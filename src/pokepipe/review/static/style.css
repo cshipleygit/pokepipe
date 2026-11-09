@@ -87,8 +87,13 @@ kbd { font: 12px ui-monospace, monospace; border: 1px solid var(--line); border-
 .hint { color: var(--muted); font-size: 12px; margin-top: 16px; }
 
 main { padding: 16px; min-width: 0; }
-.player { background: #000; border-radius: var(--radius); overflow: hidden; }
-.player video { display: block; width: 100%; max-height: 34vh; background: #000; }
+.player {
+  background: #000; border-radius: var(--radius); overflow: hidden;
+  /* pinned under the top bar so playback started from any card stays visible */
+  position: sticky; top: 65px; z-index: 3;
+  box-shadow: 0 8px 16px -8px #0006;
+}
+.player video { display: block; width: 100%; max-height: 30vh; background: #000; }
 .player-bar {
   display: flex; justify-content: space-between; align-items: center; gap: 8px;
   padding: 6px 10px; background: var(--panel); border: 1px solid var(--line); border-top: 0;
@@ -166,4 +171,5 @@ dialog::backdrop { background: #0008; }
   .topbar { flex-wrap: wrap; position: static; }
   .topbar select { max-width: 100%; flex: 1 1 100%; order: 3; }
   main { padding: 12px 16px; }
+  .player { position: static; } /* too tall to pin on a phone; seek scrolls to it instead */
 }

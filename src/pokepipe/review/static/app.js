@@ -171,11 +171,37 @@ async function act(action, id) {
   }
 }
 
-function seek(t) {
+// Playback. `stopAt` lets "Play pack clip" end at the clip boundary instead of running
+// on into the next pack; a plain seek clears it.
+let stopAt = null;
+
+function seek(t, until = null) {
   const v = $("#video");
+  stopAt = until;
   v.currentTime = Math.max(0, t);
-  v.play().catch(() => {});
+  // The player is pinned on wide screens; on narrow ones it scrolls away, so bring it
+  // back into view — otherwise playback starts off-screen and looks like nothing happened.
+  const r = v.getBoundingClientRect();
+  if (r.bottom < 0 || r.top > innerHeight) v.scrollIntoView({ behavior: "smooth", block: "start" });
+  v.play().catch((err) => {
+    if (err.name !== "AbortError") toast(`Can't play video: ${err.message}`);
+  });
 }
+
+$("#video").addEventListener("timeupdate", (e) => {
+  if (stopAt != null && e.target.currentTime >= stopAt) {
+    e.target.pause();
+    stopAt = null;
+  }
+});
+
+$("#video").addEventListener("error", (e) => {
+  const code = e.target.error && e.target.error.code;
+  const why = { 2: "network error — is `pokepipe review serve` still running?",
+                3: "the file couldn't be decoded",
+                4: "the source video is missing or in an unsupported format" }[code];
+  toast(`Video failed to load: ${why || "unknown error"}`);
+});
 
 // Card picker: used both to correct a pull and to add a missed one.
 let pickerDone = null;
@@ -255,7 +281,7 @@ $("#confirm-pack").onclick = async () => {
 };
 $("#play-clip").onclick = () => {
   const p = state.data.detection.packs.find((p) => p.index === state.pack);
-  if (p) seek(p.clip_start);
+  if (p) seek(p.clip_start, p.clip_end);
 };
 $("#finish").onclick = async () => {
   await api(`/api/videos/${state.slug}/complete`, { method: "POST" });
