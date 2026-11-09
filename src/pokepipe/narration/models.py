@@ -25,6 +25,7 @@ def _now() -> str:
 class Post(BaseModel):
     index: int
     packs: list[int]
+    seconds: float | None = Field(None, description="target length; default from pack count")
 
 
 class PostPlan(BaseModel):

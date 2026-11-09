@@ -91,7 +91,8 @@ def to_spec(groups: list[list[int]]) -> str:
     return ", ".join(fmt(g) for g in groups)
 
 
-def make_plan(slug: str, groups: list[list[int]]) -> PostPlan:
+def make_plan(slug: str, groups: list[list[int]], seconds: float | None = None) -> PostPlan:
     return PostPlan(
-        video_slug=slug, posts=[Post(index=i, packs=g) for i, g in enumerate(groups, 1)]
+        video_slug=slug,
+        posts=[Post(index=i, packs=g, seconds=seconds) for i, g in enumerate(groups, 1)],
     )

@@ -74,8 +74,15 @@ def post_progress(report: VideoReport, post: Post) -> tuple[Progress, Progress]:
 
 
 def build_prompt(
-    report: VideoReport, post: Post, total_posts: int, style: str, settings: ScriptSettings
+    report: VideoReport,
+    post: Post,
+    total_posts: int,
+    style: str,
+    settings: ScriptSettings,
+    airtime=None,
 ) -> tuple[str, str]:
+    """`airtime` (render.inputs.Airtime, optional): seconds each card is on screen in a
+    draft edit, so the script can be written to fit the footage."""
     system = (
         "You write voiceover scripts for short vertical videos of Pokémon TCG pack openings. "
         "Follow the creator's style guide below. Use only the facts given in the request: "
@@ -106,7 +113,10 @@ def build_prompt(
             }
         )
     before, after = post_progress(report, post)
-    seconds = settings.target_seconds(len(post.packs))
+    seconds = post.seconds or settings.target_seconds(len(post.packs))
+    if airtime is not None:
+        for pull in pulls:
+            pull["seconds_on_screen"] = airtime.per_card.get(pull["id"])
     facts = {
         "set": report.set_name,
         "post": f"{post.index} of {total_posts}",
@@ -116,6 +126,23 @@ def build_prompt(
         "collection_after_post": _progress_line(after),
         "new_master_set_slots_this_post": after.master_owned - before.master_owned,
     }
+    if airtime is not None:
+        facts["footage"] = {
+            "video_seconds": round(airtime.duration),
+            "seconds_before_first_card": airtime.before_first,
+            "seconds_after_last_card": airtime.after_last,
+        }
+    timing = ""
+    if airtime is not None:
+        timing = (
+            "\nTiming: the video is edited to the footage, so fit the words to it. "
+            f"Speech runs about {WORDS_PER_SECOND} words per second. The intro is spoken "
+            "before the first card. A line about a card is spoken while it is on screen: "
+            "keep it within that card's seconds_on_screen, plus the seconds of any "
+            "following cards you don't mention. After the last card there are only "
+            "seconds_after_last_card of footage, so everything said after the last card "
+            "appears (including the outro) must fit in that."
+        )
     user = (
         "Write the voiceover for this post.\n\n"
         f"<facts>\n{json.dumps(facts, indent=2, ensure_ascii=False)}\n</facts>\n\n"
@@ -123,7 +150,7 @@ def build_prompt(
         f"{int(seconds * WORDS_PER_SECOND)} words across all beats.\n"
         "Beats: in the order they are spoken. Anchor each beat to 'intro', 'outro', or the "
         "id of the pull it is about (from the facts); a beat about a card must use that "
-        "card's id so it lines up with the reveal on screen."
+        "card's id so it lines up with the reveal on screen." + timing
     )
     return system, user
 
@@ -135,10 +162,11 @@ def generate_script(
     total_posts: int,
     style: str,
     settings: ScriptSettings | None = None,
+    airtime=None,
 ) -> tuple[PostScript, float, list[str]]:
     """Returns (script, cost in USD, warnings). `client` is an `anthropic.Anthropic`."""
     settings = settings or ScriptSettings()
-    system, user = build_prompt(report, post, total_posts, style, settings)
+    system, user = build_prompt(report, post, total_posts, style, settings, airtime)
     response = client.beta.messages.parse(
         model=settings.model,
         max_tokens=16000,

@@ -22,7 +22,7 @@ reviewer as much as for function.
 | 3 | `review/` | **built** | Small local web page to confirm/fix detected pulls before rendering. The only human-in-the-loop pause. |
 | 4 | `collection/` | **built** | Local master-set progress per set, updated from confirmed pulls of each video. |
 | 5 | `narration/` | **built** (live run needs API keys) | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
-| 6 | `render/` | todo | ffmpeg: 4–6 vertical clips, speed ramps, zoom on hits, reusable intro, captions, master-set progress overlay. |
+| 6 | `render/` | **built** | ffmpeg: one vertical post per pack group, narration-driven speed ramps, zoom on hits, optional reusable intro, word captions, master-set progress overlay. |
 | 7 | `watch/` | todo | Watch folder: drop a video in → run stages 2→7, pausing only at review. |
 
 Work proceeds **one stage at a time**; stop and show the user after each stage
@@ -240,6 +240,39 @@ Known limitations:
 - Keys live in `.env` (gitignored): `ANTHROPIC_API_KEY`, `ELEVENLABS_API_KEY`,
   `ELEVENLABS_VOICE_ID`. Tests mock both APIs, so no key is needed for `pytest`.
 
+### Stage 6 design (render/)
+
+- `timeline.py` is pure edit logic. Each pack's clip window becomes gap, reveal and
+  hit shots.
+  - **Hits** are the rare slot and better, excluding reverse-holo Rares. They play at
+    1× for 2.5–4 s with a punch-in zoom; the rest of a long hold speeds up.
+  - **Framing:** shots are vertical 9:16 crops centred on the card.
+- **Narration drives the pacing.**
+  - Regions are cut at each card a line is about. A region must last as long as its
+    narration, quiet regions run up to 4× (gaps 2.5× faster), and spare time up to
+    the post's target is shared out.
+  - If a region can't fit its lines even at 1×, its hit freezes. The final shot may
+    run into real footage after the pack (`tail_room`) before freezing.
+  - Each voice line is cut from `voice.mp3` and starts when its card appears, and
+    drift is reported.
+- **Scripts are written to fit:** before Claude writes, `render/inputs.airtime()`
+  drafts the edit and gives each card's seconds on screen plus the seconds after the
+  last card. This removed the end-of-video freeze (first render 58 s with a 7 s
+  freeze, now 45.2 s with every line in sync).
+- `captions.py` writes an ASS file burned in by libass: word-by-word captions with
+  the current word highlighted, the hook caption, a master-set counter that ticks up
+  1.2 s after each pack's last card plus a "+N NEW" badge, and rarity labels during
+  big-hit zooms. Everything stays inside TikTok's safe area.
+- `ffmpeg.py` renders in two passes. First, one clip per shot (NVENC when available,
+  else x264). Then concat, burn in the ASS file, and mix the voice lines
+  (atrim + adelay + amix). An optional `config/intro.mp4` is prepended.
+  `edit.json` records every decision.
+- Result on packs 1–3 of the test video: 45.2 s, 41 shots, rendered in 39 s on the
+  RTX 3060. Total API spend for this test video so far: $0.46 (several script and
+  voice iterations).
+- To tune next: bigger counter/badge (the badge overlaps the card name), optional
+  source audio (pack-rip sounds), and motion blur on commons at ~3.6×.
+
 ## Commands
 
 ```bash
@@ -262,6 +295,7 @@ pokepipe narrate script <slug> [-p 2]     # Claude writes each post's voiceover
 pokepipe narrate voices                   # list ElevenLabs voices → ELEVENLABS_VOICE_ID
 pokepipe narrate voice <slug> [-p 2]      # synthesise (cached, budget-checked)
 pokepipe narrate cost <slug>              # spend so far vs the per-video budget
+pokepipe render post <slug> [-p 1]        # → posts/<n>/post.mp4 (1080x1920)
 pytest                                    # unit tests (no network, no GPU)
 pytest -m gpu                             # GPU/model tests
 ruff check src tests

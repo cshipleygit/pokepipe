@@ -110,6 +110,25 @@ def test_prompt_contains_only_this_posts_facts():
     assert "15/360" in facts["collection_after_post"]
     assert facts["new_master_set_slots_this_post"] == 3
     assert "at most 37 words" in user  # 15 s minimum x 2.5 words/s
+    _, user45 = build_prompt(REPORT, Post(index=2, packs=[2], seconds=45), 3, "", ScriptSettings())
+    assert "about 45 seconds" in user45 and "at most 112 words" in user45
+
+
+def test_prompt_includes_footage_timing_when_available():
+    timing = SimpleNamespace(
+        before_first=3.0, per_card={"p2-1": 1.5, "p2-2": 4.2}, after_last=4.2, duration=30.0
+    )
+    _, user = build_prompt(
+        REPORT, Post(index=2, packs=[2]), 3, "", ScriptSettings(), airtime=timing
+    )
+    facts = json.loads(user.split("<facts>")[1].split("</facts>")[0])
+    assert [p["seconds_on_screen"] for p in facts["pulls_in_reveal_order"]] == [1.5, 4.2]
+    assert facts["footage"] == {
+        "video_seconds": 30,
+        "seconds_before_first_card": 3.0,
+        "seconds_after_last_card": 4.2,
+    }
+    assert "seconds_after_last_card" in user.split("</facts>")[1]
 
 
 class FakeAnthropic:

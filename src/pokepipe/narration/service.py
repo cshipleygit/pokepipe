@@ -85,13 +85,15 @@ class Budget:
 # --- posts ------------------------------------------------------------------------------------
 
 
-def plan_posts(files: VideoFiles, slug: str, spec: str | None = None) -> PostPlan:
+def plan_posts(
+    files: VideoFiles, slug: str, spec: str | None = None, seconds: float | None = None
+) -> PostPlan:
     report = files.load_report()
     rarities: dict[int, list[str | None]] = {}
     for p in report.pulls:
         rarities.setdefault(p.pack, []).append(p.rarity)
     groups = posts_mod.parse_spec(spec, set(rarities)) if spec else posts_mod.suggest(rarities)
-    plan = posts_mod.make_plan(slug, groups)
+    plan = posts_mod.make_plan(slug, groups, seconds)
     files.save(files.plan, plan)
     return plan
 
@@ -116,6 +118,25 @@ class ScriptRun:
     warnings: list[str] = field(default_factory=list)
 
 
+def _airtime(files: VideoFiles, report: VideoReport, post, settings: ScriptSettings):
+    """Seconds each card is on screen in a draft edit, so the script fits the footage.
+    None when the footage data isn't available (the script is then length-only)."""
+    from pokepipe.detection.models import PullsFile
+    from pokepipe.render.inputs import airtime
+    from pokepipe.review.models import ReviewState
+
+    det_path, review_path = files.root / "pulls.json", files.root / "review.json"
+    if not (det_path.exists() and review_path.exists()):
+        return None
+    det = PullsFile.model_validate_json(det_path.read_text(encoding="utf-8"))
+    review = ReviewState.model_validate_json(review_path.read_text(encoding="utf-8"))
+    target = post.seconds or settings.target_seconds(len(post.packs))
+    try:
+        return airtime(det, review, report, post, target)
+    except ValueError:  # no footage for these packs
+        return None
+
+
 def write_scripts(
     files: VideoFiles,
     client,
@@ -129,7 +150,13 @@ def write_scripts(
     for post in _select(plan, only):
         budget.check(ledger, SCRIPT_ESTIMATE_USD, f"script for post {post.index}")
         script, cost, warnings = generate_script(
-            client, report, post, len(plan.posts), style, settings
+            client,
+            report,
+            post,
+            len(plan.posts),
+            style,
+            settings,
+            airtime=_airtime(files, report, post, settings),
         )
         files.save(files.post_dir(post.index) / "script.json", script)
         ledger.entries.append(

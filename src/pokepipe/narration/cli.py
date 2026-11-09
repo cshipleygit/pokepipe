@@ -47,10 +47,13 @@ def plan(
     posts: str = typer.Option(
         None, "--posts", help="Packs per post, e.g. '1-3, 9, 10+12'. Omit for a suggested grouping."
     ),
+    seconds: float = typer.Option(
+        None, "--seconds", help="Target length of each post (default: 12 s per pack, 15-60 s)"
+    ),
 ):
     """Choose which packs go into each post (saved to posts.json)."""
     files = _files(slug)
-    result = _run(lambda: service.plan_posts(files, slug, posts))
+    result = _run(lambda: service.plan_posts(files, slug, posts, seconds))
     report = files.load_report()
     table = Table("post", "packs", "cards", "best pull")
     for post in result.posts:

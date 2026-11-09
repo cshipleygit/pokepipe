@@ -15,7 +15,7 @@ See [CLAUDE.md](CLAUDE.md) for the full architecture and stage plan.
 | 3. Review UI | ✅ |
 | 4. Collection tracking | ✅ |
 | 5. Script + voice | ✅ |
-| 6. Render | ⏳ |
+| 6. Render | ✅ |
 | 7. Watch folder | ⏳ |
 
 ## Setup (Windows, NVIDIA GPU)
@@ -122,6 +122,27 @@ pokepipe narrate voice <slug>                           # ElevenLabs reads it
   turned into timings per line and per word for captions.
 - **Cost control.** Audio is cached, so re-runs are free. Every paid call is logged,
   and a check before each call keeps a video under the $1 budget.
+
+## Stage 6: render
+
+```bash
+pokepipe narrate plan <slug> --posts "1-3" --seconds 45
+pokepipe narrate script <slug> -p 1 && pokepipe narrate voice <slug> -p 1
+pokepipe render post <slug> -p 1          # → posts/1/post.mp4, 1080x1920
+```
+
+**The narration drives the edit.** Each voice line starts when its card appears.
+Stretches with nothing to say are sped up (up to 4× for commons, faster for gaps).
+Hits play in real time with a punch-in zoom. The pacing is solved per region so the
+post lands on its target length. The script writer is also told how long each card
+is on screen, so the words fit the footage.
+
+**Overlays:** word-by-word captions, the hook caption, rarity labels on big hits, and
+a master-set counter that ticks up after each pack. They're burned in from an ASS
+subtitle file. Rendering is two ffmpeg passes on the GPU (NVENC).
+
+On packs 1–3 of the test video: a 45.2 s post with all 9 lines in sync, rendered in
+39 s.
 
 ## Tests
 
