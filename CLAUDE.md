@@ -21,7 +21,7 @@ reviewer as much as for function.
 | 2 | `detection/` | **built** | Sample frames, detect card-reveal moments, crop the card, match against the stage-1 index → pulls with confidence + timestamps. |
 | 3 | `review/` | **built** | Small local web page to confirm/fix detected pulls before rendering. The only human-in-the-loop pause. |
 | 4 | `collection/` | **built** | Local master-set progress per set, updated from confirmed pulls of each video. |
-| 5 | `narration/` | todo | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
+| 5 | `narration/` | **built** (live run needs API keys) | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
 | 6 | `render/` | todo | ffmpeg: 4–6 vertical clips, speed ramps, zoom on hits, reusable intro, captions, master-set progress overlay. |
 | 7 | `watch/` | todo | Watch folder: drop a video in → run stages 2→7, pausing only at review. |
 
@@ -213,6 +213,33 @@ Known limitations:
 - "Before" progress counts every other applied video, not only earlier ones. Apply
   videos in the order they were opened.
 
+### Stage 5 design
+
+- **Posts.** The user decides which packs go into each TikTok post
+  (`narrate plan <slug> --posts "1-3, 9, 10+12"`). With no spec, a pack containing a
+  Double Rare or better gets its own post and the others are grouped in threes.
+  Saved to `posts.json`.
+- **Scripts:** Claude `claude-opus-5-5` via `client.beta.messages.parse(...,
+  output_format=ScriptDraft)`, effort `medium`, server-side `fallbacks="default"` (beta
+  `server-side-fallback-2026-07-01`), refusals and truncation handled.
+  - The model sees only computed facts (pulls with `p<pack>-<n>` ids, new/duplicate
+    flags, master-set progress before and after the post) plus `config/style.md`.
+  - Every beat must be anchored to `intro`, `outro` or one of those pull ids, so it
+    can't invent a card, and stage 6 can time each line to its reveal. Unknown anchors
+    are repaired with a warning.
+  - Length target: 12 s per pack (clamped 15–60 s) at 2.5 words/s.
+- **Voice:** ElevenLabs `POST /v1/text-to-speech/{voice}/with-timestamps` (header
+  `xi-api-key`), one request per post with the beats joined. The character alignment
+  is mapped back to per-beat and per-word timings (`voice.json`) for syncing and
+  captions in stage 6. Audio is cached in `data/tts_cache/` by hash of
+  text+voice+model+format, so re-runs are free.
+- **Budget:** every paid call is logged to `costs.json`. The check runs *before* each
+  call and refuses to push the video over `BUDGET_USD_PER_VIDEO` (default $1) unless
+  `--force` is passed. Claude cost comes from actual usage at $4/$20 per MTok. Voice
+  cost is an estimate from `ELEVENLABS_USD_PER_1K_CHARS`; set it from your plan.
+- Keys live in `.env` (gitignored): `ANTHROPIC_API_KEY`, `ELEVENLABS_API_KEY`,
+  `ELEVENLABS_VOICE_ID`. Tests mock both APIs, so no key is needed for `pytest`.
+
 ## Commands
 
 ```bash
@@ -230,6 +257,11 @@ pokepipe collection apply <slug>          # add a finished review → collection
 pokepipe collection status sv3pt5         # master-set progress by rarity
 pokepipe collection missing sv3pt5 --variant reverse
 pokepipe collection add sv3pt5 sv3pt5-25 --variant reverse   # cards owned already
+pokepipe narrate plan <slug> --posts "1-3, 9, 10-12"  # packs per post (omit = suggest)
+pokepipe narrate script <slug> [-p 2]     # Claude writes each post's voiceover
+pokepipe narrate voices                   # list ElevenLabs voices → ELEVENLABS_VOICE_ID
+pokepipe narrate voice <slug> [-p 2]      # synthesise (cached, budget-checked)
+pokepipe narrate cost <slug>              # spend so far vs the per-video budget
 pytest                                    # unit tests (no network, no GPU)
 pytest -m gpu                             # GPU/model tests
 ruff check src tests

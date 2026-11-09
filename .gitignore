@@ -4,6 +4,13 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .env
+.env.*
+!.env.example
+# never commit secrets kept in loose files
+apikey*.txt
+*api*key*.txt
+*.key
+*secret*
 data/*
 !data/.gitkeep
 *.egg-info/

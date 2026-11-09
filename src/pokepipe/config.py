@@ -23,9 +23,19 @@ class Settings(BaseSettings):
     clip_fit: str = "full"  # "full" card squashed to square, or stock "center" crop
     download_workers: int = 8
 
-    # Later stages
+    # Stage 5 — script + voice
+    budget_usd_per_video: float = 1.0
+    style_guide: Path = PROJECT_ROOT / "config" / "style.md"
     anthropic_api_key: str | None = None
+    # Needed only for API keys not scoped to a workspace (sent as anthropic-workspace-id).
+    anthropic_workspace_id: str | None = None
+    script_model: str = "claude-opus-5-5"
+    script_effort: str = "medium"
     elevenlabs_api_key: str | None = None
+    elevenlabs_voice_id: str | None = None
+    elevenlabs_model_id: str = "eleven_multilingual_v2"
+    # Used only for the budget check — set it from your ElevenLabs plan's per-character rate.
+    elevenlabs_usd_per_1k_chars: float = 0.30
 
     @property
     def sets_dir(self) -> Path:

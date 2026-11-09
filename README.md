@@ -14,7 +14,7 @@ See [CLAUDE.md](CLAUDE.md) for the full architecture and stage plan.
 | 2. Pull detection | ✅ |
 | 3. Review UI | ✅ |
 | 4. Collection tracking | ✅ |
-| 5. Script + voice | ⏳ |
+| 5. Script + voice | ✅ |
 | 6. Render | ⏳ |
 | 7. Watch folder | ⏳ |
 
@@ -104,6 +104,24 @@ video never double-counts and any video can be removed. Each video gets a
 `collection.json` marking which pulls are new and the progress after each pack,
 which is the number shown on that pack's post. Trial runs go in a separate named
 collection (`--name test`).
+
+## Stage 5: script and voice
+
+```bash
+pokepipe narrate plan <slug> --posts "1-3, 9, 10-12"   # which packs go in each post
+pokepipe narrate script <slug>                          # Claude writes the voiceover
+pokepipe narrate voice <slug>                           # ElevenLabs reads it
+```
+
+- **Choose the posts.** You decide which packs go into each TikTok post.
+- **Grounded scripts.** Claude (`claude-opus-5-5`, structured output) writes each
+  post's script from the facts only: the pulls, which ones are new, and master-set
+  progress. It follows your style guide in `config/style.md`. Every line points at a
+  specific pull, so it can't invent a card and the line can be timed to that reveal.
+- **Voice with timing.** ElevenLabs returns timings for every character, which are
+  turned into timings per line and per word for captions.
+- **Cost control.** Audio is cached, so re-runs are free. Every paid call is logged,
+  and a check before each call keeps a video under the $1 budget.
 
 ## Tests
 
