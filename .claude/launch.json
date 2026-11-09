@@ -1,0 +1,11 @@
+﻿{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "review",
+      "runtimeExecutable": ".venv/Scripts/pokepipe.exe",
+      "runtimeArgs": ["review", "serve", "--no-open", "--port", "8765"],
+      "port": 8765
+    }
+  ]
+}

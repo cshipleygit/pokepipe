@@ -12,7 +12,7 @@ See [CLAUDE.md](CLAUDE.md) for the full architecture and stage plan.
 |-------|--------|
 | 1. Card data + CLIP embeddings | ✅ |
 | 2. Pull detection | ✅ |
-| 3. Review UI | ⏳ |
+| 3. Review UI | ✅ |
 | 4. Collection tracking | ⏳ |
 | 5. Script + voice | ⏳ |
 | 6. Render | ⏳ |
@@ -68,6 +68,19 @@ clip window, so one opening can be split into several posts.
 On a 10.6-minute 1080p60 opening of 12 packs of 151 (120 cards), it found
 **120/120 cards, 10 per pack, in 89 s** on an RTX 3060. Switching from centre-crop
 to whole-card matching recovered the 6 cards the first version missed.
+
+## Stage 3: review
+
+```bash
+pokepipe review serve      # opens http://127.0.0.1:8765
+```
+
+A local page for checking detections pack by pack. Each card's crop from the video
+sits next to its reference scan, and the player jumps to the moment it was shown.
+Keep, reject, change the card, mark reverse holo, or add a card detection missed.
+Keyboard shortcuts make a 120-card review quick. Decisions are saved to
+`review.json` beside the untouched `pulls.json`, so the two files together form
+labelled data for recalibrating detection. The server binds to localhost only.
 
 ## Tests
 

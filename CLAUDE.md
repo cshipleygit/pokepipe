@@ -19,7 +19,7 @@ reviewer as much as for function.
 |---|---------|--------|---------|
 | 1 | `cards/` | **built** | Fetch any set's checklist + images from pokemontcg.io, cache locally, build CLIP image embeddings, GPU nearest-neighbour index. |
 | 2 | `detection/` | **built** | Sample frames, detect card-reveal moments, crop the card, match against the stage-1 index → pulls with confidence + timestamps. |
-| 3 | `review/` | todo | Small local web page to confirm/fix detected pulls before rendering. The only human-in-the-loop pause. |
+| 3 | `review/` | **built** | Small local web page to confirm/fix detected pulls before rendering. The only human-in-the-loop pause. |
 | 4 | `collection/` | todo | Local master-set progress per set, updated from confirmed pulls of each video. |
 | 5 | `narration/` | todo | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
 | 6 | `render/` | todo | ffmpeg: 4–6 vertical clips, speed ramps, zoom on hits, reusable intro, captions, master-set progress overlay. |
@@ -119,6 +119,27 @@ Known limitations, to handle in later stages:
 - The test video is someone else's YouTube upload: use it for development only and
   never in rendered output.
 
+### Stage 3 design
+
+- `pokepipe review serve` runs FastAPI and uvicorn on **127.0.0.1 only**. The API can
+  stream the source video and write review state, so it must never listen on the
+  network. The UI is `review/static/` (vanilla HTML/JS/CSS, no build step) and is
+  served with `Cache-Control: no-cache`.
+- `pulls.json` is never modified. Human decisions live in `review.json`
+  (`review/models.py:ReviewState`): each pull is pending / confirmed / rejected, may
+  be corrected to another card (the detected card is kept), or flagged reverse holo.
+  Reviewers can add cards detection missed. Detected pulls can only be rejected, not
+  deleted, so `pulls.json` + `review.json` together form labelled data for
+  recalibrating detection.
+- All edit rules live in `review/store.py` (atomic writes, thread lock, card ids
+  validated against the set, any edit reopens a finished review). `app.py` is a thin
+  layer over it. A review is **complete** only when nothing is pending. Stages 4+ and
+  the watch folder read `review.json` and wait for `completed: true`.
+- UI: packs sidebar (red when a pack's count ≠ expected), video player that jumps to
+  each card, video crop next to reference scan, hit badges, low-confidence "check"
+  badges, and a card picker seeded with the detector's runner-ups. Keyboard shortcuts:
+  j/k move, c/x/r/e act, space plays from the card.
+
 ## Commands
 
 ```bash
@@ -128,6 +149,8 @@ pokepipe cards fetch sv3pt5               # checklist + images → data/sets/sv3
 pokepipe cards embed sv3pt5               # build GPU embeddings index
 pokepipe cards match sv3pt5 photo.jpg     # sanity-check: top-5 matches for an image
 pokepipe detect run video.mp4 --set sv3pt5 # → data/videos/<slug>/pulls.json + thumbs/
+pokepipe review serve                     # review page at http://127.0.0.1:8765
+pokepipe review status                    # progress per video
 pytest                                    # unit tests (no network, no GPU)
 pytest -m gpu                             # GPU/model tests
 ruff check src tests

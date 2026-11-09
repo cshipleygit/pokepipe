@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pull Review</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Pull Review</div>
+    <select id="video-select" aria-label="Video"></select>
+    <div class="progress" id="progress" aria-live="polite"></div>
+    <button id="finish" class="primary" disabled>Finish review</button>
+  </header>
+
+  <div class="layout">
+    <nav class="packs" aria-label="Packs">
+      <ol id="pack-list"></ol>
+      <p class="hint">Keys: <kbd>j</kbd>/<kbd>k</kbd> move · <kbd>c</kbd> confirm ·
+        <kbd>x</kbd> reject · <kbd>r</kbd> reverse holo · <kbd>e</kbd> change card ·
+        <kbd>space</kbd> play from card</p>
+    </nav>
+
+    <main>
+      <section class="player">
+        <video id="video" controls preload="metadata"></video>
+        <div class="player-bar">
+          <span id="clip-label"></span>
+          <button id="play-clip">Play pack clip</button>
+        </div>
+      </section>
+
+      <section class="pack-head">
+        <h1 id="pack-title"></h1>
+        <div class="actions">
+          <button id="add-card">Add missed card</button>
+          <button id="confirm-pack" class="primary">Confirm remaining</button>
+        </div>
+      </section>
+
+      <ul id="pulls" class="pulls"></ul>
+      <p id="empty" class="empty" hidden>No detection results yet. Run
+        <code>pokepipe detect run &lt;video&gt; --set &lt;set_id&gt;</code> first.</p>
+    </main>
+  </div>
+
+  <dialog id="picker">
+    <form method="dialog" class="picker">
+      <h2 id="picker-title">Change card</h2>
+      <div id="picker-alts" class="alts"></div>
+      <input id="picker-search" type="search" placeholder="Search name or number…" autocomplete="off">
+      <ul id="picker-results" class="results"></ul>
+      <menu><button value="cancel">Cancel</button></menu>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
