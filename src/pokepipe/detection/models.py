@@ -25,6 +25,22 @@ class Pull(BaseModel):
     box: tuple[float, float, float, float] = Field(description="peak crop box, 0-1 of frame")
     alternatives: list[Alternative] = Field(default_factory=list)
     thumbnail: str | None = None
+    pack: int | None = Field(None, description="1-based pack this pull belongs to")
+
+
+class Pack(BaseModel):
+    index: int
+    start: float = Field(description="seconds — first reveal")
+    end: float = Field(description="seconds — last reveal")
+    clip_start: float = Field(description="seconds — suggested cut-in (includes the tear)")
+    clip_end: float = Field(description="seconds — suggested cut-out")
+    cards: int
+    expected_cards: int
+
+    @property
+    def complete(self) -> bool:
+        """False flags the pack for attention in review (missed or extra detections)."""
+        return self.cards == self.expected_cards
 
 
 class DetectionParams(BaseModel):
@@ -42,4 +58,5 @@ class PullsFile(BaseModel):
     model_tag: str
     duration: float
     params: DetectionParams
+    packs: list[Pack] = Field(default_factory=list)
     pulls: list[Pull]

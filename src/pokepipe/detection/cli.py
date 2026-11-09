@@ -15,10 +15,58 @@ from pokepipe.cards import service as cards_service
 from pokepipe.config import get_settings
 from pokepipe.detection import service
 from pokepipe.detection.frames import probe
+from pokepipe.detection.models import PullsFile
+from pokepipe.detection.packs import PackParams
 from pokepipe.detection.segment import SegmentParams
 
 app = typer.Typer(help="Stage 2: find card reveals in a video and match them.")
 console = Console()
+
+
+def _ts(seconds: float) -> str:
+    m, s = divmod(seconds, 60)
+    return f"{int(m)}:{s:04.1f}"
+
+
+def print_summary(result: PullsFile, verbose: bool = False) -> None:
+    by_pack: dict[int, list] = {}
+    for p in result.pulls:
+        by_pack.setdefault(p.pack, []).append(p)
+
+    table = Table("pack", "clip", "cards", "best pull", "lowest conf")
+    for pack in result.packs:
+        pulls = by_pack.get(pack.index, [])
+        low = min(pulls, key=lambda p: p.confidence)
+        count = f"{pack.cards}/{pack.expected_cards}"
+        table.add_row(
+            str(pack.index), f"{_ts(pack.clip_start)}–{_ts(pack.clip_end)}",
+            count if pack.complete else f"[bold red]{count}[/]",
+            _top_rarity(pulls),
+            f"{low.name} {low.confidence:.2f}",
+        )
+    console.print(table)
+
+    if verbose:
+        detail = Table("pack", "time", "card", "no.", "rarity", "conf", "score")
+        for p in result.pulls:
+            detail.add_row(str(p.pack), _ts(p.peak_time), p.name, p.number, p.rarity or "",
+                           f"{p.confidence:.2f}", f"{p.peak_score:.3f}")
+        console.print(detail)
+
+
+# Rough rarity order for display only; collection tracking (stage 4) will own this.
+_RARITY_ORDER = [
+    "Common", "Uncommon", "Rare", "Double Rare", "Illustration Rare", "Ultra Rare",
+    "Special Illustration Rare", "Hyper Rare",
+]
+
+
+def _top_rarity(pulls: list) -> str:
+    def rank(p) -> int:
+        return _RARITY_ORDER.index(p.rarity) if p.rarity in _RARITY_ORDER else 0
+
+    best = max(pulls, key=rank)
+    return f"{best.name} ({best.rarity or '?'})"
 
 
 @app.command()
@@ -28,14 +76,16 @@ def run(
     fps: float = typer.Option(4.0, help="Frames sampled per second"),
     out: Path = typer.Option(None, help="Output dir (default data/videos/<video-name>)"),
     min_peak: float = typer.Option(SegmentParams.min_peak, help="Min best-frame score for a pull"),
+    cards_per_pack: int = typer.Option(PackParams.cards_per_pack, help="Expected cards per pack"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="List every pull"),
     dump_frames: bool = typer.Option(False, help="Also write per-frame matches (calibration)"),
 ):
-    """Detect pulls in VIDEO and write pulls.json + thumbnails for review."""
+    """Detect pulls in VIDEO, group them into packs, write pulls.json + thumbnails."""
     from pokepipe.cards.embeddings import OpenClipEmbedder
 
     s = get_settings()
     out = out or s.data_dir / "videos" / service.video_slug(video)
-    embedder = OpenClipEmbedder(s.clip_model, s.clip_pretrained)
+    embedder = OpenClipEmbedder(s.clip_model, s.clip_pretrained, fit=s.clip_fit)
     index = cards_service.load_index(s.sets_dir, set_id, embedder.model_tag)
     total = int(probe(video).duration * fps)
     frames = []
@@ -54,18 +104,16 @@ def run(
 
         result = service.detect_pulls(
             video, set_id, s.sets_dir, index, embedder, out, fps=fps,
-            params=SegmentParams(min_peak=min_peak), on_frame=tick,
+            params=SegmentParams(min_peak=min_peak),
+            pack_params=PackParams(cards_per_pack=cards_per_pack), on_frame=tick,
         )
     if dump_frames:
         rows = [{"t": r.time, "top": [(m.card_id, m.score) for m in r.top]} for r in frames]
         (out / "frames.json").write_text(json.dumps(rows), encoding="utf-8")
 
-    table = Table("#", "time", "card", "no.", "rarity", "conf", "score")
-    for i, p in enumerate(result.pulls, 1):
-        m, sec = divmod(p.peak_time, 60)
-        table.add_row(str(i), f"{int(m)}:{sec:04.1f}", p.name, p.number, p.rarity or "",
-                      f"{p.confidence:.2f}", f"{p.peak_score:.3f}")
-    console.print(table)
+    print_summary(result, verbose)
+    incomplete = sum(not p.complete for p in result.packs)
     console.print(
-        f"{len(result.pulls)} pulls in {time.perf_counter() - t0:.0f}s → {out / 'pulls.json'}"
+        f"{len(result.pulls)} pulls in {len(result.packs)} packs "
+        f"({incomplete} need attention) in {time.perf_counter() - t0:.0f}s → {out / 'pulls.json'}"
     )

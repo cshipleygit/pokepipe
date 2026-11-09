@@ -81,22 +81,35 @@ search aggregates by max score per card.
 ### Stage 2 design and calibration
 
 - `frames.py` decodes via an ffmpeg rawvideo pipe at 4 fps, longest side 960 px.
-- `matcher.py` scores a grid of 30 square crops per frame in one batched
-  `torchvision.ops.roi_align` call, so frames stay on the GPU. Crops are square because
-  OpenCLIP preprocessing centre-crops reference scans to the card's middle square.
+- **Whole-card embeddings (`clip_fit="full"`, the default).** Reference scans are
+  squashed to CLIP's square input rather than OpenCLIP's stock centre-crop, and
+  `matcher.py` crops frames with card-aspect boxes squashed the same way. The stock
+  centre-crop dropped the name bar and attack text, which caused look-alike misses
+  (Squirtle vs Pikachu) and weak scores on trainers. Synthetic benchmark: top-1 87.9% →
+  92.8%, top-5 93.7% → 99.5%. Indexes are tagged `__full` so both modes can coexist.
+- `matcher.py` scores a grid of card-aspect crops per frame in one batched
+  `torchvision.ops.roi_align` call, so frames stay on the GPU.
 - `segment.py` turns per-frame votes into reveals (pure functions, unit-tested).
-  Defaults were calibrated on a third-party 10.6 min 1080p60 151 opening
-  (`--dump-frames` writes the per-frame data used):
-  genuine reveals peak at 0.75–0.89 cosine; sealed product, hands, card backs, energy
-  and code cards top out around 0.62–0.66. Hence frame vote ≥ 0.68 with ≥ 0.03 lead
-  over the runner-up, segment peak ≥ 0.72, ≥ 3 frames, 1 s gap bridging.
-- Result on that video: 114 pulls in 88 s on the RTX 3060; 113/114 correct when checked
-  by eye; the single false positive (a blurred Poliwhirl read as Kakuna) had the lowest
-  confidence of the run. Recall has not been measured (no complete ground-truth list).
-- Output: `data/videos/<slug>/pulls.json` (`detection/models.py:PullsFile`) plus
-  `thumbs/NNN_<card_id>.jpg` full-res crops for the review UI.
+  Defaults were calibrated on a third-party 10.6 min 1080p60 opening of 12 packs of 151
+  (`--dump-frames` writes the per-frame data used). Genuine reveals peak at 0.80–0.89
+  cosine. Sealed product, hands, card backs and code cards stay below about 0.71.
+  Hence: frame vote ≥ 0.68 with ≥ 0.03 lead over the runner-up, segment peak ≥ 0.72,
+  ≥ 3 frames, 1 s gap bridging. Basic Energy is matched but excluded from pulls.
+- `packs.py` groups pulls into packs on gaps > 8 s, the unit we split posts by. Each
+  pack gets a clip window: up to 15 s lead-in for the tear, 2 s tail, never overlapping.
+  A pack whose count ≠ `cards_per_pack` (default 10) is flagged for review.
+- **Ground-truth result (12 packs = 120 cards): 120/120 found, 12 packs × 10, in 89 s on
+  the RTX 3060.** The first version (centre-crop) found 114. All 114 were correct, and
+  the 6 misses were 2 trainers, Snorlax, Squirtle ×2 and Caterpie.
+- Output: `data/videos/<slug>/pulls.json` (`detection/models.py:PullsFile`: packs +
+  pulls) plus `thumbs/pNN_NNN_<card_id>.jpg` full-res crops for the review UI.
 
 Known limitations, to handle in later stages:
+- One video is not a benchmark. Validate on the user's own footage (different
+  lighting, framing and camera) before trusting the thresholds, and keep a labelled
+  pack list per test video so recall stays measurable.
+- Detection confidence is lowest on full-art hits (Charizard ex SIR: 0.62) because foil
+  texture differs from the scan. Review should show hits first.
 - **Reverse holos** match the same card id as the regular print, so detection cannot
   tell them apart. That matters for master-set tracking (stage 4); the review UI should
   let the user mark a pull as reverse holo.

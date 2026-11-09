@@ -58,12 +58,16 @@ Design notes:
 pokepipe detect run opening.mp4 --set sv3pt5
 ```
 
-Frames are sampled with ffmpeg at 4 fps. Each frame is scored as 30 square crops in a
-single batched GPU pass. Per-frame votes are then grouped into reveals with a
-calibrated score, a minimum lead over the runner-up card, and duration thresholds.
-On a 10.6-minute 1080p60 opening of 151 packs it ran in 88 s on an RTX 3060 and
-found 114 pulls. Checked by eye, 113 were correct, and the one wrong pull had the
-lowest confidence of the run.
+Frames are sampled with ffmpeg at 4 fps. Each frame is scored as a grid of
+card-shaped crops in a single batched GPU pass, against embeddings of the whole card
+(not CLIP's default centre crop, which loses the name bar). Per-frame votes are
+grouped into reveals using a calibrated score, a minimum lead over the runner-up
+card, and duration thresholds. Reveals are then grouped into **packs**, each with a
+clip window, so one opening can be split into several posts.
+
+On a 10.6-minute 1080p60 opening of 12 packs of 151 (120 cards), it found
+**120/120 cards, 10 per pack, in 89 s** on an RTX 3060. Switching from centre-crop
+to whole-card matching recovered the 6 cards the first version missed.
 
 ## Tests
 

@@ -8,13 +8,13 @@ from collections.abc import Callable
 from pathlib import Path
 
 from pokepipe.cards.cache import SetCache
+from pokepipe.cards.embeddings import CARD_ASPECT
 from pokepipe.cards.index import CardIndex
 from pokepipe.detection.frames import probe, require_tool, sample_frames, scaled_size
 from pokepipe.detection.matcher import CropGrid, FrameMatcher, FrameResult, PixelEmbedder
 from pokepipe.detection.models import Alternative, DetectionParams, Pull, PullsFile
+from pokepipe.detection.packs import PackParams, group_packs
 from pokepipe.detection.segment import SegmentParams, confidence, segment
-
-CARD_ASPECT = 63 / 88  # width / height of a standard trading card
 
 
 def video_slug(video: Path) -> str:
@@ -26,11 +26,16 @@ def build_pulls(
     cards_by_id: dict,
     frame_size: tuple[int, int],
     params: SegmentParams,
+    include_energy: bool = False,
 ) -> list[Pull]:
+    """Segments → Pull records. Basic Energy is dropped by default: every pack has one,
+    it isn't a "pull", and it doesn't count towards the pack's card total."""
     w, h = frame_size
     pulls = []
     for seg in segment(frames, params):
         card = cards_by_id[seg.card_id]
+        if card.supertype == "Energy" and not include_energy:
+            continue
         peak = seg.peak
         x1, y1, x2, y2 = peak.box
         pulls.append(
@@ -49,8 +54,8 @@ def build_pulls(
 
 
 def save_thumbnail(video: Path, pull: Pull, dest: Path, video_size: tuple[int, int]) -> None:
-    """Full-resolution crop of the peak frame, widened from the square match box to the
-    whole card's portrait shape so the reviewer sees name, art and rarity symbol."""
+    """Full-resolution crop of the peak frame, padded and forced to the card's portrait
+    shape (match boxes may be square) so the reviewer sees name, art and rarity."""
     vw, vh = video_size
     x1, y1, x2, y2 = pull.box
     cx, cy, side = (x1 + x2) / 2 * vw, (y1 + y2) / 2 * vh, (x2 - x1) * vw
@@ -80,10 +85,12 @@ def detect_pulls(
     fps: float = 4.0,
     params: SegmentParams | None = None,
     grid: CropGrid | None = None,
+    pack_params: PackParams | None = None,
     thumbnails: bool = True,
     on_frame: Callable[[FrameResult], None] | None = None,
 ) -> PullsFile:
     params = params or SegmentParams()
+    pack_params = pack_params or PackParams()
     info = probe(video)
     size = scaled_size(info, 960)
     matcher = FrameMatcher(embedder, index, grid)
@@ -95,15 +102,16 @@ def detect_pulls(
 
     cards = {c.id: c for c in SetCache(sets_root, set_id).load_cards()}
     pulls = build_pulls(results, cards, size, params)
+    packs = group_packs(pulls, info.duration, pack_params)
     if thumbnails:
         for i, pull in enumerate(pulls, 1):
-            rel = f"thumbs/{i:03d}_{pull.card_id}.jpg"
+            rel = f"thumbs/p{pull.pack:02d}_{i:03d}_{pull.card_id}.jpg"
             save_thumbnail(video, pull, out_dir / rel, (info.width, info.height))
             pull.thumbnail = rel
 
     result = PullsFile(
         video=str(video.resolve()), set_id=set_id, model_tag=index.model_tag,
-        duration=info.duration, pulls=pulls,
+        duration=info.duration, packs=packs, pulls=pulls,
         params=DetectionParams(fps=fps, **params.__dict__),
     )
     out_dir.mkdir(parents=True, exist_ok=True)

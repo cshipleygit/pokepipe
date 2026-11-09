@@ -10,7 +10,8 @@ from pokepipe.cards.index import CardIndex, Match
 from pokepipe.cards.models import Card
 from pokepipe.detection.frames import Frame, sample_frames, scaled_size
 from pokepipe.detection.matcher import CropGrid, FrameMatcher, FrameResult
-from pokepipe.detection.models import PullsFile
+from pokepipe.detection.models import Pull, PullsFile
+from pokepipe.detection.packs import PackParams, group_packs
 from pokepipe.detection.segment import SegmentParams, confidence, segment
 from pokepipe.detection.service import build_pulls, video_slug
 
@@ -31,6 +32,7 @@ class MeanColorEmbedder:
 
     image_size = 16
     device = "cpu"
+    crop_aspect = 1.0
 
     def embed_pixels(self, pixels: torch.Tensor) -> torch.Tensor:
         return torch.nn.functional.normalize(pixels.mean(dim=(2, 3)), dim=-1)
@@ -51,15 +53,24 @@ def frame_with_card(rgb: tuple[float, float, float], index=0, w=320, h=180) -> F
 # --- crop grid / matcher -------------------------------------------------------------
 
 
-def test_crop_grid_boxes_are_square_and_inside_frame():
-    boxes = CropGrid(sides=(0.5, 1.2), centers_x=(0.0, 0.5, 1.0), centers_y=(0.5,)).boxes(320, 180)
+@pytest.mark.parametrize("aspect", [1.0, 63 / 88])
+def test_crop_grid_boxes_keep_aspect_and_stay_inside_frame(aspect):
+    grid = CropGrid(heights=(0.5, 1.2), centers_x=(0.0, 0.5, 1.0), centers_y=(0.5,), aspect=aspect)
+    boxes = grid.boxes(320, 180)
     w, h = boxes[:, 2] - boxes[:, 0], boxes[:, 3] - boxes[:, 1]
-    np.testing.assert_allclose(w, h)
+    np.testing.assert_allclose(w / h, aspect, rtol=1e-2)
     assert boxes[:, :2].min() >= 0 and boxes[:, 2].max() <= 320 and boxes[:, 3].max() <= 180
+    assert len(np.unique(boxes, axis=0)) == len(boxes)  # clamped duplicates removed
+
+
+def test_matcher_rejects_grid_with_wrong_aspect():
+    with pytest.raises(ValueError, match="aspect"):
+        FrameMatcher(MeanColorEmbedder(), color_index(), CropGrid(aspect=63 / 88))
 
 
 def test_matcher_finds_card_by_colour():
-    matcher = FrameMatcher(MeanColorEmbedder(), color_index(), CropGrid(sides=(0.6,)))
+    grid = CropGrid(heights=(0.6,), aspect=1.0)
+    matcher = FrameMatcher(MeanColorEmbedder(), color_index(), grid)
     frames = [frame_with_card(COLORS["green"], 0), frame_with_card(COLORS["blue"], 1)]
     results = matcher.match_batch(frames)
     assert [r.best.card_id for r in results] == ["green", "blue"]
@@ -128,6 +139,52 @@ def test_build_pulls_serialises_relative_box(tmp_path):
     blob = PullsFile(video="v.mp4", set_id="s", model_tag="m", duration=1.0, pulls=[pull],
                      params={"fps": 4, **SegmentParams().__dict__}).model_dump_json()
     assert PullsFile.model_validate(json.loads(blob)).pulls[0] == pull
+
+
+def test_build_pulls_drops_energy_unless_asked():
+    frames = [FrameResult(i, i / 4, [Match("s-e", 0.8), Match("s-1", 0.6)], (0, 0, 10, 10))
+              for i in range(4)]
+    cards = {"s-e": Card(id="s-e", name="Basic Psychic Energy", number="207", set_id="s",
+                         supertype="Energy")}
+    assert build_pulls(frames, cards, (40, 40), SegmentParams()) == []
+    assert len(build_pulls(frames, cards, (40, 40), SegmentParams(), include_energy=True)) == 1
+
+
+def make_pull(start: float, end: float | None = None) -> Pull:
+    return Pull(card_id="s-1", name="X", number="1", start=start, end=end or start + 1,
+                peak_time=start, peak_score=0.8, mean_margin=0.1, frames=4, confidence=0.9,
+                box=(0, 0, 1, 1))
+
+
+def test_group_packs_splits_on_gaps_and_sets_clip_windows():
+    # pack A: reveals 20-30s; pack B: 50-55s (20s gap); video is 60s long
+    pulls = [make_pull(t) for t in (20, 22, 24, 29)] + [make_pull(t) for t in (50, 52, 54)]
+    packs = group_packs(pulls, duration=60, params=PackParams(cards_per_pack=4))
+    assert [(p.index, p.cards, p.complete) for p in packs] == [(1, 4, True), (2, 3, False)]
+    assert [p.pack for p in pulls] == [1, 1, 1, 1, 2, 2, 2]
+    a, b = packs
+    assert a.clip_start == 5.0  # 15s lead-in for the tear
+    assert a.clip_end == 32.0  # last reveal ends at 30 + 2s tail
+    assert b.clip_start == 35.0  # 15s lead-in, still after pack A's clip
+    assert b.clip_end == 57.0
+
+
+def test_group_packs_clips_never_overlap_when_packs_are_close():
+    pulls = [make_pull(10), make_pull(12), make_pull(22), make_pull(24)]  # 9s gap
+    a, b = group_packs(pulls, duration=26)
+    assert a.clip_end <= b.clip_start
+    assert b.clip_end == 26  # clamped to video duration
+
+
+def test_group_packs_empty():
+    assert group_packs([], duration=10) == []
+
+
+def test_openclip_fit_is_validated_before_loading_model():
+    from pokepipe.cards.embeddings import OpenClipEmbedder
+
+    with pytest.raises(ValueError, match="fit"):
+        OpenClipEmbedder(fit="stretch")
 
 
 def test_video_slug():

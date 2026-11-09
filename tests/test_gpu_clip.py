@@ -16,6 +16,7 @@ def test_openclip_embeds_on_gpu_and_is_normalised():
 
     emb = OpenClipEmbedder()
     assert emb.device == "cuda"
+    assert emb.model_tag.endswith("__full") and emb.crop_aspect == pytest.approx(63 / 88)
     a = Image.new("RGB", (245, 342), (220, 40, 40))
     ImageDraw.Draw(a).ellipse((60, 80, 180, 200), fill=(250, 220, 0))
     b = Image.new("RGB", (245, 342), (20, 60, 200))

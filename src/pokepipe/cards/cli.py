@@ -29,7 +29,7 @@ def _embedder():
     from pokepipe.cards.embeddings import OpenClipEmbedder
 
     s = get_settings()
-    return OpenClipEmbedder(s.clip_model, s.clip_pretrained)
+    return OpenClipEmbedder(s.clip_model, s.clip_pretrained, fit=s.clip_fit)
 
 
 @app.command()

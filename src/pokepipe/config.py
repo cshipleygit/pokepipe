@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     pokemontcg_base_url: str = "https://api.pokemontcg.io/v2"
     clip_model: str = "ViT-B-32"
     clip_pretrained: str = "laion2b_s34b_b79k"
+    clip_fit: str = "full"  # "full" card squashed to square, or stock "center" crop
     download_workers: int = 8
 
     # Later stages

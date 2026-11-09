@@ -38,8 +38,19 @@ def to_rgb(img: Image.Image) -> Image.Image:
     return background
 
 
+CARD_ASPECT = 63 / 88  # width / height of a standard trading card
+
+
 class OpenClipEmbedder:
-    """CLIP image encoder via `open_clip`, run on CUDA in fp16 when available."""
+    """CLIP image encoder via `open_clip`, run on CUDA in fp16 when available.
+
+    `fit` controls how a portrait card becomes CLIP's square input:
+      - "full" (default): squash the whole card to a square. Keeps the name bar, HP
+        and attack text, which separate look-alike cards (e.g. Squirtle vs Pikachu).
+      - "center": OpenCLIP's stock centre-crop, which keeps only the middle square.
+    Detection crops frames with the same geometry (`crop_aspect`), so reference and
+    query images are distorted identically.
+    """
 
     def __init__(
         self,
@@ -47,7 +58,10 @@ class OpenClipEmbedder:
         pretrained: str = "laion2b_s34b_b79k",
         device: str | None = None,
         batch_size: int = 64,
+        fit: str = "full",
     ) -> None:
+        if fit not in ("full", "center"):
+            raise ValueError(f"fit must be 'full' or 'center', not {fit!r}")
         import open_clip  # heavy imports kept local so the package imports fast
         import torch
 
@@ -58,7 +72,9 @@ class OpenClipEmbedder:
             model_name, pretrained=pretrained, device=self.device
         )
         self.model.eval()
-        self.model_tag = f"{model_name}__{pretrained}"
+        self.fit = fit
+        self.crop_aspect = CARD_ASPECT if fit == "full" else 1.0
+        self.model_tag = f"{model_name}__{pretrained}" + ("__full" if fit == "full" else "")
         self.dim = int(self.model.visual.output_dim)
 
         visual = self.model.visual
@@ -82,16 +98,22 @@ class OpenClipEmbedder:
             feats = self.model.encode_image(x).float()
         return torch.nn.functional.normalize(feats, dim=-1)
 
+    def _to_pixels(self, im: Image.Image):
+        torch = self._torch
+        if self.fit == "center":
+            x = self.preprocess(to_rgb(im))  # resize + centre-crop + normalise
+            return x * self._std[0].cpu() + self._mean[0].cpu()  # undo normalise
+        s = self.image_size
+        arr = np.asarray(to_rgb(im).resize((s, s), Image.Resampling.BICUBIC), np.float32)
+        return torch.from_numpy(arr / 255.0).permute(2, 0, 1)
+
     def embed_images(self, images: Sequence[Image.Image]) -> np.ndarray:
         torch = self._torch
         out: list[np.ndarray] = []
-        use_amp = self.device.startswith("cuda")
         for start in range(0, len(images), self.batch_size):
             batch = images[start : start + self.batch_size]
-            pixels = torch.stack([self.preprocess(to_rgb(im)) for im in batch]).to(self.device)
-            with torch.no_grad(), torch.autocast("cuda", enabled=use_amp):
-                feats = self.model.encode_image(pixels)
-            out.append(feats.float().cpu().numpy())
+            pixels = torch.stack([self._to_pixels(im) for im in batch])
+            out.append(self.embed_pixels(pixels).cpu().numpy())
         if not out:
             return np.zeros((0, self.dim), dtype=np.float32)
         return l2_normalize(np.concatenate(out)).astype(np.float32)
