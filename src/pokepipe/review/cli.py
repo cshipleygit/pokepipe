@@ -41,6 +41,13 @@ def serve(
 
 
 @app.command()
+def prefill(slug: str):
+    """Apply detection's reverse-holo guesses to pulls you haven't reviewed yet."""
+    n = _store().prefill_reverse(slug)
+    console.print(f"Updated reverse holo on {n} pending pulls")
+
+
+@app.command()
 def status():
     """Show review progress for every processed video."""
     store = _store()

@@ -20,7 +20,7 @@ reviewer as much as for function.
 | 1 | `cards/` | **built** | Fetch any set's checklist + images from pokemontcg.io, cache locally, build CLIP image embeddings, GPU nearest-neighbour index. |
 | 2 | `detection/` | **built** | Sample frames, detect card-reveal moments, crop the card, match against the stage-1 index → pulls with confidence + timestamps. |
 | 3 | `review/` | **built** | Small local web page to confirm/fix detected pulls before rendering. The only human-in-the-loop pause. |
-| 4 | `collection/` | todo | Local master-set progress per set, updated from confirmed pulls of each video. |
+| 4 | `collection/` | **built** | Local master-set progress per set, updated from confirmed pulls of each video. |
 | 5 | `narration/` | todo | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
 | 6 | `render/` | todo | ffmpeg: 4–6 vertical clips, speed ramps, zoom on hits, reusable intro, captions, master-set progress overlay. |
 | 7 | `watch/` | todo | Watch folder: drop a video in → run stages 2→7, pausing only at review. |
@@ -119,6 +119,50 @@ Known limitations, to handle in later stages:
 - The test video is someone else's YouTube upload: use it for development only and
   never in rendered output.
 
+### Pack layouts → automatic reverse holos (`detection/layout.py`)
+
+Unshuffled packs reveal cards in print order. Verified on all 12 packs of the test
+video: slots 1–4 Common, 5–7 Uncommon, 8–9 reverse-holo slots (C/U/R; slot 9 also gave
+an IR and an SIR), 10 the rare slot (R, or a UR). Basic Energy and the code card come
+outside these 10 and are not pulls. CLIP can't see reverse holo (same card id, same
+art), so a C/U/R in slot 8 or 9 is marked `reverse_guess`. Result: 22 reverse holos
+inferred, which moved the test master set from 93 to 100/360.
+
+- Conservative by design: only a pack whose rarities fit the layout gets guesses. A
+  short pack aligns from the end (the rare is last, the reverse slots just before it).
+  A shuffled or over-long pack gets no guesses and a `layout_note` shown in review.
+- The layout is chosen by series (`layout_for`). Only Scarlet & Violet is defined and
+  verified, on 151. Other sets in the series may differ (e.g. ACE SPEC or special slots),
+  so verify a new set's packs before trusting it, and add layouts per era as needed.
+- Review starts with the guess filled in ("reverse holo · auto"); the reviewer can flip
+  it. `pokepipe detect layout <slug>` re-runs inference without re-scanning, and
+  `pokepipe review prefill <slug>` applies guesses to a review already in progress
+  (pending pulls only).
+- A community guide says packs have 5 commons. On this footage it's 4; its 5th
+  "common" is the basic Energy, which here comes after the rare. The same guide says
+  IRs only appear in god packs, but Tangela IR appeared in slot 9 of a normal pack.
+
+### Set code + collector number (OCR) — measured, not adopted yet
+
+The bottom-left of every card shows regulation mark, set code + language (`MEW EN`),
+`number/printed total` (`001/165`) and a rarity symbol. Experiment on the test video
+(rapidocr, CPU, about 6 frames per reveal, majority vote; script not in repo):
+
+| | CLIP (current) | corner OCR |
+|---|---|---|
+| correct card | 120/120 | 97/120 (8 misreads, 15 unread) |
+| time | 89 s (GPU) | 456 s (CPU) |
+| set code "MEW" read | n/a | 41/120 reveals |
+
+At 1080p the text is about 20 px tall and often motion-blurred or under the opener's
+thumb, so OCR is slower and less accurate than CLIP as the primary identifier. Planned
+uses instead:
+1. **Automatic set detection.** Vote on set code + printed total across a video's reads
+   (41 good reads here). That removes `--set` and supports videos mixing sets.
+2. **Tie-breaker** when CLIP's top two are close or the art is shared, e.g. the same
+   art reprinted in another set or a promo. Only OCR the sharpest few frames of those
+   reveals, on GPU, to keep the cost down.
+
 ### Stage 3 design
 
 - `pokepipe review serve` runs FastAPI and uvicorn on **127.0.0.1 only**. The API can
@@ -140,6 +184,35 @@ Known limitations, to handle in later stages:
   badges, and a card picker seeded with the detector's runner-ups. Keyboard shortcuts:
   j/k move, c/x/r/e act, space plays from the card.
 
+### Stage 4 design
+
+- **Master set is data-driven.** pokemontcg.io only exposes which printings exist
+  through TCGplayer price keys (`normal`, `holofoil`, `reverseHolofoil`, ...).
+  `Card.variants` stores them, mapped to `normal` / `holo` / `reverse` / 1st-edition.
+  If a card has no price data, a rarity rule fills in: C/U → normal + reverse, Rare →
+  holo + reverse, rarer → holo. 151 = 360 slots (207 card numbers, 165 in the base set).
+- Progress is reported at three levels: master (every printing), full (every card
+  number including secret rares) and base (numbers ≤ the printed total).
+- `data/collection/<name>/<set_id>.json`. Ownership is a sum of **contributions**
+  (one per applied video, plus `manual`), never a bare counter. Re-applying a video
+  replaces its contribution, and `collection remove` undoes it exactly. Named
+  collections keep trial runs (`--name test`) out of the real one (`main`).
+- `collection apply <slug>` requires a finished review. It writes
+  `data/videos/<slug>/collection.json` (`VideoReport`) with, per pull, the printing,
+  `new` (first copy of that printing), `new_card` and `copy_number`, plus progress
+  before and after the video and **after each pack** (the overlay number for that
+  pack's post).
+- Test video, all 120 detections confirmed and the 22 layout-inferred reverse holos
+  kept: +100 new, master 100/360 (93/207 card numbers).
+
+Known limitations:
+- #207 in 151 is a gold Basic Psychic Energy (Hyper Rare). Detection drops all Energy
+  because each pack's ordinary basic Energy matches #207 (the only Energy in the
+  index). A real gold #207 therefore has to be added by hand in review. The proper
+  fix is to index the ordinary basic Energies as decoys.
+- "Before" progress counts every other applied video, not only earlier ones. Apply
+  videos in the order they were opened.
+
 ## Commands
 
 ```bash
@@ -149,8 +222,14 @@ pokepipe cards fetch sv3pt5               # checklist + images → data/sets/sv3
 pokepipe cards embed sv3pt5               # build GPU embeddings index
 pokepipe cards match sv3pt5 photo.jpg     # sanity-check: top-5 matches for an image
 pokepipe detect run video.mp4 --set sv3pt5 # → data/videos/<slug>/pulls.json + thumbs/
+pokepipe detect layout <slug>             # re-run pack-slot / reverse-holo inference
 pokepipe review serve                     # review page at http://127.0.0.1:8765
+pokepipe review prefill <slug>            # copy reverse guesses onto pending pulls
 pokepipe review status                    # progress per video
+pokepipe collection apply <slug>          # add a finished review → collection.json
+pokepipe collection status sv3pt5         # master-set progress by rarity
+pokepipe collection missing sv3pt5 --variant reverse
+pokepipe collection add sv3pt5 sv3pt5-25 --variant reverse   # cards owned already
 pytest                                    # unit tests (no network, no GPU)
 pytest -m gpu                             # GPU/model tests
 ruff check src tests

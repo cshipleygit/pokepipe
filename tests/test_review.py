@@ -141,6 +141,21 @@ def test_complete_requires_no_pending_and_edits_reopen(env):
     assert store.load(SLUG).completed is False
 
 
+def test_reverse_guesses_seed_new_reviews_and_prefill_only_pending(env):
+    store, _, vdir = env
+    det = json.loads((vdir / "pulls.json").read_text())
+    det["pulls"][1]["reverse_guess"] = True
+    det["pulls"][2]["reverse_guess"] = True
+    (vdir / "pulls.json").write_text(json.dumps(det))
+    assert [p.reverse_holo for p in store.load(SLUG).pulls] == [False, True, True]
+
+    # an in-progress review saved before guesses existed: prefill skips decided pulls
+    store.update(SLUG, 1, PullUpdate(status=Status.CONFIRMED, reverse_holo=False))
+    store.update(SLUG, 2, PullUpdate(reverse_holo=False))
+    assert store.prefill_reverse(SLUG) == 1
+    assert [p.reverse_holo for p in store.load(SLUG).pulls] == [False, False, True]
+
+
 def test_bad_slugs_never_touch_the_filesystem(env):
     store, _, _ = env
     for slug in ("../etc", "Test-Video", "x" * 100, ""):

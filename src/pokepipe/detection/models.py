@@ -26,6 +26,8 @@ class Pull(BaseModel):
     alternatives: list[Alternative] = Field(default_factory=list)
     thumbnail: str | None = None
     pack: int | None = Field(None, description="1-based pack this pull belongs to")
+    slot: int | None = Field(None, description="1-based position in the pack layout")
+    reverse_guess: bool = Field(False, description="in a reverse-holo slot (see layout.py)")
 
 
 class Pack(BaseModel):
@@ -36,6 +38,8 @@ class Pack(BaseModel):
     clip_end: float = Field(description="seconds — suggested cut-out")
     cards: int
     expected_cards: int
+    layout: str | None = Field(None, description="slot inference: 'full', 'tail' or None")
+    layout_note: str = ""
 
     @property
     def complete(self) -> bool:
@@ -58,5 +62,6 @@ class PullsFile(BaseModel):
     model_tag: str
     duration: float
     params: DetectionParams
+    pack_layout: str | None = None
     packs: list[Pack] = Field(default_factory=list)
     pulls: list[Pull]

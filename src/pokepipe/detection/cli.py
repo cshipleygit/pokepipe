@@ -33,25 +33,56 @@ def print_summary(result: PullsFile, verbose: bool = False) -> None:
     for p in result.pulls:
         by_pack.setdefault(p.pack, []).append(p)
 
-    table = Table("pack", "clip", "cards", "best pull", "lowest conf")
+    table = Table("pack", "clip", "cards", "reverse", "best pull", "lowest conf")
     for pack in result.packs:
         pulls = by_pack.get(pack.index, [])
         low = min(pulls, key=lambda p: p.confidence)
         count = f"{pack.cards}/{pack.expected_cards}"
+        if pack.layout:
+            rev = ", ".join(p.name for p in pulls if p.reverse_guess) or "-"
+        else:
+            rev = f"[yellow]? {pack.layout_note}[/]" if pack.layout_note else ""
         table.add_row(
             str(pack.index), f"{_ts(pack.clip_start)}–{_ts(pack.clip_end)}",
             count if pack.complete else f"[bold red]{count}[/]",
-            _top_rarity(pulls),
-            f"{low.name} {low.confidence:.2f}",
+            rev, _top_rarity(pulls), f"{low.name} {low.confidence:.2f}",
         )
     console.print(table)
 
     if verbose:
-        detail = Table("pack", "time", "card", "no.", "rarity", "conf", "score")
+        detail = Table("pack", "slot", "time", "card", "no.", "rarity", "conf", "score")
         for p in result.pulls:
-            detail.add_row(str(p.pack), _ts(p.peak_time), p.name, p.number, p.rarity or "",
+            slot = f"{p.slot}{' rev' if p.reverse_guess else ''}" if p.slot else ""
+            detail.add_row(str(p.pack), slot, _ts(p.peak_time), p.name, p.number, p.rarity or "",
                            f"{p.confidence:.2f}", f"{p.peak_score:.3f}")
         console.print(detail)
+
+
+@app.command()
+def layout(
+    slug: str,
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="List every pull"),
+):
+    """Re-apply pack-layout inference (slots, reverse holos) to an existing pulls.json,
+    without re-scanning the video."""
+    from pokepipe.cards.cache import SetCache
+    from pokepipe.detection.layout import layout_for
+
+    s = get_settings()
+    path = s.data_dir / "videos" / slug / "pulls.json"
+    if not path.exists():
+        console.print(f"[red]no pulls.json for {slug!r}[/]")
+        raise typer.Exit(1)
+    result = PullsFile.model_validate_json(path.read_text(encoding="utf-8"))
+    for p in result.pulls:
+        p.slot, p.reverse_guess = None, False
+    series = SetCache(s.sets_dir, result.set_id).load_set().series
+    chosen = service.infer_slots(result.pulls, result.packs, layout_for(series))
+    result.pack_layout = chosen.name if chosen else None
+    path.write_text(result.model_dump_json(indent=2), encoding="utf-8")
+    print_summary(result, verbose)
+    n = sum(p.reverse_guess for p in result.pulls)
+    console.print(f"Layout {result.pack_layout or 'none'}: {n} reverse holos inferred → {path}")
 
 
 # Rough rarity order for display only; collection tracking (stage 4) will own this.

@@ -11,8 +11,9 @@ from pokepipe.cards.cache import SetCache
 from pokepipe.cards.embeddings import CARD_ASPECT
 from pokepipe.cards.index import CardIndex
 from pokepipe.detection.frames import probe, require_tool, sample_frames, scaled_size
+from pokepipe.detection.layout import PackLayout, apply_layout, layout_for
 from pokepipe.detection.matcher import CropGrid, FrameMatcher, FrameResult, PixelEmbedder
-from pokepipe.detection.models import Alternative, DetectionParams, Pull, PullsFile
+from pokepipe.detection.models import Alternative, DetectionParams, Pack, Pull, PullsFile
 from pokepipe.detection.packs import PackParams, group_packs
 from pokepipe.detection.segment import SegmentParams, confidence, segment
 
@@ -51,6 +52,16 @@ def build_pulls(
             )
         )
     return pulls
+
+
+def infer_slots(pulls: list[Pull], packs: list[Pack], layout: PackLayout | None):
+    """Run pack-layout inference per pack; records the outcome on each Pack."""
+    if layout is None:
+        return None
+    for pack in packs:
+        result = apply_layout([p for p in pulls if p.pack == pack.index], layout)
+        pack.layout, pack.layout_note = result.mode, result.note
+    return layout
 
 
 def save_thumbnail(video: Path, pull: Pull, dest: Path, video_size: tuple[int, int]) -> None:
@@ -100,9 +111,11 @@ def detect_pulls(
         if on_frame:
             on_frame(r)
 
-    cards = {c.id: c for c in SetCache(sets_root, set_id).load_cards()}
+    cache = SetCache(sets_root, set_id)
+    cards = {c.id: c for c in cache.load_cards()}
     pulls = build_pulls(results, cards, size, params)
     packs = group_packs(pulls, info.duration, pack_params)
+    layout = infer_slots(pulls, packs, layout_for(cache.load_set().series))
     if thumbnails:
         for i, pull in enumerate(pulls, 1):
             rel = f"thumbs/p{pull.pack:02d}_{i:03d}_{pull.card_id}.jpg"
@@ -113,6 +126,7 @@ def detect_pulls(
         video=str(video.resolve()), set_id=set_id, model_tag=index.model_tag,
         duration=info.duration, packs=packs, pulls=pulls,
         params=DetectionParams(fps=fps, **params.__dict__),
+        pack_layout=layout.name if layout else None,
     )
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "pulls.json").write_text(result.model_dump_json(indent=2), encoding="utf-8")

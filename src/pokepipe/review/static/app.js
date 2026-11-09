@@ -104,7 +104,8 @@ function render() {
   $("#pack-title").textContent = pack
     ? `Pack ${pack.index} — ${pack.cards} of ${pack.expected} cards`
     : `Pack ${state.pack}`;
-  $("#clip-label").textContent = detPack ? `Clip ${fmt(detPack.clip_start)} – ${fmt(detPack.clip_end)}` : "";
+  const note = detPack && detPack.layout_note ? ` · ${detPack.layout_note}` : "";
+  $("#clip-label").textContent = detPack ? `Clip ${fmt(detPack.clip_start)} – ${fmt(detPack.clip_end)}${note}` : "";
   $("#play-clip").disabled = !detPack;
 
   const pulls = packPulls();
@@ -120,7 +121,10 @@ function pullTile(p, i) {
   if (det && det.confidence < LOW_CONFIDENCE && p.status === "pending") badges.push(`<span class="badge low">check</span>`);
   if (det && p.card_id !== p.detected_card_id) badges.push(`<span class="badge fixed">was ${card(p.detected_card_id).name}</span>`);
   if (!det) badges.push(`<span class="badge added">added</span>`);
-  if (p.reverse_holo) badges.push(`<span class="badge rev">reverse holo</span>`);
+  if (p.reverse_holo) {
+    const auto = det && det.reverse_guess;
+    badges.push(`<span class="badge rev" title="${auto ? `Inferred from pack order (slot ${det.slot})` : "Set by you"}">reverse holo${auto ? " · auto" : ""}</span>`);
+  }
   const shot = det && det.thumbnail
     ? `<img src="/media/${state.slug}/${det.thumbnail}" alt="Frame from video" loading="lazy">`
     : `<div class="no-shot">added by hand</div>`;

@@ -9,6 +9,25 @@ import re
 
 from pydantic import BaseModel, Field
 
+NORMAL, HOLO, REVERSE = "normal", "holo", "reverse"
+FIRST_EDITION, FIRST_EDITION_HOLO = "1st-edition", "1st-edition-holo"
+
+# pokemontcg.io exposes which printings exist only via TCGplayer price keys.
+VARIANT_KEYS = {
+    "normal": NORMAL,
+    "holofoil": HOLO,
+    "unlimitedHolofoil": HOLO,
+    "reverseHolofoil": REVERSE,
+    "1stEditionNormal": FIRST_EDITION,
+    "1stEditionHolofoil": FIRST_EDITION_HOLO,
+}
+_VARIANT_ORDER = [NORMAL, HOLO, FIRST_EDITION, FIRST_EDITION_HOLO, REVERSE]
+
+
+def variants_from_price_keys(prices: dict) -> list[str]:
+    found = {VARIANT_KEYS[k] for k in prices if k in VARIANT_KEYS}
+    return [v for v in _VARIANT_ORDER if v in found]
+
 
 class CardSet(BaseModel):
     id: str
@@ -40,10 +59,13 @@ class Card(BaseModel):
     subtypes: list[str] = Field(default_factory=list)
     image_small: str | None = None
     image_large: str | None = None
+    # Printings this card exists in (see VARIANT_KEYS). Empty = unknown → rarity rule.
+    variants: list[str] = Field(default_factory=list)
 
     @classmethod
     def from_api(cls, raw: dict) -> Card:
         images = raw.get("images") or {}
+        prices = (raw.get("tcgplayer") or {}).get("prices") or {}
         return cls(
             id=raw["id"],
             name=raw["name"],
@@ -54,7 +76,24 @@ class Card(BaseModel):
             subtypes=raw.get("subtypes") or [],
             image_small=images.get("small"),
             image_large=images.get("large"),
+            variants=variants_from_price_keys(prices),
         )
+
+    def variant_list(self) -> list[str]:
+        """Printings for master-set tracking, base printing first. Uses the API's price
+        data when present, else the modern-era rule: C/U → normal + reverse, Rare →
+        holo + reverse, anything rarer → holo only."""
+        if self.variants:
+            return self.variants
+        if self.rarity in ("Common", "Uncommon"):
+            return [NORMAL, REVERSE]
+        if self.rarity == "Rare":
+            return [HOLO, REVERSE]
+        return [HOLO]
+
+    @property
+    def base_variant(self) -> str:
+        return next((v for v in self.variant_list() if v != REVERSE), self.variant_list()[0])
 
     @property
     def image_url(self) -> str | None:

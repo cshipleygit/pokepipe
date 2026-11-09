@@ -91,10 +91,29 @@ class ReviewStore:
             ReviewedPull(
                 id=i, detected_index=i, detected_card_id=p.card_id, card_id=p.card_id,
                 pack=p.pack or 1, time=p.peak_time,
+                reverse_holo=p.reverse_guess,  # pack-layout inference; reviewer can flip it
             )
             for i, p in enumerate(det.pulls)
         ]
         return ReviewState(video_slug=slug, set_id=det.set_id, pulls=pulls)
+
+    def prefill_reverse(self, slug: str) -> int:
+        """Copy detection's reverse-holo guesses onto pulls that are still pending, for
+        reviews started before the guesses existed. Decided pulls are left alone."""
+        det = self.detection(slug)
+
+        def apply(state: ReviewState) -> int:
+            changed = 0
+            for p in state.pulls:
+                if p.status != Status.PENDING or p.detected_index is None:
+                    continue
+                guess = det.pulls[p.detected_index].reverse_guess
+                if p.reverse_holo != guess:
+                    p.reverse_holo = guess
+                    changed += 1
+            return changed
+
+        return self._edit(slug, apply)
 
     def save(self, state: ReviewState) -> None:
         state.updated_at = _now()

@@ -13,7 +13,7 @@ See [CLAUDE.md](CLAUDE.md) for the full architecture and stage plan.
 | 1. Card data + CLIP embeddings | ✅ |
 | 2. Pull detection | ✅ |
 | 3. Review UI | ✅ |
-| 4. Collection tracking | ⏳ |
+| 4. Collection tracking | ✅ |
 | 5. Script + voice | ⏳ |
 | 6. Render | ⏳ |
 | 7. Watch folder | ⏳ |
@@ -65,6 +65,13 @@ grouped into reveals using a calibrated score, a minimum lead over the runner-up
 card, and duration thresholds. Reveals are then grouped into **packs**, each with a
 clip window, so one opening can be split into several posts.
 
+**Reverse holos come from pack order.** Image matching can't tell a reverse holo from
+the regular print, but unshuffled packs follow a fixed order: 4 commons, 3 uncommons,
+2 reverse-holo slots, then the rare. A Common, Uncommon or Rare in slot 8 or 9 is
+therefore a reverse holo. This was verified on all 12 test packs and inferred 22
+reverse holos automatically. A pack that doesn't fit the order gets no guesses and is
+flagged for review.
+
 On a 10.6-minute 1080p60 opening of 12 packs of 151 (120 cards), it found
 **120/120 cards, 10 per pack, in 89 s** on an RTX 3060. Switching from centre-crop
 to whole-card matching recovered the 6 cards the first version missed.
@@ -81,6 +88,22 @@ Keep, reject, change the card, mark reverse holo, or add a card detection missed
 Keyboard shortcuts make a 120-card review quick. Decisions are saved to
 `review.json` beside the untouched `pulls.json`, so the two files together form
 labelled data for recalibrating detection. The server binds to localhost only.
+
+## Stage 4: collection tracking
+
+```bash
+pokepipe collection apply <video-slug>    # after the review is finished
+pokepipe collection status sv3pt5
+pokepipe collection missing sv3pt5 --variant reverse
+```
+
+Tracks master-set progress for any set. Which printings each card comes in (normal,
+holo, reverse holo) comes from the API data rather than hard-coded rules. Every
+applied video is stored as a separate contribution, so re-applying a re-reviewed
+video never double-counts and any video can be removed. Each video gets a
+`collection.json` marking which pulls are new and the progress after each pack,
+which is the number shown on that pack's post. Trial runs go in a separate named
+collection (`--name test`).
 
 ## Tests
 
