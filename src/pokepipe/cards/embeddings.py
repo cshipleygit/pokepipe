@@ -61,6 +61,27 @@ class OpenClipEmbedder:
         self.model_tag = f"{model_name}__{pretrained}"
         self.dim = int(self.model.visual.output_dim)
 
+        visual = self.model.visual
+        size = getattr(visual, "image_size", 224)
+        self.image_size = int(size[0] if isinstance(size, tuple | list) else size)
+        mean = getattr(visual, "image_mean", None) or open_clip.OPENAI_DATASET_MEAN
+        std = getattr(visual, "image_std", None) or open_clip.OPENAI_DATASET_STD
+        self._mean = torch.tensor(mean, device=self.device).view(1, 3, 1, 1)
+        self._std = torch.tensor(std, device=self.device).view(1, 3, 1, 1)
+
+    def embed_pixels(self, pixels):
+        """GPU fast path: (N, 3, S, S) float tensor in [0, 1], already cropped/resized
+        to `image_size` → (N, D) L2-normalised float32 tensor on the same device.
+
+        Detection uses this to crop frames with `roi_align` on the GPU and skip the
+        PIL round-trip of `embed_images`.
+        """
+        torch = self._torch
+        x = (pixels.to(self.device) - self._mean) / self._std
+        with torch.no_grad(), torch.autocast("cuda", enabled=self.device.startswith("cuda")):
+            feats = self.model.encode_image(x).float()
+        return torch.nn.functional.normalize(feats, dim=-1)
+
     def embed_images(self, images: Sequence[Image.Image]) -> np.ndarray:
         torch = self._torch
         out: list[np.ndarray] = []

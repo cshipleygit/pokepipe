@@ -50,20 +50,30 @@ class CardIndex:
     def dim(self) -> int:
         return int(self._vectors.shape[1])
 
-    def search(self, queries: np.ndarray, top_k: int = 5) -> list[list[Match]]:
-        """Top-k cards for each query vector (queries must be L2-normalised)."""
-        q = torch.as_tensor(np.atleast_2d(queries).astype(np.float32), device=self.device)
+    def card_scores(self, queries: torch.Tensor) -> torch.Tensor:
+        """(Q, D) normalised queries → (Q, n_cards) best cosine score per card, on device.
+
+        Columns follow `self.unique_ids`. Used directly by detection to stay on the GPU.
+        """
+        q = queries.to(self.device, torch.float32)
         if q.shape[1] != self.dim:
             raise ValueError(f"query dim {q.shape[1]} != index dim {self.dim}")
         sims = q @ self._vectors.T  # (Q, N)
         per_card = torch.full((q.shape[0], len(self)), -torch.inf, device=self.device)
         per_card.scatter_reduce_(1, self._owner.expand_as(sims), sims, reduce="amax")
-        k = min(top_k, len(self))
-        scores, idx = per_card.topk(k, dim=1)
+        return per_card
+
+    def top_k(self, per_card: torch.Tensor, k: int = 5) -> list[list[Match]]:
+        scores, idx = per_card.topk(min(k, len(self)), dim=1)
         return [
             [Match(self.unique_ids[i], float(s)) for s, i in zip(row_s, row_i, strict=True)]
             for row_s, row_i in zip(scores.tolist(), idx.tolist(), strict=True)
         ]
+
+    def search(self, queries: np.ndarray, top_k: int = 5) -> list[list[Match]]:
+        """Top-k cards for each query vector (queries must be L2-normalised)."""
+        q = torch.as_tensor(np.atleast_2d(queries).astype(np.float32))
+        return self.top_k(self.card_scores(q), top_k)
 
     # --- persistence -------------------------------------------------------------
 

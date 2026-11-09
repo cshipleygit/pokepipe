@@ -18,7 +18,7 @@ reviewer as much as for function.
 | # | Package | Status | Purpose |
 |---|---------|--------|---------|
 | 1 | `cards/` | **built** | Fetch any set's checklist + images from pokemontcg.io, cache locally, build CLIP image embeddings, GPU nearest-neighbour index. |
-| 2 | `detection/` | todo | Sample frames, detect card-reveal moments, crop the card, match against the stage-1 index → pulls with confidence + timestamps. |
+| 2 | `detection/` | **built** | Sample frames, detect card-reveal moments, crop the card, match against the stage-1 index → pulls with confidence + timestamps. |
 | 3 | `review/` | todo | Small local web page to confirm/fix detected pulls before rendering. The only human-in-the-loop pause. |
 | 4 | `collection/` | todo | Local master-set progress per set, updated from confirmed pulls of each video. |
 | 5 | `narration/` | todo | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
@@ -78,6 +78,34 @@ The index supports **multiple vectors per card** (`card_ids` may repeat) so stag
 can add augmented views (crops, glare, perspective) without changing the format;
 search aggregates by max score per card.
 
+### Stage 2 design and calibration
+
+- `frames.py` decodes via an ffmpeg rawvideo pipe at 4 fps, longest side 960 px.
+- `matcher.py` scores a grid of 30 square crops per frame in one batched
+  `torchvision.ops.roi_align` call, so frames stay on the GPU. Crops are square because
+  OpenCLIP preprocessing centre-crops reference scans to the card's middle square.
+- `segment.py` turns per-frame votes into reveals (pure functions, unit-tested).
+  Defaults were calibrated on a third-party 10.6 min 1080p60 151 opening
+  (`--dump-frames` writes the per-frame data used):
+  genuine reveals peak at 0.75–0.89 cosine; sealed product, hands, card backs, energy
+  and code cards top out around 0.62–0.66. Hence frame vote ≥ 0.68 with ≥ 0.03 lead
+  over the runner-up, segment peak ≥ 0.72, ≥ 3 frames, 1 s gap bridging.
+- Result on that video: 114 pulls in 88 s on the RTX 3060; 113/114 correct when checked
+  by eye; the single false positive (a blurred Poliwhirl read as Kakuna) had the lowest
+  confidence of the run. Recall has not been measured (no complete ground-truth list).
+- Output: `data/videos/<slug>/pulls.json` (`detection/models.py:PullsFile`) plus
+  `thumbs/NNN_<card_id>.jpg` full-res crops for the review UI.
+
+Known limitations, to handle in later stages:
+- **Reverse holos** match the same card id as the regular print, so detection cannot
+  tell them apart. That matters for master-set tracking (stage 4); the review UI should
+  let the user mark a pull as reverse holo.
+- The same card shown twice (e.g. re-shown at the end) appears as two pulls. Review
+  decides whether it is a duplicate copy.
+- `confidence` is a hand-weighted heuristic. Fit it on confirmed labels from review.
+- The test video is someone else's YouTube upload: use it for development only and
+  never in rendered output.
+
 ## Commands
 
 ```bash
@@ -86,6 +114,7 @@ pokepipe cards sets --search "151"        # find a set id
 pokepipe cards fetch sv3pt5               # checklist + images → data/sets/sv3pt5
 pokepipe cards embed sv3pt5               # build GPU embeddings index
 pokepipe cards match sv3pt5 photo.jpg     # sanity-check: top-5 matches for an image
+pokepipe detect run video.mp4 --set sv3pt5 # → data/videos/<slug>/pulls.json + thumbs/
 pytest                                    # unit tests (no network, no GPU)
 pytest -m gpu                             # GPU/model tests
 ruff check src tests

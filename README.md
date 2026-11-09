@@ -11,7 +11,7 @@ See [CLAUDE.md](CLAUDE.md) for the full architecture and stage plan.
 | Stage | Status |
 |-------|--------|
 | 1. Card data + CLIP embeddings | ✅ |
-| 2. Pull detection | ⏳ |
+| 2. Pull detection | ✅ |
 | 3. Review UI | ⏳ |
 | 4. Collection tracking | ⏳ |
 | 5. Script + voice | ⏳ |
@@ -51,6 +51,19 @@ Design notes:
 - **Exact search:** a set is a few hundred cards, so brute-force cosine similarity on
   the GPU is exact and sub-millisecond. The index supports several vectors per card
   so later stages can add augmented views.
+
+## Stage 2: pull detection
+
+```bash
+pokepipe detect run opening.mp4 --set sv3pt5
+```
+
+Frames are sampled with ffmpeg at 4 fps. Each frame is scored as 30 square crops in a
+single batched GPU pass. Per-frame votes are then grouped into reveals with a
+calibrated score, a minimum lead over the runner-up card, and duration thresholds.
+On a 10.6-minute 1080p60 opening of 151 packs it ran in 88 s on an RTX 3060 and
+found 114 pulls. Checked by eye, 113 were correct, and the one wrong pull had the
+lowest confidence of the run.
 
 ## Tests
 

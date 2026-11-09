@@ -42,3 +42,4 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["B008"]  # typer.Option(...) defaults are the idiomatic typer API
