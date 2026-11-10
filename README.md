@@ -1,153 +1,189 @@
 # pokepipe
 
-Local Python pipeline that turns raw Pokémon card-opening videos into edited
-vertical TikTok shorts — card recognition on a local GPU, a human review step,
-master-set tracking, LLM narration + TTS, and ffmpeg rendering.
+[![CI](https://github.com/cshipleygit/pokepipe/actions/workflows/ci.yml/badge.svg)](https://github.com/cshipleygit/pokepipe/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
 
-See [CLAUDE.md](CLAUDE.md) for the full architecture and stage plan.
+**Turn a raw Pokémon TCG pack-opening video into narrated, edited vertical shorts,
+locally, for under $1 per video.**
 
-## Status
+pokepipe watches the footage, recognises every card on a local GPU, lets you confirm
+the results in a small review page, tracks your master-set progress, writes and voices
+a script grounded in what you actually pulled, and renders 1080×1920 posts whose edit
+is paced by the narration.
 
-| Stage | Status |
-|-------|--------|
-| 1. Card data + CLIP embeddings | ✅ |
-| 2. Pull detection | ✅ |
-| 3. Review UI | ✅ |
-| 4. Collection tracking | ✅ |
-| 5. Script + voice | ✅ |
-| 6. Render | ✅ |
-| 7. Watch folder | ⏳ |
+<!-- Demo: add a GIF/MP4 here rendered from your own footage, e.g. docs/demo.gif -->
 
-## Setup (Windows, NVIDIA GPU)
+## How it works
 
-Requires Python 3.12, ffmpeg on PATH, and an NVIDIA driver.
+```mermaid
+flowchart LR
+    V[opening.mp4] --> D["2 · Detect<br/>CLIP on GPU"]
+    C["1 · Card data<br/>pokemontcg.io + embeddings"] --> D
+    D -->|pulls.json| R["3 · Review<br/>local web page"]
+    R -->|review.json| K["4 · Collection<br/>master-set progress"]
+    K -->|collection.json| N["5 · Script + voice<br/>Claude + ElevenLabs"]
+    N -->|script + voice.json| E["6 · Render<br/>ffmpeg, NVENC"]
+    E --> P[post.mp4 ×N]
+```
+
+| Stage | What it does |
+|---|---|
+| **1 · Card data** | Fetches any set's checklist and hi-res scans, and builds a CLIP embedding index on the GPU. |
+| **2 · Detect** | Samples frames, scores a grid of card-shaped crops per frame in one batched GPU pass, groups confident votes into reveals and reveals into packs, and infers reverse holos from pack slot order. |
+| **3 · Review** | Local page (FastAPI, vanilla JS) to keep, reject or correct each pull, with the video jumping to every card. The only manual step. |
+| **4 · Collection** | Master-set tracking (every printing), marking which pulls are new and the progress after each pack. |
+| **5 · Script + voice** | You choose which packs form each post. Claude writes a script from computed facts only, and ElevenLabs voices it with per-word timings. |
+| **6 · Render** | Vertical cuts with speed ramps, zooms on hits, word-by-word captions, a master-set counter and rarity labels, with each spoken line synced to its card. |
+
+## Results
+
+Measured on one 10.6-minute 1080p60 opening of 12 packs of *151* (120 cards):
+
+| | |
+|---|---|
+| Cards found | **120 / 120** (12 packs × 10), 0 false positives |
+| Detection time | **89 s** on an RTX 3060 |
+| Reverse holos inferred from pack order | 22, verified against the pack layout |
+| 45-second post | rendered in **39 s**, all 9 voice lines within 0.1 s of their card |
+| API cost | about **$0.20 per 45 s post** (script ≈ $0.04, voice ≈ $0.16) |
+
+*One video is not a benchmark. Thresholds were calibrated on this footage, and other
+cameras and lighting may need recalibrating (see [Limitations](#limitations)).*
+
+## Engineering notes
+
+The decisions that mattered, each backed by a measurement:
+
+- **Match the whole card, not CLIP's centre crop.** OpenCLIP's default preprocessing
+  crops cards to their middle square, dropping the name bar and attack text. Squashing
+  the whole card (references and frame crops alike) took a synthetic benchmark from
+  87.9% to 92.8% top-1, and real-video recall from 114 to 120 cards.
+- **Batched GPU cropping.** Each frame becomes up to 30 candidate crops via a single
+  `torchvision.ops.roi_align` call, so frames never leave the GPU. Exact cosine search
+  over a few hundred cards needs no ANN library.
+- **Thresholds from data.** Per-frame scores were dumped and plotted. Genuine reveals
+  peak at 0.80–0.89 cosine, while sealed product, hands and code cards stay below 0.71.
+  The segmenter's thresholds sit in that gap.
+- **Domain knowledge beats pixels for reverse holos.** CLIP can't see a reverse-holo
+  pattern (same card, same art), but unshuffled packs follow a fixed slot order. A
+  conservative layout matcher marks slots 8–9 and refuses to guess on shuffled packs.
+- **OCR evaluated, not adopted (yet).** Reading the set code and number from the
+  card's corner got 97/120 right and ran 5× slower than CLIP. It's planned as a set
+  detector and tie-breaker rather than the main identifier.
+- **Grounded LLM output.** The script model (`claude-opus-5-5`, structured output via
+  Pydantic) sees only computed facts. Every line must anchor to a real pull id, so it
+  can't invent cards, and stage 6 can time each line to its reveal.
+- **Narration-driven pacing.** The edit is cut into regions at each card a line is
+  about. Quiet regions speed up, talky ones slow down (never below 1×), and the
+  scriptwriter is told each card's screen time in advance. That took a test post from
+  58 s with a 7 s freeze to 45.2 s with every line on its card.
+- **Cost guardrails.** Every paid call is logged, a pre-call budget check refuses to
+  exceed $1 per video, and TTS audio is cached by content hash so re-renders are free.
+- **Human-in-the-loop as data.** Detection output is never edited. Review decisions are
+  stored separately, so the pair forms labelled data for recalibration.
+
+## Quick start
+
+Requires Python 3.12, [ffmpeg](https://ffmpeg.org/) on `PATH` (with libass), and an
+NVIDIA GPU for detection. Tested on Windows 11 with an RTX 3060.
 
 ```bash
+git clone https://github.com/cshipleygit/pokepipe && cd pokepipe
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\activate                      # macOS/Linux: source .venv/bin/activate
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 pip install -e ".[dev]"
-copy .env.example .env   # optional API keys
+copy .env.example .env                      # then add your API keys
 ```
 
-## Stage 1: card data
+Keys: `ANTHROPIC_API_KEY` (script), `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`
+(voice). Detection, review and collection tracking need no keys.
+
+## Usage
 
 ```bash
-pokepipe cards sets --search "151"     # find a set id
-pokepipe cards fetch sv3pt5            # checklist + hi-res images → data/sets/sv3pt5
-pokepipe cards embed sv3pt5            # CLIP (ViT-B/32) embeddings on the GPU
-pokepipe cards match sv3pt5 card.jpg   # top-5 matches for a photo
-```
+# 1. Card data for the set you opened (once per set)
+pokepipe cards sets --search "151"
+pokepipe cards fetch sv3pt5 && pokepipe cards embed sv3pt5
 
-Design notes:
-
-- **Any set:** everything is keyed by the pokemontcg.io set id; the full checklist
-  (including secret rares) is paginated and sorted by collector number.
-- **Resilient fetching:** the free API returns intermittent 5xx errors, so requests
-  retry with exponential backoff; image downloads are concurrent, idempotent and
-  atomic (temp file + rename).
-- **Swappable model:** the index only depends on an `Embedder` protocol; tests use a
-  deterministic fake, production uses OpenCLIP in fp16 on CUDA.
-- **Exact search:** a set is a few hundred cards, so brute-force cosine similarity on
-  the GPU is exact and sub-millisecond. The index supports several vectors per card
-  so later stages can add augmented views.
-
-## Stage 2: pull detection
-
-```bash
+# 2. Detect pulls
 pokepipe detect run opening.mp4 --set sv3pt5
-```
 
-Frames are sampled with ffmpeg at 4 fps. Each frame is scored as a grid of
-card-shaped crops in a single batched GPU pass, against embeddings of the whole card
-(not CLIP's default centre crop, which loses the name bar). Per-frame votes are
-grouped into reveals using a calibrated score, a minimum lead over the runner-up
-card, and duration thresholds. Reveals are then grouped into **packs**, each with a
-clip window, so one opening can be split into several posts.
+# 3. Review in the browser (http://127.0.0.1:8765)
+pokepipe review serve
 
-**Reverse holos come from pack order.** Image matching can't tell a reverse holo from
-the regular print, but unshuffled packs follow a fixed order: 4 commons, 3 uncommons,
-2 reverse-holo slots, then the rare. A Common, Uncommon or Rare in slot 8 or 9 is
-therefore a reverse holo. This was verified on all 12 test packs and inferred 22
-reverse holos automatically. A pack that doesn't fit the order gets no guesses and is
-flagged for review.
-
-On a 10.6-minute 1080p60 opening of 12 packs of 151 (120 cards), it found
-**120/120 cards, 10 per pack, in 89 s** on an RTX 3060. Switching from centre-crop
-to whole-card matching recovered the 6 cards the first version missed.
-
-## Stage 3: review
-
-```bash
-pokepipe review serve      # opens http://127.0.0.1:8765
-```
-
-A local page for checking detections pack by pack. Each card's crop from the video
-sits next to its reference scan, and the player jumps to the moment it was shown.
-Keep, reject, change the card, mark reverse holo, or add a card detection missed.
-Keyboard shortcuts make a 120-card review quick. Decisions are saved to
-`review.json` beside the untouched `pulls.json`, so the two files together form
-labelled data for recalibrating detection. The server binds to localhost only.
-
-## Stage 4: collection tracking
-
-```bash
-pokepipe collection apply <video-slug>    # after the review is finished
+# 4. Update your collection
+pokepipe collection apply <video-slug>
 pokepipe collection status sv3pt5
-pokepipe collection missing sv3pt5 --variant reverse
+
+# 5. Plan posts, write and voice the scripts
+pokepipe narrate plan <video-slug> --posts "1-3, 9, 10-12" --seconds 45
+pokepipe narrate script <video-slug>
+pokepipe narrate voice <video-slug>
+
+# 6. Render
+pokepipe render post <video-slug>          # → data/videos/<slug>/posts/<n>/post.mp4
 ```
 
-Tracks master-set progress for any set. Which printings each card comes in (normal,
-holo, reverse holo) comes from the API data rather than hard-coded rules. Every
-applied video is stored as a separate contribution, so re-applying a re-reviewed
-video never double-counts and any video can be removed. Each video gets a
-`collection.json` marking which pulls are new and the progress after each pack,
-which is the number shown on that pack's post. Trial runs go in a separate named
-collection (`--name test`).
+Every stage reads and writes JSON under `data/`, so any step can be re-run or
+inspected on its own. Run `pokepipe <stage> --help` for all options.
 
-## Stage 5: script and voice
+**Make it yours:** edit [`config/style.md`](config/style.md) (the narration style
+guide), choose a voice with `pokepipe narrate voices`, and optionally drop a branded
+intro at `config/intro.mp4`.
 
-```bash
-pokepipe narrate plan <slug> --posts "1-3, 9, 10-12"   # which packs go in each post
-pokepipe narrate script <slug>                          # Claude writes the voiceover
-pokepipe narrate voice <slug>                           # ElevenLabs reads it
+## Project layout
+
+```
+src/pokepipe/
+  cards/        stage 1  API client, cache, CLIP embedder, GPU index
+  detection/    stage 2  frame sampler, GPU matcher, segmenter, packs, slot layouts
+  review/       stage 3  FastAPI app, edit rules, static UI
+  collection/   stage 4  master-set model, per-video contributions
+  narration/    stage 5  post planning, Claude scripts, ElevenLabs voice, budget
+  render/       stage 6  edit timeline, pacing solver, ASS captions, ffmpeg
+tests/          pytest; APIs mocked, no GPU needed except tests marked `gpu`
+config/         style guide (and optional intro clip)
 ```
 
-- **Choose the posts.** You decide which packs go into each TikTok post.
-- **Grounded scripts.** Claude (`claude-opus-5-5`, structured output) writes each
-  post's script from the facts only: the pulls, which ones are new, and master-set
-  progress. It follows your style guide in `config/style.md`. Every line points at a
-  specific pull, so it can't invent a card and the line can be timed to that reveal.
-- **Voice with timing.** ElevenLabs returns timings for every character, which are
-  turned into timings per line and per word for captions.
-- **Cost control.** Audio is cached, so re-runs are free. Every paid call is logged,
-  and a check before each call keeps a video under the $1 budget.
+Design notes for each stage, with calibration data, are in [CLAUDE.md](CLAUDE.md).
 
-## Stage 6: render
+## Testing
 
 ```bash
-pokepipe narrate plan <slug> --posts "1-3" --seconds 45
-pokepipe narrate script <slug> -p 1 && pokepipe narrate voice <slug> -p 1
-pokepipe render post <slug> -p 1          # → posts/1/post.mp4, 1080x1920
-```
-
-**The narration drives the edit.** Each voice line starts when its card appears.
-Stretches with nothing to say are sped up (up to 4× for commons, faster for gaps).
-Hits play in real time with a punch-in zoom. The pacing is solved per region so the
-post lands on its target length. The script writer is also told how long each card
-is on screen, so the words fit the footage.
-
-**Overlays:** word-by-word captions, the hook caption, rarity labels on big hits, and
-a master-set counter that ticks up after each pack. They're burned in from an ASS
-subtitle file. Rendering is two ffmpeg passes on the GPU (NVENC).
-
-On packs 1–3 of the test video: a 45.2 s post with all 9 lines in sync, rendered in
-39 s.
-
-## Tests
-
-```bash
-pytest          # fast unit tests — no network, no GPU
-pytest -m gpu   # real CLIP model on CUDA
+pytest            # ~100 tests: no network, no GPU (one renders a tiny clip with ffmpeg)
+pytest -m gpu     # real CLIP model on CUDA
 ruff check src tests
 ```
+
+CI runs the CPU suite and lint on every push.
+
+## Limitations
+
+- **Calibrated on one video.** Detection thresholds come from a single opening, so
+  check results on your own footage first.
+- **Pack layouts:** only the Scarlet & Violet slot order is defined, verified on
+  *151*. Shuffled packs get no reverse-holo guesses (review handles them).
+- **Gold energy:** each pack's ordinary basic Energy is filtered out, so a gold Energy
+  hyper rare must be added by hand in review.
+- **Detection needs an NVIDIA GPU.** It can run on CPU, but slowly.
+
+## Roadmap
+
+- Watch folder: drop a video in and it runs end to end, pausing only for review.
+- Creator profiles (style guide, voice, intro, collection per creator).
+- Set auto-detection and tie-breaking from the card's corner text (OCR).
+- Optional source audio (pack-rip sounds) under the narration.
+
+## Disclaimer
+
+pokepipe is an unofficial fan project. It is not affiliated with, endorsed by or
+sponsored by Nintendo, The Pokémon Company, Creatures or GAME FREAK. Pokémon and card
+names are trademarks of their respective owners. Card data and images come from the
+[Pokémon TCG API](https://pokemontcg.io) and are cached locally, never redistributed by
+this repository. Only render footage you own or have rights to.
+
+## License
+
+[MIT](LICENSE) © 2026 Chance Shipley

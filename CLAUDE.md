@@ -21,7 +21,7 @@ reviewer as much as for function.
 | 2 | `detection/` | **built** | Sample frames, detect card-reveal moments, crop the card, match against the stage-1 index → pulls with confidence + timestamps. |
 | 3 | `review/` | **built** | Small local web page to confirm/fix detected pulls before rendering. The only human-in-the-loop pause. |
 | 4 | `collection/` | **built** | Local master-set progress per set, updated from confirmed pulls of each video. |
-| 5 | `narration/` | **built** (live run needs API keys) | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
+| 5 | `narration/` | **built** | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
 | 6 | `render/` | **built** | ffmpeg: one vertical post per pack group, narration-driven speed ramps, zoom on hits, optional reusable intro, word captions, master-set progress overlay. |
 | 7 | `watch/` | todo | Watch folder: drop a video in → run stages 2→7, pausing only at review. |
 
@@ -31,14 +31,17 @@ before starting the next.
 ## Data flow
 
 ```
-video.mp4 ─► detection ──pulls.json──► review (human) ──confirmed.json──► collection
-                ▲                                              │
-     cards index (stage 1)                                     ▼
-                                                 narration (script.txt, voice.mp3)
-                                                               │
-                                                               ▼
-                                                    render ─► short_01..06.mp4
+video.mp4 ─► detection ──pulls.json──► review (human) ──review.json──► collection
+                ▲                                                       │
+     cards index (stage 1)                                    collection.json
+                                                                        ▼
+                         narration: posts.json → posts/<n>/script.json, voice.mp3/.json
+                                                                        │
+                                                                        ▼
+                                              render ─► posts/<n>/post.mp4 (1080×1920)
 ```
+
+All per-video files live in `data/videos/<slug>/`.
 
 Stages communicate through **JSON files on disk** validated by Pydantic models,
 so any stage can be re-run in isolation and inspected by hand.
@@ -116,8 +119,8 @@ Known limitations, to handle in later stages:
 - The same card shown twice (e.g. re-shown at the end) appears as two pulls. Review
   decides whether it is a duplicate copy.
 - `confidence` is a hand-weighted heuristic. Fit it on confirmed labels from review.
-- The test video is someone else's YouTube upload: use it for development only and
-  never in rendered output.
+- Calibration footage may be third-party: use it for development only, and never
+  commit or publish renders made from footage the user doesn't own.
 
 ### Pack layouts → automatic reverse holos (`detection/layout.py`)
 
@@ -268,8 +271,7 @@ Known limitations:
   (atrim + adelay + amix). An optional `config/intro.mp4` is prepended.
   `edit.json` records every decision.
 - Result on packs 1–3 of the test video: 45.2 s, 41 shots, rendered in 39 s on the
-  RTX 3060. Total API spend for this test video so far: $0.46 (several script and
-  voice iterations).
+  RTX 3060. A clean run of one 45 s post costs about $0.20 (script + voice).
 - To tune next: bigger counter/badge (the badge overlaps the card name), optional
   source audio (pack-rip sounds), and motion blur on commons at ~3.6×.
 
@@ -318,5 +320,7 @@ ruff check src tests
 
 - Stage 2: CLIP zero-shot on raw scans vs. adding augmented reference views vs.
   a light fine-tune — measure on real footage first.
-- Stage 5: model choice for narration (cheap Claude model is likely enough) and
-  ElevenLabs character budget per video to stay under $1.
+- Stage 5: narration uses `claude-opus-5-5` (≈ $0.04 per post). Revisit only if
+  cost matters, by measuring script quality against a cheaper model.
+- Creator profiles: per-creator style guide, voice, intro and collection, kept out
+  of the public repo (profile *system* in code, profile *contents* gitignored).
