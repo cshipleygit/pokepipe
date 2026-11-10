@@ -33,12 +33,21 @@ class PixelEmbedder(Protocol):
 
 @dataclass(frozen=True)
 class CropGrid:
-    """Crop boxes of a fixed aspect ratio (width / height). Box heights are fractions
-    of frame height; centres are fractions of frame width / height."""
+    """Crop boxes of a fixed aspect ratio (width / height). Box heights are fractions of
+    the frame's *short* side; centres are fractions of frame width / height.
+
+    Landscape and portrait footage frame a held card differently, so each has its own
+    sizes and positions (measured on real footage): in 16:9 landscape the card fills
+    ~0.9 of the height near the centre; in a vertical phone video it is ~0.6-0.7 of the
+    width tall, centred 30-55% across and about halfway down.
+    """
 
     heights: tuple[float, ...] = (0.65, 0.8, 0.95)
     centers_x: tuple[float, ...] = (0.3, 0.4, 0.5, 0.6, 0.7)
     centers_y: tuple[float, ...] = (0.45, 0.55)
+    portrait_heights: tuple[float, ...] = (0.5, 0.62, 0.75)
+    portrait_centers_x: tuple[float, ...] = (0.3, 0.42, 0.54, 0.66)
+    portrait_centers_y: tuple[float, ...] = (0.4, 0.5, 0.6)
     aspect: float = 63 / 88
 
     @classmethod
@@ -46,17 +55,23 @@ class CropGrid:
         """Defaults tuned for a card held up to the camera: whole-card boxes for
         full-card embeddings, smaller squares (the card's middle) for centre-crop ones."""
         if abs(aspect - 1.0) < 1e-6:
-            return cls(heights=(0.45, 0.6, 0.75), aspect=1.0)
+            return cls(heights=(0.45, 0.6, 0.75), portrait_heights=(0.35, 0.45, 0.55),
+                       aspect=1.0)
         return cls(aspect=aspect)
 
     def boxes(self, width: int, height: int) -> np.ndarray:
         """(K, 4) x1, y1, x2, y2 pixel boxes, shifted inward to stay inside the frame."""
+        portrait = height > width
+        heights = self.portrait_heights if portrait else self.heights
+        centers_x = self.portrait_centers_x if portrait else self.centers_x
+        centers_y = self.portrait_centers_y if portrait else self.centers_y
+        short = min(width, height)
         out = []
-        for frac in self.heights:
-            bh = min(frac * height, height, width / self.aspect)
+        for frac in heights:
+            bh = min(frac * short, height, width / self.aspect)
             bw = bh * self.aspect
-            for cx in self.centers_x:
-                for cy in self.centers_y:
+            for cx in centers_x:
+                for cy in centers_y:
                     x1 = float(np.clip(cx * width - bw / 2, 0, width - bw))
                     y1 = float(np.clip(cy * height - bh / 2, 0, height - bh))
                     out.append((x1, y1, x1 + bw, y1 + bh))

@@ -6,7 +6,7 @@ screen?" before writing, without importing the renderer.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from pokepipe.detection.models import PullsFile
 from pokepipe.narration.models import Post
@@ -26,9 +26,11 @@ def render_pulls(det: PullsFile, review: ReviewState, report) -> list[RenderPull
         for n, rp in enumerate(in_pack, 1):
             pid = f"p{pack}-{n}"
             fact = facts.get(pid)
+            showings: tuple = ()
             if rp.detected_index is not None:
                 d = det.pulls[rp.detected_index]
                 start, end, box = d.start, d.end, d.box
+                showings = tuple((s.start, s.end, s.box) for s in d.showings)
             else:  # added by hand in review: assume a short reveal around the given time
                 start, end, box = max(0.0, rp.time - 0.5), rp.time + 1.5, None
             out.append(
@@ -42,6 +44,7 @@ def render_pulls(det: PullsFile, review: ReviewState, report) -> list[RenderPull
                     src_start=start,
                     src_end=end,
                     box=box,
+                    showings=showings,
                 )
             )
     return out
@@ -61,6 +64,7 @@ class Airtime:
     per_card: dict[str, float]  # pull id -> seconds until the next card appears
     after_last: float
     duration: float
+    shown_again: dict[str, int] = field(default_factory=dict)  # pull id -> showcase shots
 
 
 def airtime(det: PullsFile, review: ReviewState, report, post: Post, target: float) -> Airtime:
@@ -71,9 +75,14 @@ def airtime(det: PullsFile, review: ReviewState, report, post: Post, target: flo
     for (pid, at), nxt in zip(order, order[1:] + [(None, edit.duration)], strict=True):
         per_card[pid] = round(nxt[1] - at, 1)
     first = order[0][1] if order else edit.duration
+    shown_again: dict[str, int] = {}
+    for s in edit.segments:
+        if s.showcase and s.kind != "zoom":  # a zoomed hit is one shot split in two
+            shown_again[s.pull_id] = shown_again.get(s.pull_id, 0) + 1
     return Airtime(
         before_first=round(first, 1),
         per_card=per_card,
         after_last=per_card.get(order[-1][0], 0.0) if order else 0.0,
         duration=edit.duration,
+        shown_again=shown_again,
     )

@@ -133,6 +133,45 @@ Known limitations, to handle in later stages:
 - Calibration footage may be third-party: use it for development only, and never
   commit or publish renders made from footage the user doesn't own.
 
+### Phone footage (first real creator video: Delta Reign ETB, 9 packs = 90 cards)
+
+Vertical iPhone, 4K60 HEVC 10-bit HDR (HLG), 16.4 min, 6.6 GB. Three fixes:
+- **Rotation:** phones store vertical video as landscape frames plus a display-matrix
+  flag. `probe` reports the displayed size and sampling rotates explicitly; before, the
+  picture was squashed into 16:9.
+- **Decode speed:** NVDEC decode, fps first, `scale_cuda` to 8-bit, rotate last: 0.9x →
+  6.6x real time (whole video about 4 min including CLIP). Falls back to the CPU.
+- **Vertical crop grid:** card height ≈ 0.6–0.7 of the frame width, so box sizes are
+  relative to the short side, with portrait-specific sizes and positions.
+
+**Repeat showings** (`detection/reshows.py`). The creator deliberately re-shows cards:
+hits held up again, a preview before a pack, an end recap.
+- A repeat is merged into the card's pull as `Pull.showings`, so it counts once in
+  review and the collection.
+- Render uses up to `max_showings` (2) as showcase shots: hits play at 1× with a zoom,
+  others sped up. A showing inside the pack plays in place; one from elsewhere is
+  spliced in after its pack.
+- Script facts carry `shown_again`. Pack grouping treats showings as activity, so
+  merging doesn't split a pack.
+- `pokepipe detect regroup <slug>` re-applies this without re-scanning.
+- Result: 104 detections in 14 groups → 88 pulls in 10 packs (9 real + a card shown
+  before the first pack), with 16 showings kept. Packs 2–8 are all 10/10.
+
+**Recall against ground truth (90):** 86 found. The 4 misses, all explained:
+- Enamorus Uncommon vs Enamorus IR: near-identical art, lead 0.007 < 0.03.
+- Nidoran♀: borderline, clear on a rescan of that window.
+- A second Tornadus: a reverse-holo copy in slot 8, wrongly merged as a repeat. A
+  reverse slot can hold a copy of a card already in the pack.
+
+Delta Reign also has split-art twins (Legendary Trench #98/#99) that look like one card
+read twice.
+
+Next improvements, ranked:
+1. Use the pack layout to settle near-ties (slot 5 must be an Uncommon, so Enamorus U).
+2. Don't merge an in-pack repeat when the pack is short and the repeat sits in a
+   reverse slot.
+3. Re-scan short packs' windows with a frame offset to catch borderline cards.
+
 ### Pack layouts → automatic reverse holos (`detection/layout.py`)
 
 Unshuffled packs reveal cards in print order. Verified on all 12 packs of the test
@@ -145,9 +184,13 @@ inferred, which moved the test master set from 93 to 100/360.
 - Conservative by design: only a pack whose rarities fit the layout gets guesses. A
   short pack aligns from the end (the rare is last, the reverse slots just before it).
   A shuffled or over-long pack gets no guesses and a `layout_note` shown in review.
-- The layout is chosen by series (`layout_for`). Only Scarlet & Violet is defined and
-  verified, on 151. Other sets in the series may differ (e.g. ACE SPEC or special slots),
-  so verify a new set's packs before trusting it, and add layouts per era as needed.
+- The layout (`MODERN`) is chosen by series (`layout_for`): Scarlet & Violet (verified
+  on 151) and Mega Evolution (verified on the readable packs of a Delta Reign ETB).
+  Slot 9 and the rare slot accept any special rarity via `cards/rarity.py`. Other eras
+  get no inference until verified.
+- Short packs: every order-preserving placement of the detected cards into the 10
+  slots is tried, and a slot or reverse guess is kept only if *all* fitting placements
+  agree. Ambiguity goes to review instead of a wrong guess.
 - Review starts with the guess filled in ("reverse holo · auto"); the reviewer can flip
   it. `pokepipe detect layout <slug>` re-runs inference without re-scanning, and
   `pokepipe review prefill <slug>` applies guesses to a review already in progress
@@ -322,6 +365,7 @@ pokepipe cards embed sv3pt5               # build GPU embeddings index
 pokepipe cards match sv3pt5 photo.jpg     # sanity-check: top-5 matches for an image
 pokepipe detect run video.mp4 --set sv3pt5 # → data/videos/<slug>/pulls.json + thumbs/
 pokepipe detect layout <slug>             # re-run pack-slot / reverse-holo inference
+pokepipe detect regroup <slug>            # merge repeat showings + regroup + layout
 pokepipe review serve                     # review page at http://127.0.0.1:8765
 pokepipe review prefill <slug>            # copy reverse guesses onto pending pulls
 pokepipe review status                    # progress per video

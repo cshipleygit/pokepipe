@@ -27,10 +27,19 @@ def group_packs(pulls: list[Pull], duration: float, params: PackParams | None = 
     """Assign `pull.pack` (1-based) in place and return the packs in order."""
     p = params or PackParams()
     groups: list[list[Pull]] = []
+    active_until = 0.0  # end of the latest card activity, including repeat showings
     for pull in sorted(pulls, key=lambda x: x.start):
-        if not groups or pull.start - groups[-1][-1].end > p.min_gap:
+        if not groups or pull.start - active_until > p.min_gap:
             groups.append([])
         groups[-1].append(pull)
+        # A card held up again before the next card keeps the pack "active": merged
+        # repeats must not open a gap that splits the pack. Showings after the next
+        # card (e.g. an end-of-video recap) are ignored here.
+        active_until = max(active_until, pull.end)
+        for s in pull.showings:
+            if s.start >= pull.start:
+                active_until = max(active_until, s.end) if s.start - active_until <= p.min_gap \
+                    else active_until
 
     packs = []
     for i, group in enumerate(groups):

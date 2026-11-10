@@ -122,6 +122,10 @@ function pullTile(p, i) {
   if (det && det.confidence < LOW_CONFIDENCE && p.status === "pending") badges.push(`<span class="badge low">check</span>`);
   if (det && p.card_id !== p.detected_card_id) badges.push(`<span class="badge fixed">was ${card(p.detected_card_id).name}</span>`);
   if (!det) badges.push(`<span class="badge added">added</span>`);
+  if (det && det.showings && det.showings.length) {
+    const times = det.showings.map((s) => fmt(s.peak_time)).join(", ");
+    badges.push(`<span class="badge rev" title="Shown again at ${times} — kept as footage for the edit">shown ${det.showings.length + 1}×</span>`);
+  }
   if (p.reverse_holo) {
     const auto = det && det.reverse_guess;
     badges.push(`<span class="badge rev" title="${auto ? `Inferred from pack order (slot ${det.slot})` : "Set by you"}">reverse holo${auto ? " · auto" : ""}</span>`);

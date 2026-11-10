@@ -49,12 +49,26 @@ def test_shuffled_pack_yields_no_guesses():
     assert summary(pulls) == [(None, False)] * 10
 
 
-def test_missing_card_aligns_from_the_end():
+def test_missing_card_infers_only_what_every_placement_agrees_on():
     pulls = pack(C, C, C, U, U, U, R, U, R)  # one common missed
     result = apply_layout(pulls, SCARLET_VIOLET)
-    assert result.mode == "tail" and "missing" in result.note
-    assert summary(pulls)[:6] == [(None, False)] * 6  # early slots stay unknown
+    assert result.mode == "partial" and "missing" in result.note
+    assert summary(pulls)[:3] == [(None, False)] * 3  # which common is missing: unknown
+    assert summary(pulls)[3:6] == [(5, False), (6, False), (7, False)]
     assert summary(pulls)[6:] == [(8, True), (9, True), (10, False)]
+
+
+def test_ambiguous_missing_slot_gives_no_reverse_guess():
+    # Real Delta Reign pack with one card missed: the 3rd U is either slot 7 (if slot 8
+    # was missed) or slot 8, a reverse holo (if an earlier card was missed). Don't guess.
+    pulls = pack(C, C, C, C, U, U, U, IR, R)
+    result = apply_layout(pulls, SCARLET_VIOLET)
+    assert result.mode == "partial" and result.reverse_ids == []
+    assert pulls[6].slot is None and not pulls[6].reverse_guess
+    # The Rare could be the rare slot (10) or a reverse-holo Rare in slot 9 if the
+    # rare-slot card was the one missed: also ambiguous, so also no guess.
+    assert (pulls[8].slot, pulls[8].reverse_guess) == (None, False)
+    assert [p.slot for p in pulls[:4]] == [1, 2, 3, 4]  # the commons are unambiguous
 
 
 def test_tail_that_does_not_fit_is_rejected():
@@ -75,7 +89,21 @@ def test_input_order_does_not_matter():
 
 
 @pytest.mark.parametrize("series,expected", [
-    ("Scarlet & Violet", "scarlet-violet"), ("Sword & Shield", None), (None, None)])
+    ("Scarlet & Violet", "modern"), ("Mega Evolution", "modern"),
+    ("Sword & Shield", None), (None, None)])
 def test_layout_for_series(series, expected):
     layout = layout_for(series)
     assert (layout.name if layout else None) == expected
+
+
+def test_delta_reign_packs_fit_including_new_rarities():
+    # Real Delta Reign packs: Raikou ex (DR) in the rare slot, Kecleon IR in slot 9,
+    # and a Mega Hyper Rare (new in this era) must also fit the rare slot.
+    raikou = pack(C, C, C, C, U, U, U, C, R, "Double Rare")
+    assert apply_layout(raikou, SCARLET_VIOLET).mode == "full"
+    assert [p.reverse_guess for p in raikou[7:]] == [True, True, False]  # Kommo-o R = reverse
+    kecleon = pack(C, C, C, C, U, U, U, C, IR, R)
+    apply_layout(kecleon, SCARLET_VIOLET)
+    assert [p.reverse_guess for p in kecleon[7:]] == [True, False, False]
+    mega = pack(C, C, C, C, U, U, U, C, U, "Mega Hyper Rare")
+    assert apply_layout(mega, SCARLET_VIOLET).mode == "full"

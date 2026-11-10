@@ -15,7 +15,8 @@ from pokepipe.detection.frames import probe, require_tool, sample_frames, scaled
 from pokepipe.detection.layout import PackLayout, apply_layout, layout_for
 from pokepipe.detection.matcher import CropGrid, FrameMatcher, FrameResult, PixelEmbedder
 from pokepipe.detection.models import Alternative, DetectionParams, Pack, Pull, PullsFile
-from pokepipe.detection.packs import PackParams, group_packs
+from pokepipe.detection.packs import PackParams
+from pokepipe.detection.reshows import merge_reshows
 from pokepipe.detection.segment import SegmentParams, confidence, segment
 
 
@@ -116,7 +117,8 @@ def detect_pulls(
     cache = SetCache(sets_root, set_id)
     cards = {c.id: c for c in cache.load_cards()}
     pulls = build_pulls(results, cards, size, params)
-    packs = group_packs(pulls, info.duration, pack_params)
+    # Repeat showings of a card count once; their footage is kept on the pull.
+    pulls, packs = merge_reshows(pulls, info.duration, pack_params)
     layout = infer_slots(pulls, packs, layout_for(cache.load_set().series))
     if thumbnails:
         for i, pull in enumerate(pulls, 1):

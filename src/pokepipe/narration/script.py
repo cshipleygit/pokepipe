@@ -117,6 +117,9 @@ def build_prompt(
     if airtime is not None:
         for pull in pulls:
             pull["seconds_on_screen"] = airtime.per_card.get(pull["id"])
+            shown = getattr(airtime, "shown_again", {}).get(pull["id"], 0)
+            if shown:
+                pull["shown_again"] = shown  # the creator deliberately shows it off again
     facts = {
         "set": report.set_name,
         "post": f"{post.index} of {total_posts}",
@@ -141,7 +144,9 @@ def build_prompt(
             "keep it within that card's seconds_on_screen, plus the seconds of any "
             "following cards you don't mention. After the last card there are only "
             "seconds_after_last_card of footage, so everything said after the last card "
-            "appears (including the outro) must fit in that."
+            "appears (including the outro) must fit in that. A card with shown_again is "
+            "held up again on purpose later in the video; it is still one card, and "
+            "its seconds_on_screen already include that extra footage."
         )
     user = (
         "Write the voiceover for this post.\n\n"

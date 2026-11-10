@@ -59,6 +59,43 @@ def print_summary(result: PullsFile, verbose: bool = False) -> None:
         console.print(detail)
 
 
+def _reprocess(slug: str, regroup: bool, verbose: bool) -> None:
+    """Re-run post-processing on an existing pulls.json without re-scanning the video."""
+    from pokepipe.cards.cache import SetCache
+    from pokepipe.detection.layout import layout_for
+    from pokepipe.detection.reshows import merge_reshows
+
+    s = get_settings()
+    vdir = s.data_dir / "videos" / slug
+    path = vdir / "pulls.json"
+    if not path.exists():
+        console.print(f"[red]no pulls.json for {slug!r}[/]")
+        raise typer.Exit(1)
+    if regroup and (vdir / "review.json").exists():
+        # review.json refers to pulls by position; regrouping would scramble it.
+        console.print("[red]this video has a review in progress — regrouping would invalidate "
+                      "it. Delete review.json first if you want to start the review over.[/]")
+        raise typer.Exit(1)
+    result = PullsFile.model_validate_json(path.read_text(encoding="utf-8"))
+    before = len(result.pulls), len(result.packs)
+    for p in result.pulls:
+        p.slot, p.reverse_guess = None, False
+    if regroup:
+        result.pulls, result.packs = merge_reshows(result.pulls, result.duration)
+    series = SetCache(s.sets_dir, result.set_id).load_set().series
+    chosen = service.infer_slots(result.pulls, result.packs, layout_for(series))
+    result.pack_layout = chosen.name if chosen else None
+    path.write_text(result.model_dump_json(indent=2), encoding="utf-8")
+    print_summary(result, verbose)
+    if regroup:
+        shows = sum(len(p.showings) for p in result.pulls)
+        console.print(f"Merged repeats: {before[0]} detections in {before[1]} groups → "
+                      f"{len(result.pulls)} pulls in {len(result.packs)} packs "
+                      f"({shows} repeat showings kept as footage)")
+    n = sum(p.reverse_guess for p in result.pulls)
+    console.print(f"Layout {result.pack_layout or 'none'}: {n} reverse holos inferred → {path}")
+
+
 @app.command()
 def layout(
     slug: str,
@@ -66,24 +103,17 @@ def layout(
 ):
     """Re-apply pack-layout inference (slots, reverse holos) to an existing pulls.json,
     without re-scanning the video."""
-    from pokepipe.cards.cache import SetCache
-    from pokepipe.detection.layout import layout_for
+    _reprocess(slug, regroup=False, verbose=verbose)
 
-    s = get_settings()
-    path = s.data_dir / "videos" / slug / "pulls.json"
-    if not path.exists():
-        console.print(f"[red]no pulls.json for {slug!r}[/]")
-        raise typer.Exit(1)
-    result = PullsFile.model_validate_json(path.read_text(encoding="utf-8"))
-    for p in result.pulls:
-        p.slot, p.reverse_guess = None, False
-    series = SetCache(s.sets_dir, result.set_id).load_set().series
-    chosen = service.infer_slots(result.pulls, result.packs, layout_for(series))
-    result.pack_layout = chosen.name if chosen else None
-    path.write_text(result.model_dump_json(indent=2), encoding="utf-8")
-    print_summary(result, verbose)
-    n = sum(p.reverse_guess for p in result.pulls)
-    console.print(f"Layout {result.pack_layout or 'none'}: {n} reverse holos inferred → {path}")
+
+@app.command()
+def regroup(
+    slug: str,
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="List every pull"),
+):
+    """Merge repeat showings into single pulls (keeping their footage), regroup packs and
+    re-infer reverse holos — on an existing pulls.json, without re-scanning."""
+    _reprocess(slug, regroup=True, verbose=verbose)
 
 
 def _top_rarity(pulls: list) -> str:

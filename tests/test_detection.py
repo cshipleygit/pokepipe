@@ -215,6 +215,57 @@ def test_sample_frames_from_generated_video(tmp_path):
     assert frames[3].time == pytest.approx(0.6)
 
 
+@pytest.mark.skipif(not shutil.which("ffmpeg"), reason="ffmpeg not on PATH")
+def test_rotated_phone_video_is_sampled_upright(tmp_path):
+    """Phones store vertical video as landscape frames + a rotation flag. Frames must
+    come out vertical, not squashed into the stored landscape shape."""
+    plain, rotated = tmp_path / "plain.mp4", tmp_path / "rotated.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i",
+                    "testsrc=size=640x360:rate=30:duration=1", "-pix_fmt", "yuv420p",
+                    str(plain)], check=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-display_rotation", "-90", "-i", str(plain),
+                    "-c", "copy", str(rotated)], check=True)
+    from pokepipe.detection.frames import probe
+
+    info = probe(rotated)
+    assert (info.width, info.height, info.rotation) == (360, 640, 90)
+    assert info.coded_size == (640, 360)
+    frames = list(sample_frames(rotated, fps=5, max_side=320))
+    assert frames[0].rgb.shape == (320, 180, 3)  # upright: taller than wide
+
+
+def test_rotation_flag_parsing():
+    from pokepipe.detection.frames import rotation_of
+
+    assert rotation_of({"side_data_list": [{"rotation": -90}]}) == 90  # iPhone display matrix
+    assert rotation_of({"side_data_list": [{"rotation": 90}]}) == 270
+    assert rotation_of({"tags": {"rotate": "180"}}) == 180  # legacy tag
+    assert rotation_of({}) == 0
+
+
+def test_sampling_tries_gpu_first_then_cpu_and_rotates_after_scaling():
+    from pathlib import Path
+
+    from pokepipe.detection.frames import VideoInfo, sample_cmds
+
+    info = VideoInfo(2160, 3840, 10, 60, rotation=90)
+    gpu, cpu = sample_cmds(Path("v.mov"), info, 4, (540, 960))
+    gpu_vf, cpu_vf = gpu[gpu.index("-vf") + 1], cpu[cpu.index("-vf") + 1]
+    assert "cuda" in gpu and "scale_cuda=960:540" in gpu_vf  # scale the stored (landscape) frame
+    assert cpu_vf == "fps=4,scale=960:540,transpose=clock"  # then rotate upright
+    assert "-noautorotate" in cpu and gpu_vf.endswith("transpose=clock")
+
+
+def test_portrait_frames_use_portrait_box_sizes():
+    grid = CropGrid()
+    boxes = grid.boxes(540, 960)
+    heights = sorted({round(float(y2 - y1)) for _, y1, _, y2 in boxes})
+    assert heights == [270, 335, 405]  # 0.5 / 0.62 / 0.75 of the 540 px short side
+    assert boxes[:, 2].max() <= 540 and boxes[:, 3].max() <= 960
+    landscape = {round(float(y2 - y1)) for _, y1, _, y2 in grid.boxes(960, 540)}
+    assert landscape == {351, 432, 513}  # unchanged for 16:9 footage
+
+
 def test_scaled_size_keeps_even_dims():
     from pokepipe.detection.frames import VideoInfo
 

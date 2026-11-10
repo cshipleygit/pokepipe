@@ -10,6 +10,18 @@ class Alternative(BaseModel):
     score: float
 
 
+class Showing(BaseModel):
+    """A later (or earlier) appearance of the same physical card — a deliberate re-show,
+    a preview, or an end-of-video recap. Counted once as a pull, kept as footage."""
+
+    start: float
+    end: float
+    peak_time: float
+    peak_score: float
+    box: tuple[float, float, float, float]
+    frames: int
+
+
 class Pull(BaseModel):
     card_id: str
     name: str
@@ -28,6 +40,9 @@ class Pull(BaseModel):
     pack: int | None = Field(None, description="1-based pack this pull belongs to")
     slot: int | None = Field(None, description="1-based position in the pack layout")
     reverse_guess: bool = Field(False, description="in a reverse-holo slot (see layout.py)")
+    showings: list[Showing] = Field(
+        default_factory=list, description="repeat appearances of this same card (footage)"
+    )
 
 
 class Pack(BaseModel):

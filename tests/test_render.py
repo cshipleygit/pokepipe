@@ -182,6 +182,34 @@ def test_narration_drives_pacing_and_keeps_lines_on_their_cards():
     assert max(talky) < min(quiet)  # region after Charizard slows down for the long line
 
 
+def test_repeat_showings_become_showcase_shots():
+    from dataclasses import replace
+
+    sir = next(x for x in PULLS if x.id == "p1-3")  # Charizard, revealed at 20 s
+    shown = replace(sir, showings=(
+        (8.0, 9.0, BOX),     # a preview inside the window, before its reveal
+        (25.0, 26.0, BOX),   # held up again inside the window
+        (90.0, 91.0, BOX),   # an end recap, outside the pack's window
+        (95.0, 96.0, BOX),   # beyond the cap of 2 showings
+    ))
+    pulls = [x for x in PULLS if x.id != "p1-3"] + [shown]
+    segs = build_segments([PACK], pulls, EditParams())
+    showcases = [s for s in segs if s.showcase]
+    assert [(round(s.src_start, 1), s.kind) for s in showcases] == [(7.7, "hit"), (24.7, "hit")]
+    assert segs[-1].pack == 1 and not segs[-1].showcase  # cap: the 90 s recap isn't used
+
+    # with a higher cap the recap is spliced in after the pack
+    segs = build_segments([PACK], pulls, EditParams(max_showings=3))
+    assert segs[-1].showcase and segs[-1].src_start == pytest.approx(89.7)
+
+    # voice sync and the pack counter key off the reveal, never a preview showing
+    lines = [VoiceLine("p1-3", "Charizard!", 0.0, 1.0)]
+    edit = plan_edit([PACK], pulls, lines, SRC, EditParams(target=20.0))
+    reveal = next(s for s in edit.segments if s.pull_id == "p1-3" and not s.showcase)
+    assert edit.reveal_at["p1-3"] >= reveal.out_start
+    assert edit.lines[0].out_start == edit.reveal_at["p1-3"]
+
+
 def test_backwards_mention_follows_on_instead_of_jumping():
     lines = [
         VoiceLine("p1-3", "Charizard", 0.0, 1.0),

@@ -31,6 +31,8 @@ class RenderPull:
     src_start: float
     src_end: float
     box: tuple[float, float, float, float] | None  # 0-1 of source frame, None if unknown
+    # Repeat appearances of this same card (start, end, box): showcase footage.
+    showings: tuple[tuple[float, float, tuple[float, float, float, float] | None], ...] = ()
 
     @property
     def hit(self) -> bool:
@@ -64,6 +66,8 @@ class Segment:
     crop: tuple[int, int, int, int] = (0, 0, 0, 0)  # w, h, x, y in source pixels
     hold: float = 0.0  # seconds to freeze the last frame (only the final segment)
     out_start: float = 0.0
+    showcase: bool = False  # a repeat showing of an already-revealed card
+    box: tuple[float, float, float, float] | None = None  # card box, if not the pull's
 
     @property
     def src_len(self) -> float:
@@ -95,9 +99,40 @@ class EditParams:
     zoom_margin: float = 1.35  # zoomed crop height = card height × this
     beat_gap: float = 0.12  # silence between voice lines
     tail: float = 0.6  # silence after the last line
+    max_showings: int = 2  # repeat showings used per card (showcase shots)
 
 
 # --- building ------------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class _Event:
+    """A card on screen: its first reveal, or a repeat showing (showcase)."""
+
+    start: float
+    end: float
+    pull: RenderPull
+    showcase: bool
+    box: tuple[float, float, float, float] | None
+
+
+def _pack_events(pack: PackWindow, pulls: list[RenderPull], p: EditParams):
+    """(events inside the pack's clip window, showcase events from elsewhere)."""
+    inside, outside = [], []
+    for pull in (x for x in pulls if x.pack == pack.index):
+        inside.append(_Event(pull.src_start, pull.src_end, pull, False, pull.box))
+        for start, end, box in pull.showings[: p.max_showings]:
+            event = _Event(start, end, pull, True, box)
+            in_window = pack.clip_start <= start < pack.clip_end
+            (inside if in_window else outside).append(event)
+    key = lambda e: e.start  # noqa: E731
+    return sorted(inside, key=key), sorted(outside, key=key)
+
+
+def _shot(event: _Event, start: float, end: float, p: EditParams) -> tuple[float, float]:
+    if event.pull.hit:  # real-time moment on the card, but not the whole time it's held up
+        end = min(max(end, start + p.min_hit), start + p.max_hit)
+    return start, end
 
 
 def build_segments(
@@ -105,14 +140,12 @@ def build_segments(
 ) -> list[Segment]:
     segments: list[Segment] = []
     for pack in sorted(packs, key=lambda w: w.index):
-        reveals = sorted((x for x in pulls if x.pack == pack.index), key=lambda x: x.src_start)
+        events, elsewhere = _pack_events(pack, pulls, p)
         cursor = pack.clip_start
-        for i, pull in enumerate(reveals):
-            next_start = reveals[i + 1].src_start if i + 1 < len(reveals) else pack.clip_end
-            start = max(cursor, pull.src_start - p.reveal_lead)
-            end = pull.src_end + p.reveal_tail
-            if pull.hit:  # real-time moment on the card, but not the whole time it's held up
-                end = min(max(end, start + p.min_hit), start + p.max_hit)
+        for i, ev in enumerate(events):
+            next_start = events[i + 1].start if i + 1 < len(events) else pack.clip_end
+            start, end = _shot(ev, max(cursor, ev.start - p.reveal_lead),
+                               ev.end + p.reveal_tail, p)
             end = min(end, max(next_start - p.reveal_lead, start + 0.5), pack.clip_end)
             last = segments[-1] if segments and segments[-1].pack == pack.index else None
             if last and last.kind != "gap" and start - cursor < p.min_gap:
@@ -120,12 +153,21 @@ def build_segments(
             elif start > cursor + 0.05:
                 segments.append(Segment(cursor, start, "gap", pack.index))
             if end > start:
-                segments.append(
-                    Segment(start, end, "hit" if pull.hit else "reveal", pack.index, pull.id)
-                )
+                segments.append(Segment(
+                    start, end, "hit" if ev.pull.hit else "reveal", pack.index, ev.pull.id,
+                    showcase=ev.showcase, box=ev.box,
+                ))
                 cursor = end
         if pack.clip_end > cursor + 0.05:
             segments.append(Segment(cursor, pack.clip_end, "gap", pack.index))
+        # Repeat showings from elsewhere in the video (e.g. an end recap) are spliced in
+        # right after their pack.
+        for ev in elsewhere:
+            start, end = _shot(ev, max(0.0, ev.start - p.reveal_lead), ev.end + p.reveal_tail, p)
+            segments.append(Segment(
+                start, end, "hit" if ev.pull.hit else "reveal", pack.index, ev.pull.id,
+                showcase=True, box=ev.box,
+            ))
     return segments
 
 
@@ -160,11 +202,15 @@ def frame_segments(
     base_h = src_h
     base_w = min(src_w, round(base_h * OUT_W / OUT_H))
 
+    def box_of(s: Segment):
+        return s.box or (pulls[s.pull_id].box if s.pull_id else None)
+
     def centre(seg_index: int) -> tuple[float, float]:
         # Frame on this segment's card, else the next card (so gaps lead into it).
         for s in segments[seg_index:]:
-            if s.pull_id and pulls[s.pull_id].box:
-                x1, y1, x2, y2 = pulls[s.pull_id].box
+            box = box_of(s)
+            if box:
+                x1, y1, x2, y2 = box
                 return (x1 + x2) / 2 * src_w, (y1 + y2) / 2 * src_h
         return src_w / 2, src_h / 2
 
@@ -178,27 +224,20 @@ def frame_segments(
     for i, seg in enumerate(segments):
         cx, cy = centre(i)
         seg.crop = rect(cx, src_h / 2, base_w, base_h)
-        pull = pulls.get(seg.pull_id) if seg.pull_id else None
-        if seg.kind != "hit" or not (pull and pull.box):
+        box = box_of(seg)
+        if seg.kind != "hit" or not box:
             out.append(seg)
             continue
-        x1, y1, x2, y2 = pull.box
+        x1, y1, x2, y2 = box
         card_h = (x2 - x1) * src_w / CARD_ASPECT  # boxes may be square; derive from width
         zh = max(card_h * p.zoom_margin, base_h * 0.45)
         zw = zh * OUT_W / OUT_H
         split = seg.src_start + min(p.punch_in, seg.src_len / 2)
-        out.append(Segment(seg.src_start, split, "hit", seg.pack, seg.pull_id, 1.0, seg.crop))
-        out.append(
-            Segment(
-                split,
-                seg.src_end,
-                "zoom",
-                seg.pack,
-                seg.pull_id,
-                1.0,
-                rect(cx, cy, round(zw), round(zh)),
-            )
-        )
+        common = dict(pack=seg.pack, pull_id=seg.pull_id, speed=1.0,
+                      showcase=seg.showcase, box=seg.box)
+        out.append(Segment(seg.src_start, split, "hit", crop=seg.crop, **common))
+        out.append(Segment(split, seg.src_end, "zoom",
+                           crop=rect(cx, cy, round(zw), round(zh)), **common))
     return out
 
 
@@ -215,10 +254,11 @@ def place_out_times(segments: list[Segment], offset: float = 0.0) -> float:
 
 
 def reveal_times(segments: list[Segment], pulls: dict[str, RenderPull]) -> dict[str, float]:
-    """Output time at which each card is first recognisable on screen."""
+    """Output time at which each card is first recognisable on screen (its reveal, not a
+    showcase, even if a preview showing comes earlier)."""
     times: dict[str, float] = {}
     for s in segments:
-        if s.pull_id and s.pull_id not in times:
+        if s.pull_id and not s.showcase and s.pull_id not in times:
             pull = pulls[s.pull_id]
             at = max(pull.src_start, s.src_start)
             times[s.pull_id] = round(s.out_start + (at - s.src_start) / s.speed, 3)
@@ -376,7 +416,7 @@ def build_regions(
 ) -> tuple[list[Region], list[str]]:
     first_seg: dict[str, int] = {}
     for i, s in enumerate(segments):
-        if s.pull_id and s.pull_id not in first_seg:
+        if s.pull_id and not s.showcase and s.pull_id not in first_seg:
             first_seg[s.pull_id] = i
     anchors = anchor_order(lines, first_seg)
     cuts = [0] + [first_seg[a] for a in anchors] + [len(segments)]
