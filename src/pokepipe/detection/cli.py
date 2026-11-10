@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.progress import BarColumn, Progress, TextColumn, TimeRemainingColumn
 from rich.table import Table
 
+from pokepipe.cards import rarity
 from pokepipe.cards import service as cards_service
 from pokepipe.config import get_settings
 from pokepipe.detection import service
@@ -85,18 +86,8 @@ def layout(
     console.print(f"Layout {result.pack_layout or 'none'}: {n} reverse holos inferred → {path}")
 
 
-# Rough rarity order for display only; collection tracking (stage 4) will own this.
-_RARITY_ORDER = [
-    "Common", "Uncommon", "Rare", "Double Rare", "Illustration Rare", "Ultra Rare",
-    "Special Illustration Rare", "Hyper Rare",
-]
-
-
 def _top_rarity(pulls: list) -> str:
-    def rank(p) -> int:
-        return _RARITY_ORDER.index(p.rarity) if p.rarity in _RARITY_ORDER else 0
-
-    best = max(pulls, key=rank)
+    best = max(pulls, key=lambda p: rarity.rank(p.rarity))
     return f"{best.name} ({best.rarity or '?'})"
 
 

@@ -76,9 +76,12 @@ def embed(set_id: str):
     t0 = time.perf_counter()
     embedder = _embedder()
     console.print(f"Model {embedder.model_tag} on [bold]{embedder.device}[/]")
-    index = service.build_index(s.sets_dir, set_id, embedder)
+    decoys = service.ensure_decoys(_client(), s.sets_dir, s.download_workers)
+    index = service.build_index(s.sets_dir, set_id, embedder, decoys=decoys)
+    n_decoys = sum(service.is_decoy(c) for c in index.unique_ids)
     console.print(
-        f"Indexed {len(index)} cards (dim {index.dim}) in {time.perf_counter() - t0:.1f}s → "
+        f"Indexed {len(index) - n_decoys} cards + {n_decoys} basic-Energy decoys "
+        f"(dim {index.dim}) in {time.perf_counter() - t0:.1f}s → "
         f"{SetCache(s.sets_dir, set_id).index_path(embedder.model_tag)}"
     )
 

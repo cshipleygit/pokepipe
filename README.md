@@ -182,8 +182,9 @@ CI runs the CPU suite and lint on every push.
   check results on your own footage first.
 - **Pack layouts:** only the Scarlet & Violet slot order is defined, verified on
   *151*. Shuffled packs get no reverse-holo guesses (review handles them).
-- **Gold energy:** each pack's ordinary basic Energy is filtered out, so a gold Energy
-  hyper rare must be added by hand in review.
+- **New sets:** pack-order reverse-holo inference is only defined for Scarlet &
+  Violet. A brand-new set may also lack price data for a few weeks, which makes
+  master-set totals approximate.
 - **Detection needs an NVIDIA GPU.** It can run on CPU, but slowly.
 
 ## Roadmap

@@ -2,9 +2,10 @@
 // edit we refetch and re-render, which keeps the client trivially consistent.
 "use strict";
 
-const HIT_RARITIES = new Set([
-  "Double Rare", "Illustration Rare", "Ultra Rare", "Special Illustration Rare", "Hyper Rare",
-]);
+// Mirrors pokepipe.cards.rarity.is_special: Double Rare and above, including rarity
+// names a new era invents (e.g. "Mega Hyper Rare").
+const BASE_RARITIES = new Set(["Common", "Uncommon", "Rare", "Rare Holo"]);
+const isHit = (rarity) => !!rarity && !BASE_RARITIES.has(rarity) && rarity.includes("Rare");
 const LOW_CONFIDENCE = 0.7;
 
 const $ = (sel) => document.querySelector(sel);
@@ -117,7 +118,7 @@ function pullTile(p, i) {
   const det = p.detected_index != null ? state.data.detection.pulls[p.detected_index] : null;
   const c = card(p.card_id);
   const badges = [];
-  if (HIT_RARITIES.has(c.rarity)) badges.push(`<span class="badge hit">${c.rarity}</span>`);
+  if (isHit(c.rarity)) badges.push(`<span class="badge hit">${c.rarity}</span>`);
   if (det && det.confidence < LOW_CONFIDENCE && p.status === "pending") badges.push(`<span class="badge low">check</span>`);
   if (det && p.card_id !== p.detected_card_id) badges.push(`<span class="badge fixed">was ${card(p.detected_card_id).name}</span>`);
   if (!det) badges.push(`<span class="badge added">added</span>`);
@@ -293,7 +294,7 @@ $("#finish").onclick = async () => {
   const plan = await api(`/api/videos/${state.slug}/posts`);
   $("#posts-packs").innerHTML = Object.entries(plan.packs)
     .map(([pack, rarities]) => {
-      const best = rarities.filter((r) => HIT_RARITIES.has(r));
+      const best = rarities.filter(isHit);
       return `<li><b>Pack ${pack}</b> ${best.length ? `<span class="badge hit">${best.join(", ")}</span>` : ""}</li>`;
     })
     .join("");

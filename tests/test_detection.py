@@ -141,13 +141,18 @@ def test_build_pulls_serialises_relative_box(tmp_path):
     assert PullsFile.model_validate(json.loads(blob)).pulls[0] == pull
 
 
-def test_build_pulls_drops_energy_unless_asked():
-    frames = [FrameResult(i, i / 4, [Match("s-e", 0.8), Match("s-1", 0.6)], (0, 0, 10, 10))
-              for i in range(4)]
+def test_decoys_are_dropped_but_real_energy_pulls_are_kept():
+    def frames_for(card_id, runner_up):
+        return [FrameResult(i, i / 4, [Match(card_id, 0.8), Match(runner_up, 0.6)],
+                            (0, 0, 10, 10)) for i in range(4)]
+
     cards = {"s-e": Card(id="s-e", name="Basic Psychic Energy", number="207", set_id="s",
-                         supertype="Energy")}
-    assert build_pulls(frames, cards, (40, 40), SegmentParams()) == []
-    assert len(build_pulls(frames, cards, (40, 40), SegmentParams(), include_energy=True)) == 1
+                         supertype="Energy", rarity="Hyper Rare")}
+    # the pack's ordinary Energy matches a decoy: not a pull
+    assert build_pulls(frames_for("decoy:sve-5", "s-e"), cards, (40, 40), SegmentParams()) == []
+    # a real (gold) Energy pull matches its own card: kept, decoys kept out of alternatives
+    [pull] = build_pulls(frames_for("s-e", "decoy:sve-5"), cards, (40, 40), SegmentParams())
+    assert pull.card_id == "s-e" and pull.alternatives == []
 
 
 def make_pull(start: float, end: float | None = None) -> Pull:

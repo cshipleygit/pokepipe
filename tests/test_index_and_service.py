@@ -78,6 +78,31 @@ def test_fetch_then_embed_end_to_end(tmp_path, fake_embedder):
     assert index.search(query, top_k=1)[0][0].card_id == "e2e-2"
 
 
+def test_build_index_adds_prefixed_decoys(tmp_path, fake_embedder):
+    from pokepipe.cards.cache import SetCache
+    from pokepipe.cards.models import Card, CardSet
+
+    def cached(set_id, colours):
+        cache = SetCache(tmp_path, set_id)
+        cards = [Card(id=f"{set_id}-{i}", name=f"C{i}", number=str(i), set_id=set_id)
+                 for i in range(len(colours))]
+        cache.save(CardSet(id=set_id, name=set_id), cards)
+        cache.images_dir.mkdir(parents=True)
+        for card, rgb in zip(cards, colours, strict=True):
+            Image.new("RGB", (40, 56), rgb).save(cache.image_path(card.id))
+        return cache
+
+    cached("main", [(200, 0, 0), (0, 200, 0)])
+    decoys = cached("sve", [(0, 0, 200)])
+    index = service.build_index(tmp_path, "main", fake_embedder, decoys=decoys)
+    assert index.unique_ids == ["main-0", "main-1", "decoy:sve-0"]
+    assert service.index_has_decoys(index)
+    assert not service.index_has_decoys(service.build_index(tmp_path, "main", fake_embedder))
+    # a set is never its own decoy
+    assert service.build_index(tmp_path, "sve", fake_embedder, decoys=decoys).unique_ids == [
+        "sve-0"]
+
+
 def test_build_index_requires_cache(tmp_path, fake_embedder):
     with pytest.raises(FileNotFoundError, match="fetch"):
         service.build_index(tmp_path, "missing", fake_embedder)

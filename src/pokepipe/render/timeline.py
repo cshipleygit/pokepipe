@@ -14,15 +14,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-HIT_RARITIES = {
-    "Rare",
-    "Double Rare",
-    "Illustration Rare",
-    "Ultra Rare",
-    "Special Illustration Rare",
-    "Hyper Rare",
-}
-LABEL_RARITIES = HIT_RARITIES - {"Rare"}  # big enough to get an on-screen rarity label
+from pokepipe.cards.rarity import is_special
+
 CARD_ASPECT = 63 / 88
 OUT_W, OUT_H = 1080, 1920
 
@@ -41,12 +34,16 @@ class RenderPull:
 
     @property
     def hit(self) -> bool:
-        # A Rare in a reverse-holo slot is a reverse holo, not the pack's rare.
-        return self.rarity in HIT_RARITIES and self.variant != "reverse"
+        """The pack's rare and anything rarer get real-time playback and a zoom.
+        A Rare in a reverse-holo slot is a reverse holo, not the pack's rare."""
+        if self.variant == "reverse":
+            return False
+        return self.rarity in ("Rare", "Rare Holo") or is_special(self.rarity)
 
     @property
     def label(self) -> str | None:
-        return self.rarity.upper() if self.rarity in LABEL_RARITIES else None
+        """Big enough to get an on-screen rarity label."""
+        return self.rarity.upper() if is_special(self.rarity) else None
 
 
 @dataclass(frozen=True)

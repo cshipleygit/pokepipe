@@ -97,7 +97,18 @@ search aggregates by max score per card.
   (`--dump-frames` writes the per-frame data used). Genuine reveals peak at 0.80–0.89
   cosine. Sealed product, hands, card backs and code cards stay below about 0.71.
   Hence: frame vote ≥ 0.68 with ≥ 0.03 lead over the runner-up, segment peak ≥ 0.72,
-  ≥ 3 frames, 1 s gap bridging. Basic Energy is matched but excluded from pulls.
+  ≥ 3 frames, 1 s gap bridging.
+- **Basic-Energy decoys.** Every pack has an ordinary basic Energy that isn't a pull,
+  but real pulls can be Energy too (151's gold #207 Hyper Rare, Delta Reign's special
+  Energy Ultra Rares). So every index also embeds the `sve` basic Energies as
+  `decoy:`-prefixed vectors (`cards/service.py`). A reveal whose best match is a decoy
+  is dropped, and decoys never appear as review suggestions. On the 151 video this
+  gave the identical 120 pulls as before, with each pack's Energy now matching a decoy
+  instead of #207. Mega Evolution-era basic Energy art is unverified until the first
+  real footage: watch for 11-card packs in review.
+- **Rarities** live in one place (`cards/rarity.py`). Any unknown rarity containing
+  "Rare" that isn't a base rarity counts as special, because every era invents new
+  chase rarities (Mega Evolution added "Mega Hyper Rare").
 - `packs.py` groups pulls into packs on gaps > 8 s, the unit we split posts by. Each
   pack gets a clip window: up to 15 s lead-in for the tear, 2 s tail, never overlapping.
   A pack whose count ≠ `cards_per_pack` (default 10) is flagged for review.
@@ -209,10 +220,9 @@ uses instead:
   kept: +100 new, master 100/360 (93/207 card numbers).
 
 Known limitations:
-- #207 in 151 is a gold Basic Psychic Energy (Hyper Rare). Detection drops all Energy
-  because each pack's ordinary basic Energy matches #207 (the only Energy in the
-  index). A real gold #207 therefore has to be added by hand in review. The proper
-  fix is to index the ordinary basic Energies as decoys.
+- Brand-new sets have no TCGplayer price data yet (Delta Reign, 3 days old: 0 of 141
+  cards), so printings come from the rarity rule and master-set totals are
+  approximate until the API catches up. Re-run `cards fetch <set> --refresh` later.
 - "Before" progress counts every other applied video, not only earlier ones. Apply
   videos in the order they were opened.
 

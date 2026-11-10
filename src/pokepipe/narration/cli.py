@@ -6,6 +6,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from pokepipe.cards import rarity
 from pokepipe.config import get_settings
 from pokepipe.narration import posts as posts_mod
 from pokepipe.narration import service
@@ -58,7 +59,7 @@ def plan(
     table = Table("post", "packs", "cards", "best pull")
     for post in result.posts:
         pulls = [p for p in report.pulls if p.pack in post.packs]
-        best = max(pulls, key=lambda p: _rank(p.rarity), default=None)
+        best = max(pulls, key=lambda p: rarity.rank(p.rarity), default=None)
         table.add_row(
             str(post.index),
             posts_mod.to_spec([post.packs]),
@@ -73,20 +74,6 @@ def plan(
     )
 
 
-_ORDER = [
-    "Common",
-    "Uncommon",
-    "Rare",
-    "Double Rare",
-    "Illustration Rare",
-    "Ultra Rare",
-    "Hyper Rare",
-    "Special Illustration Rare",
-]
-
-
-def _rank(rarity: str | None) -> int:
-    return _ORDER.index(rarity) if rarity in _ORDER else -1
 
 
 @app.command()

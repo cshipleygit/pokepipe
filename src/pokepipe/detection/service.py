@@ -10,6 +10,7 @@ from pathlib import Path
 from pokepipe.cards.cache import SetCache
 from pokepipe.cards.embeddings import CARD_ASPECT
 from pokepipe.cards.index import CardIndex
+from pokepipe.cards.service import is_decoy
 from pokepipe.detection.frames import probe, require_tool, sample_frames, scaled_size
 from pokepipe.detection.layout import PackLayout, apply_layout, layout_for
 from pokepipe.detection.matcher import CropGrid, FrameMatcher, FrameResult, PixelEmbedder
@@ -27,16 +28,16 @@ def build_pulls(
     cards_by_id: dict,
     frame_size: tuple[int, int],
     params: SegmentParams,
-    include_energy: bool = False,
 ) -> list[Pull]:
-    """Segments → Pull records. Basic Energy is dropped by default: every pack has one,
-    it isn't a "pull", and it doesn't count towards the pack's card total."""
+    """Segments → Pull records. A segment whose best match is a decoy (the ordinary
+    basic Energy every pack contains, see cards.service.DECOY_SET) is not a pull and is
+    dropped. Real Energy pulls match their own card and are kept."""
     w, h = frame_size
     pulls = []
     for seg in segment(frames, params):
-        card = cards_by_id[seg.card_id]
-        if card.supertype == "Energy" and not include_energy:
+        if is_decoy(seg.card_id):
             continue
+        card = cards_by_id[seg.card_id]
         peak = seg.peak
         x1, y1, x2, y2 = peak.box
         pulls.append(
@@ -48,7 +49,8 @@ def build_pulls(
                 confidence=confidence(seg),
                 box=(x1 / w, y1 / h, x2 / w, y2 / h),
                 alternatives=[Alternative(card_id=c, score=round(s, 4))
-                              for c, s in seg.alternatives() if c != card.id],
+                              for c, s in seg.alternatives()
+                              if c != card.id and not is_decoy(c)],
             )
         )
     return pulls

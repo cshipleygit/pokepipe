@@ -53,9 +53,16 @@ class PipelineOps:
             if result.images.failed:
                 raise RuntimeError(f"{len(result.images.failed)} card images failed to download")
         emb = self.embedder()
-        if not SetCache(self.s.sets_dir, job.set_id).index_path(emb.model_tag).exists():
+        index_path = SetCache(self.s.sets_dir, job.set_id).index_path(emb.model_tag)
+        stale = index_path.exists() and not cards.index_has_decoys(
+            cards.load_index(self.s.sets_dir, job.set_id, emb.model_tag)
+        )
+        if not index_path.exists() or stale:
             self.log(f"building the {job.set_id} card index")
-            cards.build_index(self.s.sets_dir, job.set_id, emb)
+            client = PokemonTCGClient(self.s.pokemontcg_base_url,
+                                      api_key=self.s.pokemontcg_api_key)
+            decoys = cards.ensure_decoys(client, self.s.sets_dir, self.s.download_workers)
+            cards.build_index(self.s.sets_dir, job.set_id, emb, decoys=decoys)
 
     def detect(self, job: Job) -> None:
         from pokepipe.cards import service as cards

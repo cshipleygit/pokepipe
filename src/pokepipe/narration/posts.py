@@ -8,16 +8,8 @@ from __future__ import annotations
 
 import re
 
+from pokepipe.cards.rarity import is_special  # rarities strong enough to carry a post
 from pokepipe.narration.models import Post, PostPlan
-
-# Rarities strong enough to carry a post on their own.
-HIT_RARITIES = {
-    "Illustration Rare",
-    "Special Illustration Rare",
-    "Ultra Rare",
-    "Hyper Rare",
-    "Double Rare",
-}
 
 _PART = re.compile(r"^(\d+)(?:-(\d+))?$")
 
@@ -67,7 +59,7 @@ def suggest(
     groups: list[list[int]] = []
     run: list[int] = []
     for pack in sorted(packs_with_rarities):
-        if HIT_RARITIES & set(packs_with_rarities[pack]):
+        if any(is_special(r) for r in packs_with_rarities[pack]):
             if run:
                 groups.append(run)
                 run = []
