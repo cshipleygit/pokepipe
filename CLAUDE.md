@@ -23,7 +23,7 @@ reviewer as much as for function.
 | 4 | `collection/` | **built** | Local master-set progress per set, updated from confirmed pulls of each video. |
 | 5 | `narration/` | **built** | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
 | 6 | `render/` | **built** | ffmpeg: one vertical post per pack group, narration-driven speed ramps, zoom on hits, optional reusable intro, word captions, master-set progress overlay. |
-| 7 | `watch/` | todo | Watch folder: drop a video in → run stages 2→7, pausing only at review. |
+| 7 | `watch/` | **built** | Watch folder: drop a video in → run stages 2→6, pausing only at review. |
 
 Work proceeds **one stage at a time**; stop and show the user after each stage
 before starting the next.
@@ -275,6 +275,33 @@ Known limitations:
 - To tune next: bigger counter/badge (the badge overlaps the card name), optional
   source audio (pack-rip sounds), and motion blur on commons at ~3.6×.
 
+### Stage 7 design (watch/)
+
+- `pokepipe watch run` = watcher loop + the review page (thread, 127.0.0.1) in one
+  command. Drop videos in `<inbox>/<set_id>/` (default `data/inbox`). A video dropped in
+  the inbox root uses `WATCH_DEFAULT_SET`.
+- `intake.py`: a file is taken only after its size and mtime are unchanged for
+  `WATCH_SETTLE_SECONDS` *and* it opens for writing (Windows locks files still being
+  copied). Partial downloads are ignored. It is **moved** to
+  `data/videos/<slug>/source.<ext>` so its path never changes, with a unique slug.
+- `runner.py`: a state machine over an `Ops` protocol (queued → detecting →
+  awaiting_review → collecting → narrating → rendering → done / failed).
+  - `job.json` is the only watcher state; real outputs stay in each stage's files.
+  - Every op skips work whose outputs exist, so restarts and retries are safe.
+  - A failure records the stage and error; `watch retry <slug> [--force-budget]`
+    resumes from that stage.
+  - Single-threaded on purpose: detection and render both want the GPU.
+- **One human stop.** The review page's Finish step also chooses which packs go into
+  each post (`posts.json`), pre-filled with a suggestion. If none is saved, the
+  suggestion is used.
+- End to end on a 3-minute, 3-pack clip: taken in 8 s after dropping, detection 27 s
+  (30 pulls), then after review: collection, script + voice ($0.19), render. Result:
+  a 46.7 s post, 10/10 lines in sync, no freeze, about 1 min of machine time after
+  review.
+- Not done yet: editing a finished review re-opens it, but already-rendered posts are
+  not invalidated (delete `posts/<n>/` to redo one). No desktop notification when a
+  review is waiting.
+
 ## Commands
 
 ```bash
@@ -298,6 +325,9 @@ pokepipe narrate voices                   # list ElevenLabs voices → ELEVENLAB
 pokepipe narrate voice <slug> [-p 2]      # synthesise (cached, budget-checked)
 pokepipe narrate cost <slug>              # spend so far vs the per-video budget
 pokepipe render post <slug> [-p 1]        # → posts/<n>/post.mp4 (1080x1920)
+pokepipe watch run                        # inbox watcher + review page, end to end
+pokepipe watch status                     # where every video is
+pokepipe watch retry <slug>               # resume a failed video at its failed stage
 pytest                                    # unit tests (no network, no GPU)
 pytest -m gpu                             # GPU/model tests
 ruff check src tests

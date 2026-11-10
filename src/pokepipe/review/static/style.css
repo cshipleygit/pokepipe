@@ -149,7 +149,12 @@ dialog { border: 1px solid var(--line); border-radius: var(--radius); background
 dialog::backdrop { background: #0008; }
 .picker { padding: 16px; display: grid; gap: 10px; }
 .picker h2 { margin: 0; font-size: 16px; }
-.picker menu { margin: 0; padding: 0; display: flex; justify-content: flex-end; }
+.picker menu { margin: 0; padding: 0; display: flex; justify-content: flex-end; gap: 8px; }
+.picker label { display: grid; gap: 4px; font-weight: 600; }
+.picker label input { font-weight: 400; }
+.pack-summary { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 30vh; overflow: auto; }
+.pack-summary li { display: flex; gap: 8px; align-items: center; }
+.picker .hint { margin: 0; }
 .alts { display: flex; gap: 6px; flex-wrap: wrap; }
 .results { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow: auto; display: grid; gap: 4px; }
 .results button, .alts button { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; }

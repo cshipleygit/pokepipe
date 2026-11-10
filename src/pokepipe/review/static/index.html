@@ -55,6 +55,22 @@
     </form>
   </dialog>
 
+  <dialog id="posts">
+    <form method="dialog" class="picker" id="posts-form">
+      <h2>Plan the posts</h2>
+      <p class="hint">Which packs go into each TikTok post. Separate posts with commas;
+        use a range (<code>1-3</code>) or join packs with <code>+</code> (<code>10+12</code>).</p>
+      <ul id="posts-packs" class="pack-summary"></ul>
+      <label>Posts <input id="posts-spec" type="text" autocomplete="off" spellcheck="false"></label>
+      <label>Seconds per post <input id="posts-seconds" type="number" min="10" max="180" step="5"></label>
+      <p id="posts-note" class="hint"></p>
+      <menu>
+        <button value="cancel" formnovalidate>Back</button>
+        <button id="posts-save" class="primary" value="save">Save &amp; finish review</button>
+      </menu>
+    </form>
+  </dialog>
+
   <div id="toast" class="toast" role="status" hidden></div>
   <script src="/static/app.js"></script>
 </body>

@@ -287,12 +287,42 @@ $("#play-clip").onclick = () => {
   const p = state.data.detection.packs.find((p) => p.index === state.pack);
   if (p) seek(p.clip_start, p.clip_end);
 };
+// Finishing the review also fixes which packs go into each post, so the pipeline
+// only ever needs this one human stop.
 $("#finish").onclick = async () => {
-  await api(`/api/videos/${state.slug}/complete`, { method: "POST" });
+  const plan = await api(`/api/videos/${state.slug}/posts`);
+  $("#posts-packs").innerHTML = Object.entries(plan.packs)
+    .map(([pack, rarities]) => {
+      const best = rarities.filter((r) => HIT_RARITIES.has(r));
+      return `<li><b>Pack ${pack}</b> ${best.length ? `<span class="badge hit">${best.join(", ")}</span>` : ""}</li>`;
+    })
+    .join("");
+  $("#posts-spec").value = plan.spec;
+  $("#posts-seconds").value = plan.seconds;
+  $("#posts-note").textContent = plan.suggested
+    ? "Suggested: packs with a big hit get their own post, the rest in threes."
+    : "Your saved plan.";
+  $("#posts").showModal();
+  $("#posts-spec").focus();
+};
+
+$("#posts-form").addEventListener("submit", async (e) => {
+  if (e.submitter && e.submitter.value !== "save") return;
+  e.preventDefault();
+  try {
+    await api(`/api/videos/${state.slug}/posts`, {
+      method: "PUT",
+      body: { spec: $("#posts-spec").value, seconds: Number($("#posts-seconds").value) },
+    });
+    await api(`/api/videos/${state.slug}/complete`, { method: "POST" });
+  } catch {
+    return; // the error is already shown as a toast; keep the dialog open to fix it
+  }
+  $("#posts").close();
   await refresh();
   render();
-  toast("Review finished — ready for the next stage");
-};
+  toast("Review finished — the pipeline takes it from here");
+});
 
 document.addEventListener("keydown", (e) => {
   if (e.target.closest("input, select, dialog") || e.ctrlKey || e.metaKey || e.altKey) return;

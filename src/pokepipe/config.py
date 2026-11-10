@@ -37,9 +37,25 @@ class Settings(BaseSettings):
     # Used only for the budget check — set it from your ElevenLabs plan's per-character rate.
     elevenlabs_usd_per_1k_chars: float = 0.30
 
+    # Stage 7 — watch folder
+    watch_inbox: Path | None = None  # default: <data_dir>/inbox
+    watch_default_set: str | None = None  # for videos dropped straight into the inbox
+    watch_collection: str = "main"  # collection that finished reviews are applied to
+    watch_poll_seconds: float = 5.0
+    watch_settle_seconds: float = 10.0  # a file must stop changing this long before intake
+    default_post_seconds: float = 45.0
+
     @property
     def sets_dir(self) -> Path:
         return self.data_dir / "sets"
+
+    @property
+    def videos_dir(self) -> Path:
+        return self.data_dir / "videos"
+
+    @property
+    def inbox_dir(self) -> Path:
+        return self.watch_inbox or self.data_dir / "inbox"
 
 
 @lru_cache

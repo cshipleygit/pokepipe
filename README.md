@@ -35,6 +35,7 @@ flowchart LR
 | **4 · Collection** | Master-set tracking (every printing), marking which pulls are new and the progress after each pack. |
 | **5 · Script + voice** | You choose which packs form each post. Claude writes a script from computed facts only, and ElevenLabs voices it with per-word timings. |
 | **6 · Render** | Vertical cuts with speed ramps, zooms on hits, word-by-word captions, a master-set counter and rarity labels, with each spoken line synced to its card. |
+| **7 · Watch folder** | Drop a video in and it runs end to end, pausing only for your review. Resumable, with failures recorded and retryable. |
 
 ## Results
 
@@ -102,6 +103,21 @@ Keys: `ANTHROPIC_API_KEY` (script), `ELEVENLABS_API_KEY` + `ELEVENLABS_VOICE_ID`
 
 ## Usage
 
+**The easy way: a watch folder.** Start it once and leave it running:
+
+```bash
+pokepipe watch run          # watcher + review page at http://127.0.0.1:8765
+```
+
+Drop a video into `data/inbox/<set_id>/` (e.g. `data/inbox/sv3pt5/`). It's taken in
+once it finishes copying, and card data is fetched if the set is new. Detection then
+runs and the job waits for you. On the review page, confirm the cards and, on
+**Finish**, choose which packs go into each post. Collection, scripts, voice and
+render then run on their own. `pokepipe watch status` shows where every video is;
+`pokepipe watch retry <slug>` resumes a failed one.
+
+**Or stage by stage:**
+
 ```bash
 # 1. Card data for the set you opened (once per set)
 pokepipe cards sets --search "151"
@@ -143,6 +159,7 @@ src/pokepipe/
   collection/   stage 4  master-set model, per-video contributions
   narration/    stage 5  post planning, Claude scripts, ElevenLabs voice, budget
   render/       stage 6  edit timeline, pacing solver, ASS captions, ffmpeg
+  watch/        stage 7  inbox intake, resumable job state machine, watcher loop
 tests/          pytest; APIs mocked, no GPU needed except tests marked `gpu`
 config/         style guide (and optional intro clip)
 ```
@@ -171,7 +188,6 @@ CI runs the CPU suite and lint on every push.
 
 ## Roadmap
 
-- Watch folder: drop a video in and it runs end to end, pausing only for review.
 - Creator profiles (style guide, voice, intro, collection per creator).
 - Set auto-detection and tie-breaking from the card's corner text (OCR).
 - Optional source audio (pack-rip sounds) under the narration.

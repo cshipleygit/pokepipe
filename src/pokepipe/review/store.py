@@ -217,3 +217,56 @@ class ReviewStore:
             state.completed = True
             self.save(state)
             return state
+
+    # --- post planning (chosen at the end of review, so the pipeline pauses only once) ----
+
+    def _kept_rarities(self, state: ReviewState) -> dict[int, list[str | None]]:
+        """Rarities per pack of every pull not rejected (pending ones count, so a plan
+        can be suggested before the review is finished)."""
+        cards = self.cards(state.set_id)
+        by_pack: dict[int, list[str | None]] = {}
+        for p in (x for x in state.pulls if x.status != Status.REJECTED):
+            card = cards.get(p.card_id)
+            by_pack.setdefault(p.pack, []).append(card.rarity if card else None)
+        return by_pack
+
+    def post_plan(self, slug: str, default_seconds: float) -> dict:
+        """The saved grouping of packs into posts, or a suggestion if none is saved yet."""
+        from pokepipe.narration import posts
+        from pokepipe.narration.models import PostPlan
+
+        state = self.load(slug)
+        rarities = self._kept_rarities(state)
+        path = self.video_dir(slug) / "posts.json"
+        if path.exists():
+            plan = PostPlan.model_validate_json(path.read_text(encoding="utf-8"))
+            groups = [p.packs for p in plan.posts]
+            seconds = plan.posts[0].seconds if plan.posts else None
+            suggested = False
+        else:
+            groups, seconds, suggested = posts.suggest(rarities), None, True
+        return {
+            "spec": posts.to_spec(groups) if groups else "",
+            "seconds": seconds or default_seconds,
+            "suggested": suggested,
+            "packs": {pack: sorted({r for r in rs if r}) for pack, rs in sorted(rarities.items())},
+        }
+
+    def save_post_plan(self, slug: str, spec: str, seconds: float):
+        from pokepipe.narration import posts
+
+        if not 10 <= seconds <= 180:
+            raise ReviewError("post length must be 10-180 seconds")
+        packs = set(self._kept_rarities(self.load(slug)))
+        if not packs:
+            raise ReviewError("no kept pulls to plan posts from")
+        try:
+            groups = posts.parse_spec(spec, packs)
+        except posts.PostSpecError as exc:
+            raise ReviewError(str(exc)) from exc
+        plan = posts.make_plan(slug, groups, seconds)
+        path = self.video_dir(slug) / "posts.json"
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(plan.model_dump_json(indent=2), encoding="utf-8")
+        tmp.replace(path)
+        return plan

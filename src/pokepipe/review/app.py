@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from pokepipe.cards.cache import SetCache
-from pokepipe.review.models import NewPull, PullUpdate
+from pokepipe.review.models import NewPull, PostPlanBody, PullUpdate
 from pokepipe.review.store import NotFound, ReviewError, ReviewStore
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -21,7 +21,7 @@ def _expected(det) -> int:
     return det.packs[0].expected_cards if det.packs else 10
 
 
-def create_app(store: ReviewStore) -> FastAPI:
+def create_app(store: ReviewStore, default_post_seconds: float = 45.0) -> FastAPI:
     app = FastAPI(title="pokepipe review", docs_url="/api/docs")
 
     @app.middleware("http")
@@ -130,5 +130,13 @@ def create_app(store: ReviewStore) -> FastAPI:
     @app.post("/api/videos/{slug}/complete")
     def complete(slug: str):
         return store.complete(slug)
+
+    @app.get("/api/videos/{slug}/posts")
+    def get_posts(slug: str):
+        return store.post_plan(slug, default_post_seconds)
+
+    @app.put("/api/videos/{slug}/posts")
+    def put_posts(slug: str, body: PostPlanBody):
+        return store.save_post_plan(slug, body.spec, body.seconds)
 
     return app

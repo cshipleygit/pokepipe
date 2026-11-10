@@ -199,6 +199,32 @@ def test_api_errors_map_to_status_codes(env):
     assert client.patch(f"/api/videos/{SLUG}/pulls/0", json={"status": "maybe"}).status_code == 422
 
 
+def test_post_plan_suggests_then_saves_the_users_choice(env):
+    store, client, vdir = env
+    # nothing confirmed yet: pending pulls still count for the suggestion
+    plan = client.get(f"/api/videos/{SLUG}/posts").json()
+    assert plan["suggested"] is True and plan["spec"] == "1-2" and plan["seconds"] == 45.0
+
+    r = client.put(f"/api/videos/{SLUG}/posts", json={"spec": "2, 1", "seconds": 30})
+    assert r.status_code == 200
+    saved = json.loads((vdir / "posts.json").read_text())
+    assert [p["packs"] for p in saved["posts"]] == [[2], [1]]
+    assert saved["posts"][0]["seconds"] == 30
+    again = client.get(f"/api/videos/{SLUG}/posts").json()
+    assert again == {**again, "suggested": False, "spec": "2, 1", "seconds": 30}
+
+
+def test_post_plan_rejects_bad_input(env):
+    store, client, _ = env
+    store.update(SLUG, 2, PullUpdate(status=Status.REJECTED))  # pack 2's only pull rejected
+    rejected = client.put(f"/api/videos/{SLUG}/posts", json={"spec": "1-2", "seconds": 45})
+    assert rejected.status_code == 400 and "no pack(s) [2]" in rejected.json()["detail"]
+    bad_pack = client.put(f"/api/videos/{SLUG}/posts", json={"spec": "1, 7", "seconds": 45})
+    assert bad_pack.status_code == 400 and "no pack" in bad_pack.json()["detail"]
+    too_long = client.put(f"/api/videos/{SLUG}/posts", json={"spec": "1", "seconds": 600})
+    assert too_long.status_code == 400 and "10-180" in too_long.json()["detail"]
+
+
 def test_media_endpoints(env):
     _, client, _ = env
     assert client.get("/").status_code == 200

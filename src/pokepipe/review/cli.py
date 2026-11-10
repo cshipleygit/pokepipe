@@ -37,7 +37,8 @@ def serve(
         threading.Timer(1.0, webbrowser.open, args=(url,)).start()
     # Bound to loopback on purpose: the API can read the source video and write review
     # state, so it must not be reachable from the network.
-    uvicorn.run(create_app(_store()), host="127.0.0.1", port=port, log_level="warning")
+    app_ = create_app(_store(), get_settings().default_post_seconds)
+    uvicorn.run(app_, host="127.0.0.1", port=port, log_level="warning")
 
 
 @app.command()

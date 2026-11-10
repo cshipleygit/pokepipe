@@ -64,6 +64,11 @@ class PullUpdate(BaseModel):
     pack: int | None = None
 
 
+class PostPlanBody(BaseModel):
+    spec: str = Field(description="packs per post, e.g. '1-3, 9, 10+12'")
+    seconds: float = Field(45.0, description="target length of each post")
+
+
 class NewPull(BaseModel):
     card_id: str
     pack: int
