@@ -88,3 +88,18 @@ def test_lead_and_recap_clips_play_at_real_speed_around_the_pack():
 def test_call_to_action_points_to_the_next_part_then_asks_for_a_follow():
     assert "watch part 2" in call_to_action(1, 2) and "follow" in call_to_action(1, 2)
     assert "watch part" not in call_to_action(2, 2) and "follow" in call_to_action(2, 2)
+
+
+def test_a_talky_ending_stretches_the_recap_instead_of_freezing():
+    from pokepipe.render.timeline import VoiceLine
+
+    pulls = [rp(f"p1-{i}", 5 + 3 * i) for i in range(1, 9)] + [rp("p1-9", 32, "Double Rare")]
+    recap = [Clip(40.0, 41.2, "recap", "p1-9", (0.3, 0.3, 0.7, 0.7), max_end=49.0),
+             Clip(50.0, 51.2, "recap", "p1-1", (0.3, 0.3, 0.7, 0.7), max_end=51.5)]
+    lines = [VoiceLine("p1-9", "big hit", 0.0, 4.0), VoiceLine("outro", "follow", 4.0, 12.0)]
+    e = plan_edit([PackWindow(1, 7.0, 36.0)], pulls, lines, (1080, 1920),
+                  EditParams(target=20), recap=recap)
+    assert all(s.hold == 0 for s in e.segments[:-1])  # no frozen frame mid-video
+    clips = [s for s in e.segments if s.label == "recap"]
+    assert clips[0].src_len > 1.2 and clips[1].src_end <= 51.5 + 1e-6
+    assert any("recap shots longer" in n for n in e.notes)

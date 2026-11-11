@@ -65,6 +65,7 @@ class Clip:
     label: str
     pull_id: str | None = None
     box: tuple[float, float, float, float] | None = None
+    max_end: float | None = None  # footage of this moment runs until here (room to stretch)
 
 
 @dataclass
@@ -88,6 +89,7 @@ class Segment:
     window: tuple[int, int, int, int] | None = None
     chained: bool = False
     label: str = ""  # clips: what the shot shows ("rip", "cards_out", "recap", ...)
+    max_end: float | None = None  # clips: can run on until here if narration needs time
     path: list[tuple[float, tuple[int, int, int, int]]] | None = None
 
     @property
@@ -474,6 +476,22 @@ def build_regions(
     return regions, anchors
 
 
+def _stretch_clips(segments: list[Segment], need: float) -> float:
+    """Let clips with spare footage (`max_end`) run longer, sharing `need` evenly, so a
+    talky ending plays over more of the recap instead of freezing a frame. Returns the
+    seconds gained."""
+    gained = 0.0
+    room = [s for s in segments if s.kind == "clip" and s.max_end and s.max_end > s.src_end]
+    while need - gained > 0.01 and room:
+        share = (need - gained) / len(room)
+        for s in room:
+            extra = min(share, s.max_end - s.src_end)
+            s.src_end += extra
+            gained += extra
+        room = [s for s in room if s.max_end - s.src_end > 1e-3]
+    return gained
+
+
 def pace_regions(regions: list[Region], p: EditParams, tail_room: float) -> list[str]:
     notes: list[str] = []
     floor = [max(r.need, r.out(p.max_speed, p)) for r in regions]
@@ -492,6 +510,10 @@ def pace_regions(regions: list[Region], p: EditParams, tail_room: float) -> list
         r.apply(r.speed_for(w, p), p)
         short = r.need - r.out(1.0, p) if w > c else 0.0
         if short <= 0.05:
+            continue
+        short -= _stretch_clips(r.segments, short)
+        if short <= 0.05:
+            notes.append("ran the recap shots longer for the outro")
             continue
         last = r.segments[-1]
         if r is regions[-1] and tail_room > 0:  # run on into real footage after the pack
@@ -531,7 +553,7 @@ def plan_edit(
                  showcase=c.pull_id is not None) for c in lead]
         + segments
         + [Segment(c.start, c.end, "clip", last, c.pull_id, box=c.box, label=c.label,
-                   showcase=True) for c in recap]
+                   showcase=True, max_end=c.max_end) for c in recap]
     )
     if recap:  # the outro plays over the recap: no running on into later footage
         tail_room = 0.0

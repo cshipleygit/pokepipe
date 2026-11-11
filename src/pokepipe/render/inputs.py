@@ -128,11 +128,13 @@ def edit_inputs(
         if after:  # sleeved / shown off after the pack: fresh footage of the hit
             start, end, box = after[0]
             mid = (start + end) / 2
-            recap.append(Clip(max(start, mid - length / 2), max(start, mid - length / 2) + length,
-                              "recap", x.id, box or x.box))
+            begin = max(start, mid - length / 2)
+            recap.append(Clip(begin, begin + length, "recap", x.id, box or x.box,
+                              max_end=max(end, begin + length)))
         else:
             start = x.src_start + 0.8  # past the reveal, the card held up
-            recap.append(Clip(start, start + length, "recap", x.id, x.box))
+            recap.append(Clip(start, start + length, "recap", x.id, x.box,
+                              max_end=max(x.src_end, start + length)))
     pulls = [replace(x, showings=()) for x in pulls]
     return EditInputs(packs, pulls, lead, recap)
 
