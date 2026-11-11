@@ -325,6 +325,11 @@ Known limitations:
   `edit.json` records every decision.
 - Result on packs 1–3 of the test video: 45.2 s, 41 shots, rendered in 39 s on the
   RTX 3060. A clean run of one 45 s post costs about $0.20 (script + voice).
+- **Narration off** (`render post --no-narration`, or `NARRATION=false` for the watcher):
+  the edit alone, with no script, voice or API spend. The source audio plays under it,
+  sped up per shot with pitch-preserving `atempo` and padded through freezes, so it stays
+  in sync. There's no hook and no word captions; the counter and labels stay. Allen's Delta
+  Reign posts (90 s each) rendered this way in about 5 min each.
 - To tune next: bigger counter/badge (the badge overlaps the card name), optional
   source audio (pack-rip sounds), and motion blur on commons at ~3.6×.
 

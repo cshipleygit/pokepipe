@@ -24,9 +24,17 @@ def post(
     slug: str,
     post: list[int] = typer.Option(None, "--post", "-p", help="Post number(s); default all"),
     keep_temp: bool = typer.Option(False, help="Keep the per-segment clips"),
+    narration: bool = typer.Option(
+        None,
+        "--narration/--no-narration",
+        help="Voiceover + captions, or the edit alone with source audio (default: NARRATION)",
+    ),
 ):
     """Render posts to data/videos/<slug>/posts/<n>/post.mp4."""
-    files = VideoFiles(get_settings().data_dir / "videos" / slug)
+    settings = get_settings()
+    if narration is None:
+        narration = settings.narration
+    files = VideoFiles(settings.data_dir / "videos" / slug)
     try:
         indexes = post or [p.index for p in files.load_plan().posts]
     except NarrationError as exc:
@@ -43,6 +51,7 @@ def post(
                     index,
                     intro=intro,
                     keep_temp=keep_temp,
+                    narration=narration,
                     on_progress=lambda done, total, t=task: bar.update(
                         t, completed=done, total=total
                     ),

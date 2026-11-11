@@ -111,6 +111,9 @@ class PipelineOps:
         files = self._files(job)
         if not files.plan.exists():  # not chosen in review: use the suggested grouping
             narration.plan_posts(files, job.slug, None, self.s.default_post_seconds)
+        if not self.s.narration:  # edit-only posts: no script, no voice, no API spend
+            self.log(f"{job.slug}: narration off — skipping scripts and voice")
+            return
         plan = files.load_plan()
 
         need_script = [
@@ -159,5 +162,6 @@ class PipelineOps:
         for post in files.load_plan().posts:
             if (files.post_dir(post.index) / "post.mp4").exists():
                 continue
-            result = render_post(files, post.index, intro=intro if intro.exists() else None)
+            result = render_post(files, post.index, intro=intro if intro.exists() else None,
+                                 narration=self.s.narration)
             self.log(f"{job.slug}: post {post.index} → {result.path} ({result.edit.duration:.0f}s)")

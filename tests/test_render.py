@@ -1,5 +1,6 @@
 import shutil
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -20,6 +21,7 @@ from pokepipe.render.timeline import (
 )
 
 SRC = (1920, 1080)
+SRC_PATH = Path("src.mp4")
 BOX = (0.40, 0.10, 0.60, 0.90)  # card-ish box in the middle of the frame
 
 
@@ -367,3 +369,58 @@ def test_end_to_end_render_of_synthetic_clip(tmp_path):
     assert (video["width"], video["height"]) == (1080, 1920)
     assert any(s["codec_type"] == "audio" for s in info["streams"])
     assert float(info["format"]["duration"]) == pytest.approx(edit.duration, abs=0.3)
+
+
+# --- narration-free mode --------------------------------------------------------------------
+
+
+def test_build_ass_without_narration_has_no_hook_or_captions():
+    edit = plan_edit([PACK], PULLS, [], SRC, EditParams(target=12.0))
+    overlay = Overlay("", 3.0, 360, 10, {1: 14}, {1: 4}, edit.pack_done_at, [(1.0, 2.0, "SIR")])
+    ass = build_ass(edit.lines, [], overlay, edit.duration)
+    assert ",Hook," not in ass and ",Caption," not in ass
+    assert "MASTER SET 14/360" in ass
+    # with no hook, the label isn't pushed back behind it
+    assert "Dialogue: 0,0:00:01.00,0:00:02.00,Label" in ass
+
+
+def test_segment_cmd_with_audio_speed_matches_and_cuts_to_length():
+    seg = Segment(1.0, 3.0, "reveal", 1, speed=2.0, crop=(606, 1080, 657, 0))
+    with_audio = ffmpeg.segment_cmd(SRC_PATH, seg, SRC_PATH, audio=True)
+    assert "atempo=2.0000,apad" in with_audio and "0:a:0" in with_audio
+    assert with_audio[with_audio.index("-t", 10) + 1] == f"{seg.out_len:.3f}"
+    assert "-an" in ffmpeg.segment_cmd(SRC_PATH, seg, SRC_PATH)
+
+
+@needs_ffmpeg
+def test_source_audio_render_keeps_audio_in_sync(tmp_path):
+    src = tmp_path / "src.mp4"
+    subprocess.run(
+        ["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "testsrc2=size=1920x1080:rate=30:duration=8",
+         "-f", "lavfi", "-i", "sine=f=440:d=8", "-pix_fmt", "yuv420p", "-shortest", str(src)],
+        check=True,
+    )
+    assert ffmpeg.has_audio(src)
+    pulls = [rp("p1-1", 1, 2.0), rp("p1-2", 1, 4.0, rarity="Rare")]
+    edit = plan_edit([PackWindow(1, 0.0, 8.0)], pulls, [], (1920, 1080), EditParams(target=5.0))
+    clips = []
+    for i, seg in enumerate(edit.segments):
+        clip = tmp_path / f"seg_{i}.mp4"
+        ffmpeg.run(ffmpeg.segment_cmd(src, seg, clip, audio=True))
+        clips.append(clip)
+    concat = tmp_path / "list.txt"
+    concat.write_text("".join(f"file '{c.as_posix()}'\n" for c in clips))
+    overlay = Overlay("", 3.0, 360, 0, {1: 2}, {1: 2}, edit.pack_done_at, [])
+    (tmp_path / "c.ass").write_text(build_ass([], [], overlay, edit.duration), encoding="utf-8")
+    out = tmp_path / "post.mp4"
+    ffmpeg.run(
+        ffmpeg.final_cmd_source_audio(concat, "c.ass", edit.duration, out, True), cwd=tmp_path
+    )
+    import json
+
+    info = json.loads(subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,duration", "-of", "json",
+         str(out)], capture_output=True, text=True, check=True).stdout)
+    durs = {s["codec_type"]: float(s["duration"]) for s in info["streams"]}
+    assert durs["audio"] == pytest.approx(durs["video"], abs=0.25)
+    assert durs["video"] == pytest.approx(edit.duration, abs=0.3)

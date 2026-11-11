@@ -111,7 +111,8 @@ def build_ass(
                 add(w.start, end, "Caption", text)
 
     # Hook at the top for the opening seconds.
-    add(offset, offset + overlay.hook_seconds, "Hook", esc(overlay.hook.upper()))
+    if overlay.hook:  # no hook without a script (narration-free render)
+        add(offset, offset + overlay.hook_seconds, "Hook", esc(overlay.hook.upper()))
 
     # Master-set counter, stepping up at each pack's end, plus a "+N NEW" badge.
     t, value = offset, overlay.master_before
@@ -126,8 +127,9 @@ def build_ass(
     add(t, duration, "Counter", f"MASTER SET {value}/{overlay.master_total}")
 
     # Rarity label during big-hit zooms (after the hook has gone).
+    hook_end = offset + overlay.hook_seconds if overlay.hook else offset
     for start, end, text in overlay.labels:
-        add(max(start, offset + overlay.hook_seconds), end, "Label", esc(text))
+        add(max(start, hook_end), end, "Label", esc(text))
 
     style_lines = [
         f"Style: {n},{FONT},{size},{prim},{prim},{outl},{back},-1,0,0,0,100,100,0,0,"

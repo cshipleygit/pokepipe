@@ -65,48 +65,47 @@ def segment_filter(seg: Segment) -> str:
     return ",".join(parts)
 
 
-def segment_cmd(source: Path, seg: Segment, out: Path) -> list[str]:
-    return [
-        require_tool("ffmpeg"),
-        "-v",
-        "error",
-        "-y",
-        "-ss",
-        f"{seg.src_start:.3f}",
-        "-t",
-        f"{seg.src_len:.3f}",
-        "-i",
-        str(source),
-        "-an",
-        "-vf",
-        segment_filter(seg),
-        *_encoder(18),
-        "-pix_fmt",
-        "yuv420p",
-        str(out),
+AUDIO_OUT = ["-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2"]
+
+
+def segment_cmd(source: Path, seg: Segment, out: Path, audio: bool = False) -> list[str]:
+    """One shot as its own clip. With `audio`, the source's first audio track comes
+    along: sped up with pitch-preserving atempo, padded through any freeze-frame, and
+    cut to exactly the shot's length so clips concatenate in sync."""
+    cmd = [
+        require_tool("ffmpeg"), "-v", "error", "-y", "-hwaccel", "auto",
+        "-ss", f"{seg.src_start:.3f}", "-t", f"{seg.src_len:.3f}", "-i", str(source),
+        "-vf", segment_filter(seg), *_encoder(18), "-pix_fmt", "yuv420p",
     ]
+    if audio:
+        cmd += ["-map", "0:v:0", "-map", "0:a:0",
+                "-af", f"atempo={seg.speed:.4f},apad", *AUDIO_OUT, "-t", f"{seg.out_len:.3f}"]
+    else:
+        cmd += ["-an"]
+    return cmd + [str(out)]
 
 
-def intro_cmd(intro: Path, out: Path) -> list[str]:
+def intro_cmd(intro: Path, out: Path, audio: bool = False) -> list[str]:
     fit = (
         f"scale={OUT_W}:{OUT_H}:force_original_aspect_ratio=decrease,"
         f"pad={OUT_W}:{OUT_H}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps={FPS}"
     )
-    return [
-        require_tool("ffmpeg"),
-        "-v",
-        "error",
-        "-y",
-        "-i",
-        str(intro),
-        "-an",
-        "-vf",
-        fit,
-        *_encoder(18),
-        "-pix_fmt",
-        "yuv420p",
-        str(out),
-    ]
+    cmd = [require_tool("ffmpeg"), "-v", "error", "-y", "-i", str(intro)]
+    if audio:  # keep the concat's streams uniform: the intro gets silence if it has none
+        cmd += ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo",
+                "-map", "0:v:0", "-map", "1:a:0", "-shortest", *AUDIO_OUT]
+    else:
+        cmd += ["-an"]
+    return cmd + ["-vf", fit, *_encoder(18), "-pix_fmt", "yuv420p", str(out)]
+
+
+def has_audio(video: Path) -> bool:
+    out = subprocess.run(
+        [require_tool("ffprobe"), "-v", "error", "-select_streams", "a",
+         "-show_entries", "stream=index", "-of", "csv=p=0", str(video)],
+        capture_output=True, text=True,
+    )
+    return bool(out.stdout.strip())
 
 
 def voice_filter(lines: list[PlacedLine], input_index: int = 1) -> str:
@@ -173,6 +172,21 @@ def final_cmd(
         "+faststart",
         str(out),
     ]
+
+
+def final_cmd_source_audio(
+    concat_list: Path, ass_name: str, duration: float, out: Path, audio: bool
+) -> list[str]:
+    """No narration: concat the clips, burn in the overlay, keep the clips' own audio
+    (the source's, already speed-matched per shot) or none."""
+    cmd = [
+        require_tool("ffmpeg"), "-v", "error", "-y",
+        "-f", "concat", "-safe", "0", "-i", str(concat_list),
+        "-vf", f"subtitles={ass_name}", "-t", f"{duration:.3f}",
+        *_encoder(21), "-pix_fmt", "yuv420p",
+    ]
+    cmd += ["-map", "0:v:0", "-map", "0:a:0", *AUDIO_OUT] if audio else ["-an"]
+    return cmd + ["-movflags", "+faststart", str(out)]
 
 
 def run(cmd: list[str], cwd: Path | None = None) -> None:

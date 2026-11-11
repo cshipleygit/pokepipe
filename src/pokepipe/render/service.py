@@ -43,7 +43,10 @@ def render_post(
     params: EditParams | None = None,
     keep_temp: bool = False,
     on_progress: Callable[[int, int], None] | None = None,
+    narration: bool = True,
 ) -> RenderResult:
+    """Render one post. `narration=False` is the edit alone: no script or voiceover
+    needed; the source audio plays under it, speed-matched per shot."""
     det = _load(files.root / "pulls.json", PullsFile, "run detection first")
     review = _load(files.root / "review.json", ReviewState, "finish the review first")
     if not review.completed:
@@ -54,19 +57,22 @@ def render_post(
     if post is None:
         raise RenderInputError(f"no post {post_index} in posts.json")
     pdir = files.post_dir(post_index)
-    script = _load(pdir / "script.json", PostScript, "run `pokepipe narrate script`")
-    voice = _load(pdir / "voice.json", VoiceTiming, "run `pokepipe narrate voice`")
+    script = voice = None
+    if narration:
+        script = _load(pdir / "script.json", PostScript, "run `pokepipe narrate script`")
+        voice = _load(pdir / "voice.json", VoiceTiming, "run `pokepipe narrate voice`")
 
     source = Path(det.video)
     if not source.exists():
         raise RenderInputError(f"source video not found: {source}")
     info = probe(source)
     intro_len = probe(intro).duration if intro and intro.exists() else 0.0
+    source_audio = not narration and ffmpeg.has_audio(source)
 
-    target = post.seconds or max(voice.duration + 1.0, 15.0)
+    target = post.seconds or (max(voice.duration + 1.0, 15.0) if voice else 45.0)
     params = params or EditParams(target=target)
     packs = pack_windows(det, post)
-    lines = [VoiceLine(b.anchor, b.text, b.start, b.end) for b in voice.beats]
+    lines = [VoiceLine(b.anchor, b.text, b.start, b.end) for b in voice.beats] if voice else []
     # Real footage after the post's last pack (until the next pack starts) that the final
     # shot may run into while the outro finishes.
     last_end = max(w.clip_end for w in packs)
@@ -91,7 +97,7 @@ def render_post(
         if s.kind == "zoom" and by_id[s.pull_id].label
     ]
     overlay = Overlay(
-        hook=script.hook_caption,
+        hook=script.hook_caption if script else "",
         hook_seconds=3.0,
         master_total=report.after.master_total,
         master_before=before.master_owned,
@@ -106,7 +112,8 @@ def render_post(
         shutil.rmtree(work)
     work.mkdir(parents=True)
     (work / "captions.ass").write_text(
-        build_ass(edit.lines, voice.words, overlay, edit.duration, intro_len), encoding="utf-8"
+        build_ass(edit.lines, voice.words if voice else [], overlay, edit.duration, intro_len),
+        encoding="utf-8",
     )
     (work / "edit.json").write_text(
         json.dumps(
@@ -135,11 +142,11 @@ def render_post(
     total = len(edit.segments) + (1 if intro_len else 0)
     if intro_len:
         clip = work / "seg_000_intro.mp4"
-        ffmpeg.run(ffmpeg.intro_cmd(intro, clip))
+        ffmpeg.run(ffmpeg.intro_cmd(intro, clip, audio=source_audio))
         clips.append(clip)
     for i, seg in enumerate(edit.segments, 1):
         clip = work / f"seg_{i:03d}.mp4"
-        ffmpeg.run(ffmpeg.segment_cmd(source, seg, clip))
+        ffmpeg.run(ffmpeg.segment_cmd(source, seg, clip, audio=source_audio))
         clips.append(clip)
         if on_progress:
             on_progress(len(clips), total)
@@ -148,12 +155,15 @@ def render_post(
 
     # --- pass 2: assemble ----------------------------------------------------------------------
     out = pdir / "post.mp4"
-    ffmpeg.run(
-        ffmpeg.final_cmd(
+    if narration:
+        cmd = ffmpeg.final_cmd(
             concat, pdir / "voice.mp3", edit.lines, "captions.ass", edit.duration, out
-        ),
-        cwd=work,
-    )
+        )
+    else:
+        cmd = ffmpeg.final_cmd_source_audio(
+            concat, "captions.ass", edit.duration, out, source_audio
+        )
+    ffmpeg.run(cmd, cwd=work)
     if not keep_temp:
         for clip in clips:
             clip.unlink(missing_ok=True)
