@@ -10,7 +10,13 @@ from pokepipe.collection.models import PackResult, Progress, PullResult, VideoRe
 from pokepipe.narration import posts as P
 from pokepipe.narration import service
 from pokepipe.narration.models import Beat, Post, PostScript, ScriptDraft
-from pokepipe.narration.script import ScriptError, ScriptSettings, build_prompt, generate_script
+from pokepipe.narration.script import (
+    ScriptError,
+    ScriptSettings,
+    build_prompt,
+    generate_script,
+    pack_numbers,
+)
 from pokepipe.narration.voice import (
     API,
     ElevenLabsClient,
@@ -320,3 +326,18 @@ def test_voice_budget_refuses_and_force_overrides(files, tmp_path):
     tight = VoiceSettings(voice_id="voice123", usd_per_1k_chars=1000.0)
     with pytest.raises(service.BudgetError):
         service.voice_posts(files, None, VoiceCache(tmp_path / "tts"), tight, service.Budget(1.0))
+
+
+def test_pack_numbers_skip_a_card_shown_before_the_first_pack():
+    # A promo held up before opening is detection's "pack 1"; viewers count from the next.
+    pulls = [pull(1, 5, "Promo")] + [
+        pull(pack, 10 * pack + i, f"Mon{pack}{i}") for pack in (2, 3) for i in range(10)
+    ]
+    report = REPORT.model_copy(update={"pulls": pulls})
+    assert pack_numbers(report) == {2: 1, 3: 2}
+    _, user = build_prompt(report, Post(index=1, packs=[3]), 1, "", ScriptSettings())
+    facts = json.loads(user.split("<facts>")[1].split("</facts>")[0])
+    assert facts["packs_in_this_post"] == [2] and facts["packs_opened_in_video"] == 2
+    assert facts["pulls_in_reveal_order"][0]["pack"] == "pack 2 of 2"
+    assert facts["pulls_in_reveal_order"][0]["id"] == "p3-1"  # anchors are unchanged
+    assert "not pack numbers" in user

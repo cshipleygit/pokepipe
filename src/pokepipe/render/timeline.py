@@ -16,7 +16,6 @@ from dataclasses import dataclass, field
 
 from pokepipe.cards.rarity import is_special
 
-CARD_ASPECT = 63 / 88
 OUT_W, OUT_H = 1080, 1920
 
 
@@ -96,7 +95,8 @@ class EditParams:
     max_gap_speed: float = 12.0
     gap_cap: float = 1.5  # if still too long, cut each gap to this many output seconds
     punch_in: float = 0.35  # seconds at normal framing before a hit zooms in
-    zoom_margin: float = 1.35  # zoomed crop height = card height × this
+    zoom_margin: float = 1.5  # zoomed crop width = card width × this
+    max_zoom: float = 1.8  # never punch in further than this vs the normal framing
     beat_gap: float = 0.12  # silence between voice lines
     tail: float = 0.6  # silence after the last line
     max_showings: int = 2  # repeat showings used per card (showcase shots)
@@ -228,10 +228,15 @@ def frame_segments(
         if seg.kind != "hit" or not box:
             out.append(seg)
             continue
+        # Size the zoom by the card's *width*: a 9:16 crop is narrower than a card's
+        # 63:88, so width is what gets cut. The margin also absorbs the detection box
+        # being coarse (a grid cell, not the card's outline) and the card drifting in
+        # the hand during a 2.5–4 s hold. A card that already fills the frame gets
+        # little or no zoom rather than a cropped one.
         x1, y1, x2, y2 = box
-        card_h = (x2 - x1) * src_w / CARD_ASPECT  # boxes may be square; derive from width
-        zh = max(card_h * p.zoom_margin, base_h * 0.45)
-        zw = zh * OUT_W / OUT_H
+        card_w = (x2 - x1) * src_w
+        zw = min(base_w, max(card_w * p.zoom_margin, base_w / p.max_zoom))
+        zh = zw * OUT_H / OUT_W
         split = seg.src_start + min(p.punch_in, seg.src_len / 2)
         common = dict(pack=seg.pack, pull_id=seg.pull_id, speed=1.0,
                       showcase=seg.showcase, box=seg.box)

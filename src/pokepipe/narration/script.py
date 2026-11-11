@@ -57,6 +57,24 @@ def pull_ids(report: VideoReport) -> dict[str, PullResult]:
     return ids
 
 
+MIN_OPENED_PACK = 3  # fewer pulls than this: a card shown outside a pack, not a pack
+
+
+def pack_numbers(report: VideoReport) -> dict[int, int]:
+    """Pack index → the number a viewer would say ("pack 3"), counting opened packs only.
+
+    Detection's pack indexes count every group of reveals, so a promo or a card
+    shown before the first pack becomes "pack 1" and shifts every real pack by one.
+    Narration must use the creator's count instead. Groups too small to be a pack
+    (the same cutoff `detection/reshows.py` uses for satellites) get no number.
+    """
+    counts: dict[int, int] = {}
+    for p in report.pulls:
+        counts[p.pack] = counts.get(p.pack, 0) + 1
+    opened = [i for i in sorted(counts) if counts[i] >= MIN_OPENED_PACK]
+    return {index: n for n, index in enumerate(opened, 1)}
+
+
 def _progress_line(p: Progress) -> str:
     return (
         f"{p.master_owned}/{p.master_total} master set (every printing), "
@@ -90,6 +108,7 @@ def build_prompt(
         "<style_guide>\n" + style.strip() + "\n</style_guide>"
     )
     ids = pull_ids(report)
+    numbers = pack_numbers(report)
     pulls = []
     for pid, p in ids.items():
         if p.pack not in post.packs:
@@ -104,7 +123,11 @@ def build_prompt(
         pulls.append(
             {
                 "id": pid,
-                "pack": p.pack,
+                "pack": (
+                    f"pack {numbers[p.pack]} of {len(numbers)}"
+                    if p.pack in numbers
+                    else "shown on its own, outside any pack"
+                ),
                 "card": p.name,
                 "number": p.number,
                 "rarity": p.rarity,
@@ -123,7 +146,8 @@ def build_prompt(
     facts = {
         "set": report.set_name,
         "post": f"{post.index} of {total_posts}",
-        "packs_in_this_post": post.packs,
+        "packs_in_this_post": [numbers[i] for i in post.packs if i in numbers],
+        "packs_opened_in_video": len(numbers),
         "pulls_in_reveal_order": pulls,
         "collection_before_post": _progress_line(before),
         "collection_after_post": _progress_line(after),
@@ -155,7 +179,9 @@ def build_prompt(
         f"{int(seconds * WORDS_PER_SECOND)} words across all beats.\n"
         "Beats: in the order they are spoken. Anchor each beat to 'intro', 'outro', or the "
         "id of the pull it is about (from the facts); a beat about a card must use that "
-        "card's id so it lines up with the reveal on screen." + timing
+        "card's id so it lines up with the reveal on screen. Ids are internal labels: "
+        "their numbers are not pack numbers. When you say a pack number, take it from "
+        "the pull's 'pack' field." + timing
     )
     return system, user
 

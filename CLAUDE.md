@@ -325,6 +325,8 @@ Known limitations:
   `edit.json` records every decision.
 - Result on packs 1–3 of the test video: 45.2 s, 41 shots, rendered in 39 s on the
   RTX 3060. A clean run of one 45 s post costs about $0.20 (script + voice).
+- **Zoom is sized by card width** (crop width = card width × 1.5, at most 1.8× in). A 9:16 crop is narrower than a card, and detection boxes are coarse grid cells, so the old height-based zoom cut cards off at the sides on phone footage.
+- **Pack numbers in scripts count opened packs only** (`narration/script.pack_numbers`): a group of fewer than 3 pulls, like a promo shown before the first pack, gets no number. Pull ids (`p<index>-<n>`) are unchanged.
 - **Narration off** (`render post --no-narration`, or `NARRATION=false` for the watcher):
   the edit alone, with no script, voice or API spend. The source audio plays under it,
   sped up per shot with pitch-preserving `atempo` and padded through freezes, so it stays

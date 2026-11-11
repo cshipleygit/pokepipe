@@ -117,6 +117,24 @@ def test_framing_is_vertical_in_bounds_and_hits_zoom():
     normal = next(s for s in framed if s.kind == "hit")
     assert zoom.crop[1] < normal.crop[1]  # tighter crop = zoomed in
     assert normal.src_end == zoom.src_start  # punch-in is a clean cut
+    card_w = (BOX[2] - BOX[0]) * SRC[0]
+    assert zoom.crop[0] >= min(normal.crop[0], card_w * p.zoom_margin) - 2  # whole card fits
+    assert normal.crop[0] / zoom.crop[0] <= p.max_zoom + 0.01
+
+
+def test_zoom_on_a_large_portrait_card_keeps_the_whole_card():
+    # Allen's footage: 2160x3840, the card ~44% of the frame width. The old height-based
+    # zoom made the crop barely wider than the card, so a coarse box cut it off.
+    box = (0.32, 0.33, 0.76, 0.67)
+    pulls = [rp("p1-1", 1, 5.0, rarity="Double Rare", box=box)]
+    p = EditParams(target=12.0)
+    segs = build_segments([PackWindow(1, 0.0, 20.0)], pulls, p)
+    solve_speeds(segs, p)
+    zoom = next(s for s in frame_segments(segs, {"p1-1": pulls[0]}, 2160, 3840, p)
+                if s.kind == "zoom")
+    w, h, x, y = zoom.crop
+    assert w >= 0.44 * 2160 * 1.5 - 2
+    assert x <= 0.32 * 2160 and x + w >= 0.76 * 2160  # both card edges inside the crop
 
 
 def test_voice_lines_start_on_their_card_and_never_overlap():
