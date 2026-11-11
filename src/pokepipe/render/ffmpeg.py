@@ -99,10 +99,12 @@ def segment_filter(seg: Segment) -> str:
 AUDIO_OUT = ["-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2"]
 
 
-def segment_cmd(source: Path, seg: Segment, out: Path, audio: bool = False) -> list[str]:
+def segment_cmd(
+    source: Path, seg: Segment, out: Path, audio: bool = False, volume: float = 1.0
+) -> list[str]:
     """One shot as its own clip. With `audio`, the source's first audio track comes
-    along: sped up with pitch-preserving atempo, padded through any freeze-frame, and
-    cut to exactly the shot's length so clips concatenate in sync."""
+    along: sped up with pitch-preserving atempo, set to `volume`, padded through any
+    freeze-frame, and cut to exactly the shot's length so clips concatenate in sync."""
     cmd = [
         require_tool("ffmpeg"), "-v", "error", "-y", "-hwaccel", "auto",
         "-ss", f"{seg.src_start:.3f}", "-t", f"{seg.src_len:.3f}", "-i", str(source),
@@ -110,7 +112,8 @@ def segment_cmd(source: Path, seg: Segment, out: Path, audio: bool = False) -> l
     ]
     if audio:
         cmd += ["-map", "0:v:0", "-map", "0:a:0",
-                "-af", f"atempo={seg.speed:.4f},apad", *AUDIO_OUT, "-t", f"{seg.out_len:.3f}"]
+                "-af", f"atempo={seg.speed:.4f},volume={volume:.3f},apad", *AUDIO_OUT,
+                "-t", f"{seg.out_len:.3f}"]
     else:
         cmd += ["-an"]
     return cmd + [str(out)]
@@ -139,8 +142,9 @@ def has_audio(video: Path) -> bool:
     return bool(out.stdout.strip())
 
 
-def voice_filter(lines: list[PlacedLine], input_index: int = 1) -> str:
-    """Cut each line out of voice.mp3 and delay it to its place on the timeline."""
+def voice_filter(lines: list[PlacedLine], input_index: int = 1, under: str = "") -> str:
+    """Cut each line out of voice.mp3 and delay it to its place on the timeline. `under`
+    (e.g. "[0:a]"): another audio stream mixed in beneath, the source sound."""
     n = len(lines)
     chains = (
         [f"[{input_index}:a]asplit={n}" + "".join(f"[v{i}]" for i in range(n))]
@@ -154,8 +158,8 @@ def voice_filter(lines: list[PlacedLine], input_index: int = 1) -> str:
             f"asetpts=PTS-STARTPTS,adelay={ms}:all=1[l{i}]"
         )
     chains.append(
-        "".join(f"[l{i}]" for i in range(n))
-        + f"amix=inputs={n}:normalize=0:dropout_transition=0,apad[aout]"
+        "".join(f"[l{i}]" for i in range(n)) + under
+        + f"amix=inputs={n + bool(under)}:normalize=0:dropout_transition=0,apad[aout]"
     )
     return ";".join(chains)
 
@@ -167,8 +171,12 @@ def final_cmd(
     ass_name: str,
     duration: float,
     out: Path,
+    source_audio: bool = False,
 ) -> list[str]:
-    graph = f"[0:v]subtitles={ass_name}[vout];" + voice_filter(lines)
+    """`source_audio`: the clips carry the (already levelled) source sound; mix the
+    voice over it."""
+    graph = f"[0:v]subtitles={ass_name}[vout];" + voice_filter(
+        lines, under="[0:a]" if source_audio else "")
     return [
         require_tool("ffmpeg"),
         "-v",

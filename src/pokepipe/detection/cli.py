@@ -169,3 +169,32 @@ def run(
         f"{len(result.pulls)} pulls in {len(result.packs)} packs "
         f"({incomplete} need attention) in {time.perf_counter() - t0:.0f}s → {out / 'pulls.json'}"
     )
+
+
+@app.command()
+def moments(slug: str):
+    """Find the box opening, each pack's tear / cards out and its Energy start
+    → data/videos/<slug>/moments.json (used by the series edit)."""
+    from pokepipe.cards.embeddings import OpenClipEmbedder
+    from pokepipe.detection.moments_scan import find_moments
+
+    s = get_settings()
+    root = s.videos_dir / slug
+    det = PullsFile.model_validate_json((root / "pulls.json").read_text(encoding="utf-8"))
+    embedder = OpenClipEmbedder(s.clip_model, s.clip_pretrained, fit=s.clip_fit)
+    index = cards_service.load_index(s.sets_dir, det.set_id, embedder.model_tag)
+    t0 = time.perf_counter()
+    found = find_moments(Path(det.video), det, embedder, index)
+    (root / "moments.json").write_text(found.model_dump_json(indent=2), encoding="utf-8")
+    table = Table("pack", "rip", "cards out", "energy")
+    for p in found.packs:
+        table.add_row(str(p.index),
+                      _ts(p.rip.start) if p.rip else "-",
+                      _ts(p.cards_out.start) if p.cards_out else "-",
+                      _ts(p.energy_at) if p.energy_at is not None else "-")
+    console.print(table)
+    for name, span in found.intro:
+        console.print(f"box {name}: {_ts(span.start) + '–' + _ts(span.end) if span else '-'}")
+    for note in found.notes:
+        console.print(f"[yellow]{note}[/]")
+    console.print(f"{time.perf_counter() - t0:.0f}s → {root / 'moments.json'}")

@@ -72,6 +72,7 @@ class OpenClipEmbedder:
             model_name, pretrained=pretrained, device=self.device
         )
         self.model.eval()
+        self._tokenizer = open_clip.get_tokenizer(model_name)
         self.fit = fit
         self.crop_aspect = CARD_ASPECT if fit == "full" else 1.0
         self.model_tag = f"{model_name}__{pretrained}" + ("__full" if fit == "full" else "")
@@ -97,6 +98,13 @@ class OpenClipEmbedder:
         with torch.no_grad(), torch.autocast("cuda", enabled=self.device.startswith("cuda")):
             feats = self.model.encode_image(x).float()
         return torch.nn.functional.normalize(feats, dim=-1)
+
+    def embed_texts(self, texts: Sequence[str]):
+        """(N, D) L2-normalised text embeddings, for zero-shot scoring of frames."""
+        torch = self._torch
+        with torch.no_grad():
+            feats = self.model.encode_text(self._tokenizer(list(texts)).to(self.device))
+        return torch.nn.functional.normalize(feats.float(), dim=-1)
 
     def _to_pixels(self, im: Image.Image):
         torch = self._torch

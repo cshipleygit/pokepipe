@@ -55,11 +55,23 @@ class PackWindow:
     clip_end: float
 
 
+@dataclass(frozen=True)
+class Clip:
+    """A quick 1× shot with its sound up: the box opening, a pack's tear, the cards
+    coming out, or a hit in the end recap (`pull_id`, framed on `box`)."""
+
+    start: float
+    end: float
+    label: str
+    pull_id: str | None = None
+    box: tuple[float, float, float, float] | None = None
+
+
 @dataclass
 class Segment:
     src_start: float
     src_end: float
-    kind: str  # "gap" | "reveal" | "hit" | "zoom"
+    kind: str  # "gap" | "reveal" | "hit" | "zoom" | "clip" (quick 1× shot, see Clip)
     pack: int
     pull_id: str | None = None
     speed: float = 1.0
@@ -75,6 +87,7 @@ class Segment:
     # out and back in.
     window: tuple[int, int, int, int] | None = None
     chained: bool = False
+    label: str = ""  # clips: what the shot shows ("rip", "cards_out", "recap", ...)
     path: list[tuple[float, tuple[int, int, int, int]]] | None = None
 
     @property
@@ -110,6 +123,8 @@ class EditParams:
     tail: float = 0.6  # silence after the last line
     max_showings: int = 2  # repeat showings used per card (showcase shots)
 
+
+FIXED = ("hit", "zoom", "clip")  # always play at 1×
 
 # --- building ------------------------------------------------------------------------------
 
@@ -183,14 +198,14 @@ def build_segments(
 def solve_speeds(segments: list[Segment], p: EditParams) -> float:
     """Pick one reveal speed (gaps run `gap_factor` faster) so the cut hits `p.target`.
     Returns the reveal speed used. Hits always play at 1×."""
-    fixed = sum(s.src_len for s in segments if s.kind == "hit")
+    fixed = sum(s.src_len for s in segments if s.kind in FIXED)
     reveal = sum(s.src_len for s in segments if s.kind == "reveal")
     gap = sum(s.src_len for s in segments if s.kind == "gap")
     flexible_out = max(p.target - fixed, 1.0)
     speed = (reveal + gap / p.gap_factor) / flexible_out if (reveal or gap) else 1.0
     speed = min(max(speed, 1.0), p.max_speed)
     for s in segments:
-        if s.kind == "hit":
+        if s.kind in FIXED:
             s.speed = 1.0
         elif s.kind == "reveal":
             s.speed = speed
@@ -219,6 +234,9 @@ def frame_segments(
 
     def centre(seg_index: int) -> tuple[float, float]:
         # Frame on this segment's card, else the next card (so gaps lead into it).
+        # A clip of the box or a pack has no card: keep it centred.
+        if segments[seg_index].kind == "clip" and not box_of(segments[seg_index]):
+            return src_w / 2, src_h / 2
         for s in segments[seg_index:]:
             box = box_of(s)
             if box:
@@ -392,7 +410,7 @@ class Region:
     def out(self, speed: float, p: EditParams) -> float:
         total = 0.0
         for s in self.segments:
-            if s.kind in ("hit", "zoom"):
+            if s.kind in FIXED:
                 total += s.src_len
             elif s.kind == "reveal":
                 total += s.src_len / speed
@@ -404,7 +422,7 @@ class Region:
         for s in self.segments:
             s.speed = (
                 1.0
-                if s.kind in ("hit", "zoom")
+                if s.kind in FIXED
                 else speed
                 if s.kind == "reveal"
                 else min(speed * p.gap_factor, p.max_gap_speed)
@@ -496,14 +514,27 @@ def plan_edit(
     p: EditParams | None = None,
     intro: float = 0.0,
     tail_room: float = 0.0,
+    lead: list[Clip] | tuple = (),
+    recap: list[Clip] | tuple = (),
 ) -> Edit:
     """`tail_room`: source seconds available after the last pack's clip window, which the
-    final shot may run into if the outro needs it."""
+    final shot may run into if the outro needs it. `lead` clips open the post (the box,
+    each pack's tear and cards coming out); `recap` clips close it (the hits again)."""
     p = p or EditParams()
     by_id = {x.id: x for x in pulls}
     segments = build_segments(packs, pulls, p)
     if not segments:
         raise ValueError("nothing to render: no footage in the selected packs")
+    first, last = segments[0].pack, segments[-1].pack
+    segments = (
+        [Segment(c.start, c.end, "clip", first, c.pull_id, box=c.box, label=c.label,
+                 showcase=c.pull_id is not None) for c in lead]
+        + segments
+        + [Segment(c.start, c.end, "clip", last, c.pull_id, box=c.box, label=c.label,
+                   showcase=True) for c in recap]
+    )
+    if recap:  # the outro plays over the recap: no running on into later footage
+        tail_room = 0.0
     speed = solve_speeds(segments, p)  # global first pass; also trims gaps if far too long
     segments = frame_segments(segments, by_id, *src_size, p)
 

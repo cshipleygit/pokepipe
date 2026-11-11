@@ -75,6 +75,25 @@ def pack_numbers(report: VideoReport) -> dict[int, int]:
     return {index: n for n, index in enumerate(opened, 1)}
 
 
+CLIP_WORDS = {  # lead clip labels (render.inputs) as the script writer should read them
+    "box_hero": "the sealed Elite Trainer Box",
+    "box_seal": "ripping the shrink-wrap off the box",
+    "box_open": "lifting the lid",
+    "box_packs": "the packs fanned out",
+    "rip": "a pack being torn open",
+    "cards_out": "the cards coming out of the pack",
+}
+
+
+def call_to_action(part: int, parts: int) -> str:
+    """The creators' chosen CTA: point to the next part, ask for a follow. No selling."""
+    follow = "invite viewers to follow the master-set series"
+    if part < parts:
+        return (f"The outro tells viewers to watch part {part + 1} for the rest of the "
+                f"packs and {follow}.")
+    return f"The outro should {follow}."
+
+
 def _progress_line(p: Progress) -> str:
     return (
         f"{p.master_owned}/{p.master_total} master set (every printing), "
@@ -153,6 +172,13 @@ def build_prompt(
         "collection_after_post": _progress_line(after),
         "new_master_set_slots_this_post": after.master_owned - before.master_owned,
     }
+    facts["part"] = f"{post.index} of {total_posts}"
+    opening = getattr(airtime, "opening", None) or []
+    recap = getattr(airtime, "recap", None) or []
+    if opening:
+        facts["opening_clips"] = [CLIP_WORDS.get(c, c) for c in opening]
+    if recap:
+        facts["recap_at_end"] = recap
     if airtime is not None:
         facts["footage"] = {
             "video_seconds": round(airtime.duration),
@@ -181,9 +207,31 @@ def build_prompt(
         "id of the pull it is about (from the facts); a beat about a card must use that "
         "card's id so it lines up with the reveal on screen. Ids are internal labels: "
         "their numbers are not pack numbers. When you say a pack number, take it from "
-        "the pull's 'pack' field." + timing
+        "the pull's 'pack' field." + timing + _structure(report, opening, recap)
+        + "\nCall to action: " + call_to_action(post.index, total_posts)
+        + " Don't mention shops, prices or links."
     )
     return system, user
+
+
+def _structure(report: VideoReport, opening: list[str], recap: list[str]) -> str:
+    out = ""
+    if opening:
+        out += (
+            "\nStructure: the post opens with quick clips (opening_clips) before the first "
+            "card; speak the intro over them."
+        )
+        if any(c.startswith("box_") for c in opening):
+            out += (
+                f" They show a {report.set_name} Elite Trainer Box being opened: make the "
+                "intro a hook about opening it to start the master set."
+            )
+    if recap:
+        out += (
+            "\nThe post ends by replaying the hits in recap_at_end (they were already "
+            "revealed); the outro plays over that recap."
+        )
+    return out
 
 
 def generate_script(

@@ -348,6 +348,32 @@ Known limitations:
 - To tune next: bigger counter/badge (the badge overlaps the card name), optional
   source audio (pack-rip sounds), and motion blur on commons at ~3.6×.
 
+### Series edit (moments.json)
+
+`pokepipe detect moments <slug>` (`detection/moments.py` pure, `moments_scan.py` signals)
+finds footage Allen films on purpose. When `moments.json` exists, render and the script
+writer use the series edit (`render/inputs.edit_inputs`):
+- **Opening montage, ~1 s each with sound:** the sealed box, shrink-wrap coming off, lid
+  off, packs fanned (only in the post with the first pack), then every pack's tear and
+  cards coming out.
+- **Packs start at their Energy,** which cuts the straightening, the code card and early
+  peeks. Repeat showings are dropped from packs.
+- **End recap:** each hit again (2 s for Double Rare+, 1.2 s otherwise), from its sleeving
+  footage when there is some, under the outro. CTA: part *n*+1, then follow the series.
+- **Sound:** source audio at 0.22 under the voice, 0.8 on the quick clips.
+
+Signals, measured on the Delta Reign ETB video:
+- **Sound** (high-passed >2.5 kHz): tearing foil and shrink-wrap are -25 to -40 dB in an
+  otherwise quiet room (about -75 dB). The last crinkle of ≥1.5 s before a pack's Energy
+  is its tear then cards out. 9/9 tears correct, 9/9 cards-out after one fix (the crinkle
+  tails off past the cards).
+- **Energy start:** basic-Energy decoy matches. 9/9.
+- **CLIP zero-shot** only for "open box with packs inside" (0.94–0.98) and "packs fanned".
+  Generic prompts fired everywhere because the ETB display wall is behind every shot.
+  The longest wrap crinkle before the lid comes off is the seal. All 4 box shots correct.
+- Tuned on one video: check `moments.json` on new footage (a different room, music, or
+  talking would break the sound rules).
+
 ### Stage 7 design (watch/)
 
 - `pokepipe watch run` = watcher loop + the review page (thread, 127.0.0.1) in one
@@ -386,6 +412,7 @@ pokepipe cards match sv3pt5 photo.jpg     # sanity-check: top-5 matches for an i
 pokepipe detect run video.mp4 --set sv3pt5 # → data/videos/<slug>/pulls.json + thumbs/
 pokepipe detect layout <slug>             # re-run pack-slot / reverse-holo inference
 pokepipe detect regroup <slug>            # merge repeat showings + regroup + layout
+pokepipe detect moments <slug>            # box / tear / cards-out / Energy → series edit
 pokepipe review serve                     # review page at http://127.0.0.1:8765
 pokepipe review prefill <slug>            # copy reverse guesses onto pending pulls
 pokepipe review status                    # progress per video

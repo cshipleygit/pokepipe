@@ -15,10 +15,13 @@ from pokepipe.narration.script import post_progress
 from pokepipe.narration.service import VideoFiles
 from pokepipe.render import ffmpeg
 from pokepipe.render.captions import Overlay, build_ass
-from pokepipe.render.inputs import pack_windows, render_pulls
+from pokepipe.render.inputs import edit_inputs, load_moments
 from pokepipe.render.timeline import Edit, EditParams, Segment, VoiceLine, plan_edit
 from pokepipe.render.zoom import add_zoom_paths
 from pokepipe.review.models import ReviewState
+
+UNDER_VOICE_VOLUME = 0.22  # source sound under the narration (about -13 dB)
+CLIP_VOLUME = 0.8  # quick clips: the tearing and crinkling is the point
 
 
 class RenderInputError(RuntimeError):
@@ -71,11 +74,19 @@ def render_post(
         raise RenderInputError(f"source video not found: {source}")
     info = probe(source)
     intro_len = probe(intro).duration if intro and intro.exists() else 0.0
-    source_audio = not narration and ffmpeg.has_audio(source)
+    # The source sound plays under every shot: alone at full level without narration,
+    # else quietly under the voice and louder on the quick clips (tearing, crinkling).
+    source_audio = ffmpeg.has_audio(source)
+
+    def volume(seg: Segment) -> float:
+        if not narration:
+            return 1.0
+        return CLIP_VOLUME if seg.kind == "clip" else UNDER_VOICE_VOLUME
 
     target = post.seconds or (max(voice.duration + 1.0, 15.0) if voice else 45.0)
     params = params or EditParams(target=target)
-    packs = pack_windows(det, post)
+    inputs = edit_inputs(det, review, report, post, load_moments(files.root))
+    packs = inputs.packs
     lines = [VoiceLine(b.anchor, b.text, b.start, b.end) for b in voice.beats] if voice else []
     # Real footage after the post's last pack (until the next pack starts) that the final
     # shot may run into while the outro finishes.
@@ -84,15 +95,17 @@ def render_post(
     tail_room = max(0.0, (min(later) if later else info.duration) - last_end)
     edit = plan_edit(
         packs,
-        render_pulls(det, review, report),
+        inputs.pulls,
         lines,
         (info.width, info.height),
         params,
         intro=intro_len,
         tail_room=tail_room,
+        lead=inputs.lead,
+        recap=inputs.recap,
     )
 
-    by_id = {p.id: p for p in render_pulls(det, review, report)}
+    by_id = {p.id: p for p in inputs.pulls}
 
     # --- zooms follow the card ---------------------------------------------------------------
     if track and tracker is None and any(s.kind == "zoom" for s in edit.segments):
@@ -172,7 +185,8 @@ def render_post(
         clips.append(clip)
     for i, seg in enumerate(edit.segments, 1):
         clip = work / f"seg_{i:03d}.mp4"
-        ffmpeg.run(ffmpeg.segment_cmd(source, seg, clip, audio=source_audio))
+        ffmpeg.run(ffmpeg.segment_cmd(source, seg, clip, audio=source_audio,
+                                      volume=volume(seg)))
         clips.append(clip)
         if on_progress:
             on_progress(len(clips), total)
@@ -183,7 +197,8 @@ def render_post(
     out = pdir / "post.mp4"
     if narration:
         cmd = ffmpeg.final_cmd(
-            concat, pdir / "voice.mp3", edit.lines, "captions.ass", edit.duration, out
+            concat, pdir / "voice.mp3", edit.lines, "captions.ass", edit.duration, out,
+            source_audio=source_audio,
         )
     else:
         cmd = ffmpeg.final_cmd_source_audio(

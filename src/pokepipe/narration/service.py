@@ -122,7 +122,7 @@ def _airtime(files: VideoFiles, report: VideoReport, post, settings: ScriptSetti
     """Seconds each card is on screen in a draft edit, so the script fits the footage.
     None when the footage data isn't available (the script is then length-only)."""
     from pokepipe.detection.models import PullsFile
-    from pokepipe.render.inputs import airtime
+    from pokepipe.render.inputs import airtime, load_moments
     from pokepipe.review.models import ReviewState
 
     det_path, review_path = files.root / "pulls.json", files.root / "review.json"
@@ -132,7 +132,7 @@ def _airtime(files: VideoFiles, report: VideoReport, post, settings: ScriptSetti
     review = ReviewState.model_validate_json(review_path.read_text(encoding="utf-8"))
     target = post.seconds or settings.target_seconds(len(post.packs))
     try:
-        return airtime(det, review, report, post, target)
+        return airtime(det, review, report, post, target, load_moments(files.root))
     except ValueError:  # no footage for these packs
         return None
 
