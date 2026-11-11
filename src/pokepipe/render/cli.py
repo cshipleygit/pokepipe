@@ -29,11 +29,16 @@ def post(
         "--narration/--no-narration",
         help="Voiceover + captions, or the edit alone with source audio (default: NARRATION)",
     ),
+    track: bool = typer.Option(
+        None, "--track/--no-track", help="Follow each card through its zoom (GPU)"
+    ),
 ):
     """Render posts to data/videos/<slug>/posts/<n>/post.mp4."""
     settings = get_settings()
     if narration is None:
         narration = settings.narration
+    if track is None:
+        track = settings.render_track
     files = VideoFiles(settings.data_dir / "videos" / slug)
     try:
         indexes = post or [p.index for p in files.load_plan().posts]
@@ -52,6 +57,7 @@ def post(
                     intro=intro,
                     keep_temp=keep_temp,
                     narration=narration,
+                    track=track,
                     on_progress=lambda done, total, t=task: bar.update(
                         t, completed=done, total=total
                     ),

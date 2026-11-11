@@ -51,7 +51,38 @@ def _encoder(cq: int) -> list[str]:
     return [a.replace("{cq}", str(cq)) for a in video_encoder()]
 
 
+def _piecewise(times: list[float], values: list[float], t: str) -> str:
+    """ffmpeg expression: linear interpolation of `values` at `times`, held at the ends."""
+    expr = f"{values[-1]:.4f}"
+    for i in range(len(times) - 2, -1, -1):
+        t0, t1, v0, v1 = times[i], times[i + 1], values[i], values[i + 1]
+        lerp = f"{v0:.4f}+({v1 - v0:.4f})*({t}-{t0:.3f})/{max(t1 - t0, 1e-3):.3f}"
+        expr = f"if(lt({t},{t1:.3f}),{lerp},{expr})"
+    return expr
+
+
+def zoompan_filter(seg: Segment) -> str:
+    """Animated crop for a zoom shot: crop to the normal framing (`window`), then let
+    zoompan move a window through it along `seg.path`, scaled to the output size.
+    zoompan's window has its input's aspect, which is why the input is the 9:16 window."""
+    ww, wh, wx, wy = seg.window or seg.crop
+    times = [t for t, _ in seg.path]
+    t = f"(in/{FPS}*{seg.speed:.4f})"  # output frame → seconds into the shot's source
+    z = _piecewise(times, [ww / c[0] for _, c in seg.path], t)
+    x = _piecewise(times, [c[2] - wx for _, c in seg.path], t)
+    y = _piecewise(times, [c[3] - wy for _, c in seg.path], t)
+    return (
+        f"crop={ww}:{wh}:{wx}:{wy},setpts=(PTS-STARTPTS)/{seg.speed:.4f},fps={FPS},"
+        f"zoompan=z='{z}':x='{x}':y='{y}':d=1:s={OUT_W}x{OUT_H}:fps={FPS},setsar=1"
+    )
+
+
 def segment_filter(seg: Segment) -> str:
+    if seg.path:
+        parts = [zoompan_filter(seg)]
+        if seg.hold > 0:
+            parts.append(f"tpad=stop_mode=clone:stop_duration={seg.hold:.3f}")
+        return ",".join(parts)
     w, h, x, y = seg.crop
     parts = [
         f"crop={w}:{h}:{x}:{y}",

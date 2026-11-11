@@ -16,7 +16,8 @@ from pokepipe.narration.service import VideoFiles
 from pokepipe.render import ffmpeg
 from pokepipe.render.captions import Overlay, build_ass
 from pokepipe.render.inputs import pack_windows, render_pulls
-from pokepipe.render.timeline import Edit, EditParams, VoiceLine, plan_edit
+from pokepipe.render.timeline import Edit, EditParams, Segment, VoiceLine, plan_edit
+from pokepipe.render.zoom import add_zoom_paths
 from pokepipe.review.models import ReviewState
 
 
@@ -44,9 +45,12 @@ def render_post(
     keep_temp: bool = False,
     on_progress: Callable[[int, int], None] | None = None,
     narration: bool = True,
+    track: bool = True,
+    tracker=None,
 ) -> RenderResult:
     """Render one post. `narration=False` is the edit alone: no script or voiceover
-    needed; the source audio plays under it, speed-matched per shot."""
+    needed; the source audio plays under it, speed-matched per shot. `track` follows
+    each zoomed card with `render.track` (pass `tracker` to reuse a loaded model)."""
     det = _load(files.root / "pulls.json", PullsFile, "run detection first")
     review = _load(files.root / "review.json", ReviewState, "finish the review first")
     if not review.completed:
@@ -88,9 +92,30 @@ def render_post(
         tail_room=tail_room,
     )
 
+    by_id = {p.id: p for p in render_pulls(det, review, report)}
+
+    # --- zooms follow the card ---------------------------------------------------------------
+    if track and tracker is None and any(s.kind == "zoom" for s in edit.segments):
+        from pokepipe.render.track import load_tracker
+
+        tracker = load_tracker(det.set_id)
+    track_log: list[dict] = []
+
+    def track_fn(seg: Segment):
+        pull = by_id[seg.pull_id]
+        box = seg.box or pull.box
+        if not (tracker and pull.card_id and box):
+            return None
+        samples = tracker.track(source, pull.card_id, seg.src_start, seg.src_end, box)
+        track_log.append({"pull_id": seg.pull_id, "src_start": seg.src_start,
+                          "scores": tracker.last_scores,
+                          "lost": sum(b is None for _, b in samples)})
+        return samples
+
+    add_zoom_paths(edit.segments, info.width, info.height, track_fn if tracker else None)
+
     # --- overlay -----------------------------------------------------------------------------
     before, _ = post_progress(report, post)
-    by_id = {p.id: p for p in render_pulls(det, review, report)}
     labels = [
         (s.out_start, s.out_end, f"{by_id[s.pull_id].label} · {by_id[s.pull_id].name.upper()}")
         for s in edit.segments
@@ -121,6 +146,7 @@ def render_post(
                 "duration": edit.duration,
                 "reveal_speed": edit.reveal_speed,
                 "notes": edit.notes,
+                "tracking": track_log,
                 "segments": [asdict(s) for s in edit.segments],
                 "lines": [
                     {

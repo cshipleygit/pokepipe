@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     # Stage 5 — script + voice
     narration: bool = True  # False: posts are the edit alone, with the source audio
+    render_track: bool = True  # follow the card through zooms (loads CLIP on the GPU)
     budget_usd_per_video: float = 1.0
     style_guide: Path = PROJECT_ROOT / "config" / "style.md"
     anthropic_api_key: str | None = None

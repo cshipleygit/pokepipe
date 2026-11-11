@@ -325,7 +325,20 @@ Known limitations:
   `edit.json` records every decision.
 - Result on packs 1–3 of the test video: 45.2 s, 41 shots, rendered in 39 s on the
   RTX 3060. A clean run of one 45 s post costs about $0.20 (script + voice).
-- **Zoom is sized by card width** (crop width = card width × 1.5, at most 1.8× in). A 9:16 crop is narrower than a card, and detection boxes are coarse grid cells, so the old height-based zoom cut cards off at the sides on phone footage.
+- **Zooms follow the card and never cut it off** (`render/track.py`, `render/zoom.py`).
+  - Detection boxes are grid cells, too rough to frame a card, so the tracker re-finds
+    the known card 5×/s during each zoom: coarse-to-fine box search scored against that
+    one card's embedding on the GPU. CLIP scores the artwork alone about as high as the
+    whole card, so it takes the *largest* box within 0.02 of the best score, kept to
+    0.7–1.35× the detection box (full-art cards score flatly and would grow otherwise).
+  - `zoom.py` (pure): crop width = card width × 1.5 (≤ 1.8× in), moving average, then
+    any keyframe that would clip the card is widened until it fits. A lost card (score
+    < 0.55) eases back to the normal framing; 1–2 lost samples are bridged.
+  - Zooms ease in (0.6 s) and out (0.5 s) with zoompan instead of hard cuts. One zoom
+    per card: repeat showings stay at normal framing. A hit straight after another zoom
+    pans across from it instead of zooming out and back in.
+  - Allen's posts: 16 zooms → 10, every zoom frame shows the whole card. Tracking adds
+    about 10 s per post. `--no-track` / `RENDER_TRACK=false` skips it.
 - **Pack numbers in scripts count opened packs only** (`narration/script.pack_numbers`): a group of fewer than 3 pulls, like a promo shown before the first pack, gets no number. Pull ids (`p<index>-<n>`) are unchanged.
 - **Narration off** (`render post --no-narration`, or `NARRATION=false` for the watcher):
   the edit alone, with no script, voice or API spend. The source audio plays under it,

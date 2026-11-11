@@ -45,6 +45,7 @@ def render_pulls(det: PullsFile, review: ReviewState, report) -> list[RenderPull
                     src_end=end,
                     box=box,
                     showings=showings,
+                    card_id=rp.card_id,
                 )
             )
     return out

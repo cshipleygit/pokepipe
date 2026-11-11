@@ -32,6 +32,7 @@ class RenderPull:
     box: tuple[float, float, float, float] | None  # 0-1 of source frame, None if unknown
     # Repeat appearances of this same card (start, end, box): showcase footage.
     showings: tuple[tuple[float, float, tuple[float, float, float, float] | None], ...] = ()
+    card_id: str = ""  # final card id (after review), used to track the card in zooms
 
     @property
     def hit(self) -> bool:
@@ -67,6 +68,14 @@ class Segment:
     out_start: float = 0.0
     showcase: bool = False  # a repeat showing of an already-revealed card
     box: tuple[float, float, float, float] | None = None  # card box, if not the pull's
+    # Zoom shots only. `crop` is the static zoom; `window` is the normal framing the zoom
+    # happens inside; `path` (set by render.zoom) animates the crop over the shot as
+    # [(seconds into the shot's source, (w, h, x, y))]. `chained`: this zoom follows
+    # straight on from the previous card's zoom, so it pans across instead of zooming
+    # out and back in.
+    window: tuple[int, int, int, int] | None = None
+    chained: bool = False
+    path: list[tuple[float, tuple[int, int, int, int]]] | None = None
 
     @property
     def src_len(self) -> float:
@@ -198,7 +207,10 @@ def solve_speeds(segments: list[Segment], p: EditParams) -> float:
 def frame_segments(
     segments: list[Segment], pulls: dict[str, RenderPull], src_w: int, src_h: int, p: EditParams
 ) -> list[Segment]:
-    """Vertical 9:16 crops; hits get split into a short normal shot and a zoomed shot."""
+    """Vertical 9:16 crops. A card's first hit shot is split into a short normal shot and
+    a zoom; a hit straight after another card's zoom skips the normal shot (no zoom out
+    and back in). Repeat showings of a card that already zoomed stay at normal framing:
+    one zoom per card, and a card held up next to another isn't cut in half."""
     base_h = src_h
     base_w = min(src_w, round(base_h * OUT_W / OUT_H))
 
@@ -221,13 +233,15 @@ def frame_segments(
         return w, h, x, y
 
     out: list[Segment] = []
+    zoomed: set[str] = set()
     for i, seg in enumerate(segments):
         cx, cy = centre(i)
         seg.crop = rect(cx, src_h / 2, base_w, base_h)
         box = box_of(seg)
-        if seg.kind != "hit" or not box:
+        if seg.kind != "hit" or not box or seg.pull_id in zoomed:
             out.append(seg)
             continue
+        zoomed.add(seg.pull_id)
         # Size the zoom by the card's *width*: a 9:16 crop is narrower than a card's
         # 63:88, so width is what gets cut. The margin also absorbs the detection box
         # being coarse (a grid cell, not the card's outline) and the card drifting in
@@ -237,12 +251,18 @@ def frame_segments(
         card_w = (x2 - x1) * src_w
         zw = min(base_w, max(card_w * p.zoom_margin, base_w / p.max_zoom))
         zh = zw * OUT_H / OUT_W
-        split = seg.src_start + min(p.punch_in, seg.src_len / 2)
         common = dict(pack=seg.pack, pull_id=seg.pull_id, speed=1.0,
-                      showcase=seg.showcase, box=seg.box)
-        out.append(Segment(seg.src_start, split, "hit", crop=seg.crop, **common))
-        out.append(Segment(split, seg.src_end, "zoom",
-                           crop=rect(cx, cy, round(zw), round(zh)), **common))
+                      showcase=seg.showcase, box=seg.box, window=seg.crop)
+        zoom_crop = rect(cx, cy, round(zw), round(zh))
+        prev = out[-1] if out else None
+        if prev and prev.kind == "zoom" and abs(prev.src_end - seg.src_start) < 1e-6:
+            out.append(Segment(seg.src_start, seg.src_end, "zoom", crop=zoom_crop,
+                               chained=True, **common))
+            continue
+        split = seg.src_start + min(p.punch_in, seg.src_len / 2)
+        out.append(Segment(seg.src_start, split, "hit", crop=seg.crop,
+                           **{k: v for k, v in common.items() if k != "window"}))
+        out.append(Segment(split, seg.src_end, "zoom", crop=zoom_crop, **common))
     return out
 
 

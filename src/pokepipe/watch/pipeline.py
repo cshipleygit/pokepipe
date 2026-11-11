@@ -37,6 +37,14 @@ class PipelineOps:
             )
         return self._embedder
 
+    def _tracker(self, job: Job):
+        """Zoom tracking reuses the CLIP model already loaded for detection."""
+        from pokepipe.cards import service as cards
+        from pokepipe.render.track import CardTracker
+
+        emb = self.embedder()
+        return CardTracker(emb, cards.load_index(self.s.sets_dir, job.set_id, emb.model_tag))
+
     # --- stages ---------------------------------------------------------------------------
 
     def ensure_set(self, job: Job) -> None:
@@ -163,5 +171,6 @@ class PipelineOps:
             if (files.post_dir(post.index) / "post.mp4").exists():
                 continue
             result = render_post(files, post.index, intro=intro if intro.exists() else None,
-                                 narration=self.s.narration)
+                                 narration=self.s.narration, track=self.s.render_track,
+                                 tracker=self._tracker(job) if self.s.render_track else None)
             self.log(f"{job.slug}: post {post.index} → {result.path} ({result.edit.duration:.0f}s)")
