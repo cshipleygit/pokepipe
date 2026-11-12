@@ -291,7 +291,9 @@ def test_build_ass_has_highlighted_words_counter_and_labels():
     assert "PlayResX: 1080" in ass and "PlayResY: 1920" in ass
     assert "{\\c&H0000E5FF&}".replace("&}", "}") in ass or "\\c&H0000E5FF" in ass
     assert "CHARIZARD" in ass and "EX!" in ass
-    assert "MASTER SET 10/360" in ass and "MASTER SET 14/360" in ass and "+4 NEW" in ass
+    assert "MASTER SET" in ass and "}10{" in ass and "}14{" in ass and "/360" in ass
+    assert "+4 NEW" in ass
+    assert r"\clip(" in ass and r"\t(0,700," in ass  # the progress bar fills, animated
     assert "SIR · CHARIZARD EX" in ass and "NO WAY" in ass
 
 
@@ -397,7 +399,7 @@ def test_build_ass_without_narration_has_no_hook_or_captions():
     overlay = Overlay("", 3.0, 360, 10, {1: 14}, {1: 4}, edit.pack_done_at, [(1.0, 2.0, "SIR")])
     ass = build_ass(edit.lines, [], overlay, edit.duration)
     assert ",Hook," not in ass and ",Caption," not in ass
-    assert "MASTER SET 14/360" in ass
+    assert "MASTER SET" in ass and "}14{" in ass and "/360" in ass
     # with no hook, the label isn't pushed back behind it
     assert "Dialogue: 0,0:00:01.00,0:00:02.00,Label" in ass
 

@@ -361,6 +361,17 @@ writer use the series edit (`render/inputs.edit_inputs`):
 - **End recap:** each hit again (2 s for Double Rare+, 1.2 s otherwise), from its sleeving
   footage when there is some, under the outro. CTA: part *n*+1, then follow the series.
 - **Sound:** source audio at 0.22 under the voice, 0.8 on the quick clips.
+- **Each pack's tear plays right before that pack** (not all up front: hits already on
+  the table would show early). The packs run card to card (`EditParams.cut_gaps`):
+  straightening, slips and re-shown cards between reveals are cut (part 1: 48 s of such
+  footage), and so is the tail after the last card.
+- **On screen:** a master-set progress bar (ASS vector drawing, its fill clip animated
+  when a pack is done), a "PACK 3 OF 9" title over each tear, and spoken captions at
+  about 75% of the height, above TikTok's own caption and username.
+- **Script:** the first line is a hook aimed at the viewer, with 2–3 interactive
+  prompts. **No spoilers:** `narration/script.spoilers` flags any line (and the
+  hook caption) that names a hit, or a special rarity, before it appears. A spoiling
+  draft is rewritten once with the exact problems listed; a second miss is a warning.
 
 Signals, measured on the Delta Reign ETB video:
 - **Sound** (high-passed >2.5 kHz): tearing foil and shrink-wrap are -25 to -40 dB in an

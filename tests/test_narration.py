@@ -341,3 +341,46 @@ def test_pack_numbers_skip_a_card_shown_before_the_first_pack():
     assert facts["pulls_in_reveal_order"][0]["pack"] == "pack 2 of 2"
     assert facts["pulls_in_reveal_order"][0]["id"] == "p3-1"  # anchors are unchanged
     assert "not pack numbers" in user
+
+
+# --- no spoilers ---------------------------------------------------------------------------
+
+
+def test_spoilers_flags_hits_named_before_they_appear():
+    from pokepipe.narration.script import spoilers
+
+    post = Post(index=1, packs=[2, 3])
+    bad = ScriptDraft(
+        hook_caption="Can Charizard save this box?",
+        beats=[
+            Beat(anchor="intro", text="A special illustration rare is waiting."),
+            Beat(anchor="p2-1", text="Rattata again."),
+            Beat(anchor="p2-2", text="Charizard ex!"),
+            Beat(anchor="p3-1", text="Ditto to finish, after that Charizard."),
+            Beat(anchor="outro", text="Charizard and Ditto, what a run."),
+        ],
+        hashtags=[],
+    )
+    found = spoilers(bad, REPORT, post)
+    assert len(found) == 2
+    assert "hook caption" in found[0] and "Charizard" in found[0]
+    assert "special illustration rare" in found[1]
+
+
+def test_a_spoiling_draft_is_rewritten_once():
+    spoiled = ScriptDraft(hook_caption="Guess the hit", hashtags=[], beats=[
+        Beat(anchor="intro", text="Charizard is in here somewhere."),
+        Beat(anchor="p2-2", text="There it is!")])
+    clean = ScriptDraft(hook_caption="Guess the hit", hashtags=[], beats=[
+        Beat(anchor="intro", text="Call it in the comments."),
+        Beat(anchor="p2-2", text="Charizard ex!")])
+    client = FakeAnthropic(spoiled)
+    drafts = iter([spoiled, clean])
+    client.beta.messages.parse = lambda **kw: (client.calls.append(kw), SimpleNamespace(
+        stop_reason="end_turn", parsed_output=next(drafts), model=kw["model"],
+        usage=SimpleNamespace(input_tokens=1000, output_tokens=500)))[1]
+    script, cost, warnings = generate_script(client, REPORT, Post(index=1, packs=[2]), 1, "")
+    assert len(client.calls) == 2
+    assert "no-spoiler rule" in client.calls[1]["messages"][0]["content"]
+    assert script.beats[0].text == "Call it in the comments." and not warnings
+    assert cost == pytest.approx(2 * (1000 * 4e-6 + 500 * 20e-6))

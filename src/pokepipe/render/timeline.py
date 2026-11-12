@@ -66,6 +66,7 @@ class Clip:
     pull_id: str | None = None
     box: tuple[float, float, float, float] | None = None
     max_end: float | None = None  # footage of this moment runs until here (room to stretch)
+    pack: int | None = None  # play right before this pack (its tear); None: at the start
 
 
 @dataclass
@@ -124,6 +125,10 @@ class EditParams:
     beat_gap: float = 0.12  # silence between voice lines
     tail: float = 0.6  # silence after the last line
     max_showings: int = 2  # repeat showings used per card (showcase shots)
+    # Series edit: cut the footage between cards inside a pack (straightening the
+    # stack, slips, re-showing a card) and after the last card, so a pack runs card to
+    # card. The lead-in before the first card (the Energy lined up) stays.
+    cut_gaps: bool = False
 
 
 FIXED = ("hit", "zoom", "clip")  # always play at 1×
@@ -176,7 +181,7 @@ def build_segments(
             last = segments[-1] if segments and segments[-1].pack == pack.index else None
             if last and last.kind != "gap" and start - cursor < p.min_gap:
                 last.src_end = start  # absorb a sliver of a gap instead of a tiny clip
-            elif start > cursor + 0.05:
+            elif start > cursor + 0.05 and not (p.cut_gaps and last):
                 segments.append(Segment(cursor, start, "gap", pack.index))
             if end > start:
                 segments.append(Segment(
@@ -184,7 +189,7 @@ def build_segments(
                     showcase=ev.showcase, box=ev.box,
                 ))
                 cursor = end
-        if pack.clip_end > cursor + 0.05:
+        if pack.clip_end > cursor + 0.05 and not p.cut_gaps:
             segments.append(Segment(cursor, pack.clip_end, "gap", pack.index))
         # Repeat showings from elsewhere in the video (e.g. an end recap) are spliced in
         # right after their pack.
@@ -548,13 +553,19 @@ def plan_edit(
     if not segments:
         raise ValueError("nothing to render: no footage in the selected packs")
     first, last = segments[0].pack, segments[-1].pack
-    segments = (
-        [Segment(c.start, c.end, "clip", first, c.pull_id, box=c.box, label=c.label,
-                 showcase=c.pull_id is not None) for c in lead]
-        + segments
-        + [Segment(c.start, c.end, "clip", last, c.pull_id, box=c.box, label=c.label,
-                   showcase=True, max_end=c.max_end) for c in recap]
-    )
+
+    def clip(c: Clip, pack: int) -> Segment:
+        return Segment(c.start, c.end, "clip", pack, c.pull_id, box=c.box, label=c.label,
+                       showcase=c.pull_id is not None, max_end=c.max_end)
+
+    # Opening clips first; a pack's own clips (its tear, its cards coming out) right
+    # before that pack, so later hits sitting on the table aren't seen early.
+    out = [clip(c, first) for c in lead if c.pack is None]
+    for i, seg in enumerate(segments):
+        if i == 0 or seg.pack != segments[i - 1].pack:
+            out += [clip(c, seg.pack) for c in lead if c.pack == seg.pack]
+        out.append(seg)
+    segments = out + [clip(c, last) for c in recap]
     if recap:  # the outro plays over the recap: no running on into later footage
         tail_room = 0.0
     speed = solve_speeds(segments, p)  # global first pass; also trims gaps if far too long

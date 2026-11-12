@@ -11,7 +11,7 @@ from pathlib import Path
 from pokepipe.detection.frames import probe
 from pokepipe.detection.models import PullsFile
 from pokepipe.narration.models import PostPlan, PostScript, VoiceTiming
-from pokepipe.narration.script import post_progress
+from pokepipe.narration.script import pack_numbers, post_progress
 from pokepipe.narration.service import VideoFiles
 from pokepipe.render import ffmpeg
 from pokepipe.render.captions import Overlay, build_ass
@@ -38,6 +38,18 @@ def _load(path: Path, model, hint: str):
     if not path.exists():
         raise RenderInputError(f"missing {path.name} — {hint}")
     return model.model_validate_json(path.read_text(encoding="utf-8"))
+
+
+def pack_titles(segments: list[Segment], numbers: dict[int, int]) -> tuple:
+    """"PACK 3 OF 9" over each pack's tear: from its first clip until its cards start."""
+    titles = []
+    for i, seg in enumerate(segments):
+        if seg.kind == "clip" and seg.label == "rip" and seg.pack in numbers:
+            start_cards = next((s.out_start for s in segments[i:]
+                                if s.pack == seg.pack and s.kind != "clip"), seg.out_end)
+            titles.append((seg.out_start, start_cards,
+                           f"PACK {numbers[seg.pack]} OF {len(numbers)}"))
+    return tuple(titles)
 
 
 def render_post(
@@ -84,8 +96,8 @@ def render_post(
         return CLIP_VOLUME if seg.kind == "clip" else UNDER_VOICE_VOLUME
 
     target = post.seconds or (max(voice.duration + 1.0, 15.0) if voice else 45.0)
-    params = params or EditParams(target=target)
     inputs = edit_inputs(det, review, report, post, load_moments(files.root))
+    params = params or inputs.params(target)
     packs = inputs.packs
     lines = [VoiceLine(b.anchor, b.text, b.start, b.end) for b in voice.beats] if voice else []
     # Real footage after the post's last pack (until the next pack starts) that the final
@@ -143,6 +155,7 @@ def render_post(
         new_per_pack={p.index: p.new_slots for p in report.packs if p.index in post.packs},
         pack_done_at=edit.pack_done_at,
         labels=labels,
+        titles=pack_titles(edit.segments, pack_numbers(report)),
     )
 
     work = pdir / "render"

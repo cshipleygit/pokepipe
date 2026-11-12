@@ -72,6 +72,10 @@ class EditInputs:
     pulls: list[RenderPull]
     lead: list[Clip] = field(default_factory=list)
     recap: list[Clip] = field(default_factory=list)
+    series: bool = False  # the series edit (moments.json found): cut in-pack gaps
+
+    def params(self, target: float) -> EditParams:
+        return EditParams(target=target, cut_gaps=self.series)
 
 
 ENERGY_LEAD = 0.2  # start a pack this long before its Energy shows
@@ -107,7 +111,7 @@ def edit_inputs(
         for name in ("rip", "cards_out"):
             span = getattr(pm, name) if pm else None
             if span:
-                lead.append(Clip(span.start, span.end, name))
+                lead.append(Clip(span.start, span.end, name, pack=w.index))
 
     packs = []
     for w in windows:
@@ -136,7 +140,7 @@ def edit_inputs(
             recap.append(Clip(start, start + length, "recap", x.id, x.box,
                               max_end=max(x.src_end, start + length)))
     pulls = [replace(x, showings=()) for x in pulls]
-    return EditInputs(packs, pulls, lead, recap)
+    return EditInputs(packs, pulls, lead, recap, series=True)
 
 
 @dataclass(frozen=True)
@@ -157,7 +161,7 @@ def airtime(
     moments: MomentsFile | None = None,
 ) -> Airtime:
     inputs = edit_inputs(det, review, report, post, moments)
-    edit = plan_edit(inputs.packs, inputs.pulls, [], (1920, 1080), EditParams(target=target),
+    edit = plan_edit(inputs.packs, inputs.pulls, [], (1920, 1080), inputs.params(target),
                      lead=inputs.lead, recap=inputs.recap)
     order = sorted(edit.reveal_at.items(), key=lambda kv: kv[1])
     per_card = {}

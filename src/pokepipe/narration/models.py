@@ -46,7 +46,10 @@ class Beat(BaseModel):
 
 
 class ScriptDraft(BaseModel):
-    hook_caption: str = Field(description="On-screen caption, max 8 words")
+    hook_caption: str = Field(
+        description="On-screen caption for the first seconds, max 8 words: a question or "
+        "challenge to the viewer that names no card or rarity"
+    )
     beats: list[Beat]
     hashtags: list[str]
 

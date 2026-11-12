@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 
+from pokepipe.cards.rarity import is_special
 from pokepipe.collection.models import Progress, PullResult, VideoReport
 from pokepipe.narration.models import Post, PostScript, ScriptDraft
 
@@ -83,6 +84,60 @@ CLIP_WORDS = {  # lead clip labels (render.inputs) as the script writer should r
     "rip": "a pack being torn open",
     "cards_out": "the cards coming out of the pack",
 }
+
+
+ENGAGEMENT = (
+    "\nHook: the intro's first sentence decides whether people keep watching. Make it a "
+    "question, challenge or bet aimed at the viewer (guess, predict, comment), not a "
+    "summary. The hook_caption works the same way."
+    "\nTalk to the viewer: add two or three short interactive moments, such as asking them "
+    "to call the rare before a pack's last card or to comment their pick."
+    "\nNo spoilers: a card's name or rarity may only be said in its own beat or later. "
+    "The hook_caption and intro name no card or rarity, and no line hints that a hit is "
+    "coming or that a particular pack is special. Build suspense; the viewer finds out "
+    "when the card appears."
+)
+
+
+def is_hit(p: PullResult) -> bool:
+    """Same rule as the render's zoom: the rare slot and better, not reverse holos."""
+    if p.variant == "reverse":
+        return False
+    return p.rarity in ("Rare", "Rare Holo") or is_special(p.rarity)
+
+
+def _name_key(name: str) -> str:
+    """'Talonflame ex' -> 'talonflame': what a line would say."""
+    return name.lower().replace(" ex", "").split()[0]
+
+
+def spoilers(draft: ScriptDraft, report: VideoReport, post: Post) -> list[str]:
+    """Lines that name a hit, or a special rarity, before the hit appears.
+
+    Lines are positioned by their anchor in reveal order: the hook caption and intro
+    come before every card, the outro after all of them."""
+    ids = pull_ids(report)
+    order = {pid: i for i, pid in enumerate(ids)}
+    hits = [(pid, p) for pid, p in ids.items() if p.pack in post.packs and is_hit(p)]
+    first_rarity: dict[str, int] = {}
+    for pid, p in hits:
+        if is_special(p.rarity):
+            key = p.rarity.lower()
+            first_rarity[key] = min(first_rarity.get(key, order[pid]), order[pid])
+    lines = [("hook caption", -1, draft.hook_caption)] + [
+        (b.anchor, order.get(b.anchor, -1 if b.anchor == "intro" else len(order)), b.text)
+        for b in draft.beats
+    ]
+    found = []
+    for anchor, at, text in lines:
+        low = text.lower()
+        for pid, p in hits:
+            if at < order[pid] and _name_key(p.name) in low:
+                found.append(f"{anchor!r} names {p.name} before it appears: {text!r}")
+        for rarity, first in first_rarity.items():
+            if at < first and rarity in low:
+                found.append(f"{anchor!r} says '{rarity}' before one appears: {text!r}")
+    return found
 
 
 def call_to_action(part: int, parts: int) -> str:
@@ -209,7 +264,7 @@ def build_prompt(
         "their numbers are not pack numbers. When you say a pack number, take it from "
         "the pull's 'pack' field." + timing + _structure(report, opening, recap)
         + "\nCall to action: " + call_to_action(post.index, total_posts)
-        + " Don't mention shops, prices or links."
+        + " Don't mention shops, prices or links." + ENGAGEMENT
     )
     return system, user
 
@@ -234,18 +289,8 @@ def _structure(report: VideoReport, opening: list[str], recap: list[str]) -> str
     return out
 
 
-def generate_script(
-    client,
-    report: VideoReport,
-    post: Post,
-    total_posts: int,
-    style: str,
-    settings: ScriptSettings | None = None,
-    airtime=None,
-) -> tuple[PostScript, float, list[str]]:
-    """Returns (script, cost in USD, warnings). `client` is an `anthropic.Anthropic`."""
-    settings = settings or ScriptSettings()
-    system, user = build_prompt(report, post, total_posts, style, settings, airtime)
+def _draft(client, settings: ScriptSettings, system: str, user: str):
+    """One structured call → (draft, response, cost in USD)."""
     response = client.beta.messages.parse(
         model=settings.model,
         max_tokens=16000,
@@ -263,17 +308,39 @@ def generate_script(
     draft = response.parsed_output
     if draft is None:
         raise ScriptError("no structured script in the response")
-
     usage = response.usage
     cost = (
         usage.input_tokens * settings.usd_per_mtok_in
         + usage.output_tokens * settings.usd_per_mtok_out
     ) / 1_000_000
+    return draft, response, cost
+
+
+def generate_script(
+    client,
+    report: VideoReport,
+    post: Post,
+    total_posts: int,
+    style: str,
+    settings: ScriptSettings | None = None,
+    airtime=None,
+) -> tuple[PostScript, float, list[str]]:
+    """Returns (script, cost in USD, warnings). `client` is an `anthropic.Anthropic`."""
+    settings = settings or ScriptSettings()
+    system, user = build_prompt(report, post, total_posts, style, settings, airtime)
+    draft, response, cost = _draft(client, settings, system, user)
+    warnings = []
+    found = spoilers(draft, report, post)
+    if found:  # one rewrite with the exact problems; a second miss is only a warning
+        retry = (user + "\n\nYour previous draft broke the no-spoiler rule:\n- "
+                 + "\n- ".join(found) + "\nRewrite the whole script without these.")
+        draft, response, extra = _draft(client, settings, system, retry)
+        cost += extra
+        warnings += [f"spoiler: {f}" for f in spoilers(draft, report, post)]
 
     valid = {"intro", "outro"} | {
         pid for pid, p in pull_ids(report).items() if p.pack in post.packs
     }
-    warnings = []
     beats = []
     for beat in draft.beats:
         if not beat.text.strip():
