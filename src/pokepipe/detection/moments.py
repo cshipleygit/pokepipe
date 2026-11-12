@@ -138,18 +138,18 @@ def energy_start(
 SLEEVE_P = 0.5  # zero-shot "sliding a card into a sleeve" probability
 
 
-def sleeve_slide(times: np.ndarray, p_sleeve: np.ndarray, clip: float = 1.2) -> Span | None:
+def sleeve_slide(times: np.ndarray, p_sleeve: np.ndarray, clip: float = 2.0) -> Span | None:
     """The card going into its sleeve, in the seconds before the sleeved card is held up.
 
     Sleeving makes almost no sound (-60 to -80 dB), so this is visual: CLIP's "sliding a
     card into a sleeve" score stays high while the card goes in and drops once it's in.
     The slide ends at the last confident sample that has a confident neighbour (lone
-    spikes are glare); the clip is the second before that."""
+    spikes are glare); the clip is the 2 s up to just after that."""
     ok = p_sleeve >= SLEEVE_P
     for i in range(len(times) - 1, -1, -1):
         near = (i > 0 and p_sleeve[i - 1] >= 0.4) or (i + 1 < len(times) and p_sleeve[i + 1] >= 0.4)
         if ok[i] and near:
-            end = float(times[i]) + 0.2
+            end = float(times[i]) + 0.4  # let the card settle fully into the sleeve
             return Span(start=end - clip, end=end)
     return None
 

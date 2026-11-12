@@ -113,7 +113,7 @@ def test_sleeve_slide_ends_where_the_sleeve_score_drops():
     p[(times >= 2.0) & (times <= 3.0)] = 0.9  # the card going in
     p[np.isclose(times, 5.0)] = 0.95  # a lone glare spike after it
     span = sleeve_slide(times, p)
-    assert span.end == pytest.approx(3.2) and span.length == pytest.approx(1.2)
+    assert span.end == pytest.approx(3.4) and span.length == pytest.approx(2.0)
     assert sleeve_slide(times, np.zeros_like(times)) is None
 
 
@@ -126,3 +126,14 @@ def test_after_clips_play_right_after_their_pack():
     labels = [s.label or s.kind for s in e.segments]
     assert labels[0] == "rip" and labels[-1] == "sleeve"
     assert e.segments[-2].kind == "zoom"  # straight after the hit
+
+
+def test_series_cuts_exactly_where_cards_are_recognised():
+    """The margins around a card are when the next card's edge peeks out: cut them,
+    and don't stretch a shot over a short gap either."""
+    pulls = [rp("p1-1", 8.0), rp("p1-2", 9.8), rp("p1-3", 14.0, "Double Rare")]  # 1.5 s each
+    p = EditParams(target=10, cut_gaps=True, reveal_lead=0.0, reveal_tail=0.0)
+    e = plan_edit([PackWindow(1, 7.5, 20.0)], pulls, [], (1080, 1920), p)
+    shots = {s.pull_id: s for s in e.segments if s.kind == "reveal"}
+    assert (shots["p1-1"].src_start, shots["p1-1"].src_end) == (8.0, 9.5)  # not to 9.8
+    assert (shots["p1-2"].src_start, shots["p1-2"].src_end) == (9.8, 11.3)

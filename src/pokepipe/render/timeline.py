@@ -188,7 +188,7 @@ def build_segments(
             start, end = _shot(ev, max(cursor, ev.start - lead), ev.end + tail, p)
             end = min(end, max(next_start - p.reveal_lead, start + 0.5), pack.clip_end)
             last = segments[-1] if segments and segments[-1].pack == pack.index else None
-            if last and last.kind != "gap" and start - cursor < p.min_gap:
+            if last and last.kind != "gap" and start - cursor < p.min_gap and not p.cut_gaps:
                 last.src_end = start  # absorb a sliver of a gap instead of a tiny clip
             elif start > cursor + 0.05 and not (p.cut_gaps and last):
                 segments.append(Segment(cursor, start, "gap", pack.index))

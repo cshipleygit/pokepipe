@@ -75,7 +75,12 @@ class EditInputs:
     series: bool = False  # the series edit (moments.json found): cut in-pack gaps
 
     def params(self, target: float) -> EditParams:
-        return EditParams(target=target, cut_gaps=self.series)
+        """The series edit cuts card to card exactly where each card is recognised: the
+        default 0.3 s lead / 0.4 s tail are when the next card's edge peeks out from
+        behind the current one (measured on Allen's footage)."""
+        if not self.series:
+            return EditParams(target=target)
+        return EditParams(target=target, cut_gaps=True, reveal_lead=0.0, reveal_tail=0.0)
 
 
 ENERGY_LEAD = 0.2  # start a pack this long before its Energy shows

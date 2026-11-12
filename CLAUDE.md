@@ -365,10 +365,13 @@ writer use the series edit (`render/inputs.edit_inputs`):
   the table would show early). The packs run card to card (`EditParams.cut_gaps`):
   straightening, slips and re-shown cards between reveals are cut (part 1: 48 s of such
   footage), and so is the tail after the last card.
-- **Clean cuts:** next to cut footage, a card's shot starts and ends exactly where it is
-  recognised (no 0.3/0.4 s margins), which removed two late cuts that showed the next
-  card slipping out.
-- **Sleeving:** after a hit, a 1.2 s clip of it sliding into its sleeve (2x volume: it is
+- **Clean cuts:** in the series edit a card's shot starts and ends exactly where it is
+  recognised (`reveal_lead`/`reveal_tail` = 0, and short gaps are cut, not absorbed).
+  The default margins are precisely when the next card's edge peeks out from behind the
+  current one. A colour check (next card's hues around the current card) was tried and
+  dropped: hands and foil glare moved it as much as a real peek. Checked by eye on the
+  last frames of all 40 card shots of part 1.
+- **Sleeving:** after a hit, a 2 s clip of it sliding into its sleeve (2x volume: it is
   recorded very quietly). Silent, so found visually: CLIP's "sliding a card into a
   sleeve" score is high while the card goes in and drops once it's in, in the 6 s before
   a post-pack showing (each showing is tried; Kecleon was held up before sleeving).
