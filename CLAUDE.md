@@ -371,14 +371,14 @@ writer use the series edit (`render/inputs.edit_inputs`):
   current one. A colour check (next card's hues around the current card) was tried and
   dropped: hands and foil glare moved it as much as a real peek. Checked by eye on the
   last frames of all 40 card shots of part 1.
-- **Sleeving:** after a hit, a 2 s clip of it sliding into its sleeve (ending 0.4 s before the score drops, which lags the insert) (2x volume: it is
+- **Sleeving:** after a hit, a 2.8 s clip of it sliding into its sleeve (from 2.4 s before the sleeve score drops to 0.4 s after, so the whole insert shows) (2x volume: it is
   recorded very quietly). Silent, so found visually: CLIP's "sliding a card into a
   sleeve" score is high while the card goes in and drops once it's in, in the 6 s before
   a post-pack showing (each showing is tried; Kecleon was held up before sleeving).
   3/3 sleeved hits found, Kyogre (not sleeved) correctly skipped.
-- **Fewer jump cuts:** a card-to-card transition under 0.5 s stays as a "sliver" at 5×+
-  (continuous motion; any edge of the next card shows for a frame or two). Longer
-  fumbles are still cut.
+- **Fewer jump cuts:** a card-to-card transition up to 1.5 s (the slide itself) stays
+  as a "sliver" sped up to ~0.12 s on screen; longer fumbles (3.8 s+) are cut. In-pack
+  jump cuts: part 1 27 → 3, part 2 39 → 1, all of them real fumbles.
 - **Rocket theme** (`render/theme.py`): Gill Sans Ultra Bold Condensed, navy outlines,
   flame-orange spoken word, mint badge, yellow rarity labels. The master-set bar is a
   rounded navy pill whose orange fill is a flame trail; a Pillow-drawn rocket PNG rides
@@ -402,6 +402,21 @@ Signals, measured on the Delta Reign ETB video:
   The longest wrap crinkle before the lid comes off is the seal. All 4 box shots correct.
 - Tuned on one video: check `moments.json` on new footage (a different room, music, or
   talking would break the sound rules).
+
+### Prices, P/L and sound effects
+
+- **Prices** (`cards/prices.py`): a `PriceBook` per set = pokemontcg.io's TCGplayer market
+  price per printing (stored on `Card.prices` by `cards fetch`) overridden by
+  `data/prices/<set>.csv` (card_id, variant, usd, source, as_of). Lookups are exact
+  printing only; unpriced stays unpriced. Delta Reign had no API prices yet (0/141), so
+  its hits were entered from tcgplayer.com market prices (2026-11-12).
+- **P/L input:** `pokepipe collection value <slug>` → `values.json` (each pull's price,
+  source and date; totals per pack and video; unpriced count). Cost basis comes next.
+- **On screen:** a mint price tag pops in under each zoomed hit (0.5 s after the zoom).
+- **Sound effects** (`render/sfx.py`), synthesised with numpy (no samples to license):
+  sparkle on Double Rare+ reveals, chime on ordinary rares, coin with each price tag,
+  rocket rise when the bar fills, whoosh into each pack and the recap. One `sfx.wav`
+  per post, mixed under the voice at 0.5.
 
 ### Stage 7 design (watch/)
 

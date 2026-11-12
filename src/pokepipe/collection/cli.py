@@ -127,3 +127,29 @@ def remove(slug: str, name: str = NameOpt):
         console.print(f"Removed {slug} from {name}/{set_id}")
     else:
         console.print(f"{slug} was not applied to {name}/{set_id}")
+
+
+@app.command()
+def value(slug: str):
+    """Price every pull of a video (exact printing) → data/videos/<slug>/values.json.
+    Prices come from data/prices/<set>.csv, then pokemontcg.io's TCGplayer market."""
+    from pokepipe.cards.prices import PriceBook
+    from pokepipe.collection.values import video_values
+    from pokepipe.narration.service import NarrationError, VideoFiles
+
+    s = get_settings()
+    files = VideoFiles(s.videos_dir / slug)
+    try:
+        report = files.load_report()
+    except NarrationError as exc:
+        console.print(f"[red]{exc}[/]")
+        raise typer.Exit(1) from exc
+    book = PriceBook.load(s.sets_dir, report.set_id, s.prices_dir)
+    values = video_values(report, book)
+    (files.root / "values.json").write_text(values.model_dump_json(indent=2), encoding="utf-8")
+    table = Table("pull", "card", "printing", "price", "source")
+    for x in sorted((x for x in values.pulls if x.usd is not None), key=lambda x: -x.usd):
+        table.add_row(x.pull_id, x.name, x.variant, f"${x.usd:,.2f}", f"{x.source} {x.as_of or ''}")
+    console.print(table)
+    console.print(f"Total ${values.total_usd:,.2f} from {values.priced} priced pulls "
+                  f"({values.unpriced} unpriced) → {files.root / 'values.json'}")

@@ -52,6 +52,10 @@ class Settings(BaseSettings):
         return self.data_dir / "sets"
 
     @property
+    def prices_dir(self) -> Path:
+        return self.data_dir / "prices"
+
+    @property
     def videos_dir(self) -> Path:
         return self.data_dir / "videos"
 

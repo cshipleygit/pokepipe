@@ -160,7 +160,7 @@ def voice_filter(lines: list[PlacedLine], input_index: int = 1, under: str = "")
         )
     chains.append(
         "".join(f"[l{i}]" for i in range(n)) + under
-        + f"amix=inputs={n + bool(under)}:normalize=0:dropout_transition=0,apad[aout]"
+        + f"amix=inputs={n + under.count('[')}:normalize=0:dropout_transition=0,apad[aout]"
     )
     return ";".join(chains)
 
@@ -199,15 +199,17 @@ def final_cmd(
     out: Path,
     source_audio: bool = False,
     sprite: Sprite | None = None,
+    sfx: Path | None = None,
 ) -> list[str]:
     """`source_audio`: the clips carry the (already levelled) source sound; mix the
-    voice over it. Inputs: 0 the clips, 1 the voice, 2 the sprite."""
-    graph = _video_graph(ass_name, sprite, 2) + ";" + voice_filter(
-        lines, under="[0:a]" if source_audio else "")
+    voice over it, plus the `sfx` track. Inputs: 0 clips, 1 voice, 2 sprite, then sfx."""
+    sfx_input = 2 + bool(sprite)
+    under = ("[0:a]" if source_audio else "") + (f"[{sfx_input}:a]" if sfx else "")
+    graph = _video_graph(ass_name, sprite, 2) + ";" + voice_filter(lines, under=under)
     return [
         require_tool("ffmpeg"), "-v", "error", "-y",
         "-f", "concat", "-safe", "0", "-i", str(concat_list),
-        "-i", str(voice), *_sprite_input(sprite),
+        "-i", str(voice), *_sprite_input(sprite), *(["-i", str(sfx)] if sfx else []),
         "-filter_complex", graph, "-map", "[vout]", "-map", "[aout]",
         "-t", f"{duration:.3f}", *_encoder(21), "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
@@ -217,17 +219,24 @@ def final_cmd(
 
 def final_cmd_source_audio(
     concat_list: Path, ass_name: str, duration: float, out: Path, audio: bool,
-    sprite: Sprite | None = None,
+    sprite: Sprite | None = None, sfx: Path | None = None,
 ) -> list[str]:
     """No narration: concat the clips, burn in the overlay, keep the clips' own audio
-    (the source's, already speed-matched per shot) or none."""
+    (the source's, already speed-matched per shot) or none, plus the `sfx` track."""
+    sfx_input = 1 + bool(sprite)
+    graph = _video_graph(ass_name, sprite, 1)
+    streams = ("[0:a]" if audio else "") + (f"[{sfx_input}:a]" if sfx else "")
+    if streams:
+        graph += (f";{streams}amix=inputs={streams.count('[')}:normalize=0"
+                  ":dropout_transition=0,apad[aout]")
     cmd = [
         require_tool("ffmpeg"), "-v", "error", "-y",
         "-f", "concat", "-safe", "0", "-i", str(concat_list), *_sprite_input(sprite),
-        "-filter_complex", _video_graph(ass_name, sprite, 1), "-map", "[vout]",
+        *(["-i", str(sfx)] if sfx else []),
+        "-filter_complex", graph, "-map", "[vout]",
         "-t", f"{duration:.3f}", *_encoder(21), "-pix_fmt", "yuv420p",
     ]
-    cmd += ["-map", "0:a:0", *AUDIO_OUT] if audio else ["-an"]
+    cmd += ["-map", "[aout]", *AUDIO_OUT] if streams else ["-an"]
     return cmd + ["-movflags", "+faststart", str(out)]
 
 

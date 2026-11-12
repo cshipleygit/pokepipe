@@ -39,6 +39,7 @@ STYLES = [
     ("Badge", 48, theme.ass(theme.MINT), NAVY, SHADE, 1, 5, 2, 7, 60, 60, 330),
     ("Label", 60, theme.ass(theme.YELLOW), NAVY, SHADE, 1, 6, 3, 8, 90, 170, 430),
     ("Title", 80, WHITE, NAVY, SHADE, 1, 8, 3, 8, 90, 170, 430),
+    ("Price", 84, theme.ass(theme.MINT), NAVY, SHADE, 1, 8, 3, 8, 90, 170, 505),
     ("Bar", 10, WHITE, NAVY, NAVY, 1, 0, 0, 7, 0, 0, 0),
 ]
 
@@ -71,6 +72,7 @@ class Overlay:
     pack_done_at: dict[int, float]  # when each pack's new count should show
     labels: list[tuple[float, float, str]]  # (start, end, text) for big hits
     titles: tuple[tuple[float, float, str], ...] = ()  # (start, end, "PACK 3 OF 9")
+    prices: tuple[tuple[float, float, str], ...] = ()  # (start, end, "$31.11") on hits
 
 
 def caption_chunks(words: list[TimedWord], max_words: int = 3) -> list[list[TimedWord]]:
@@ -237,6 +239,11 @@ def build_ass(
     hook_end = offset + overlay.hook_seconds if overlay.hook else offset
     for start, end, text in overlay.labels:
         add(max(start, hook_end), end, "Label", esc(text))
+
+    # Price tags pop in (a little overshoot) under the rarity label while a hit is zoomed.
+    pop = r"{\fscx40\fscy40\t(0,160,\fscx115\fscy115)\t(160,280,\fscx100\fscy100)}"
+    for start, end, text in overlay.prices:
+        add(max(start, hook_end), end, "Price", pop + esc(text))
 
     style_lines = [
         f"Style: {n},{FONT},{size},{prim},{prim},{outl},{back},-1,0,0,0,100,100,0,0,"

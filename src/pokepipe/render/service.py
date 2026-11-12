@@ -8,18 +8,22 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from pokepipe.cards.prices import PriceBook
+from pokepipe.config import get_settings
 from pokepipe.detection.frames import probe
 from pokepipe.detection.models import PullsFile
 from pokepipe.narration.models import PostPlan, PostScript, VoiceTiming
 from pokepipe.narration.script import pack_numbers, post_progress
 from pokepipe.narration.service import VideoFiles
-from pokepipe.render import ffmpeg, theme
+from pokepipe.render import ffmpeg, sfx, theme
 from pokepipe.render.captions import ROCKET_Y, Overlay, build_ass, rocket_keys
 from pokepipe.render.inputs import edit_inputs, load_moments
 from pokepipe.render.timeline import Edit, EditParams, Segment, VoiceLine, plan_edit
 from pokepipe.render.zoom import add_zoom_paths
 from pokepipe.review.models import ReviewState
 
+PRICE_DELAY = 0.5  # the price tag pops in this long after a hit's zoom starts
+SFX_VOLUME = 0.5  # effects sit under the voice
 UNDER_VOICE_VOLUME = 0.22  # source sound under the narration (about -13 dB)
 CLIP_VOLUME = 0.8  # quick clips: the tearing and crinkling is the point
 SLEEVE_VOLUME = 2.0  # sliding a card into a sleeve is recorded very quietly
@@ -142,6 +146,33 @@ def render_post(
 
     add_zoom_paths(edit.segments, info.width, info.height, track_fn if tracker else None)
 
+    # --- prices and sound effects -------------------------------------------------------------
+    settings = get_settings()
+    book = PriceBook.load(settings.sets_dir, det.set_id, settings.prices_dir)
+    price_tags, effects = [], []
+    zoomed: set[str] = set()
+    for s in edit.segments:
+        if s.kind != "zoom" or s.pull_id in zoomed:
+            continue
+        zoomed.add(s.pull_id)
+        pull = by_id[s.pull_id]
+        effects.append((s.out_start, "sparkle" if pull.label else "chime"))
+        price = book.get(pull.card_id, pull.variant)
+        if price:
+            ends = [x.out_end for x in edit.segments if x.pull_id == s.pull_id
+                    and x.kind == "zoom"]
+            price_tags.append((s.out_start + PRICE_DELAY, max(ends), f"${price.usd:,.2f}"))
+            effects.append((s.out_start + PRICE_DELAY, "coin"))
+    new_slots = {p.index: p.new_slots for p in report.packs}
+    for pack, at in edit.pack_done_at.items():
+        if new_slots.get(pack):
+            effects.append((at, "rocket"))  # the rocket flies as the bar fills
+    for start, _, _ in pack_titles(edit.segments, pack_numbers(report)):
+        effects.append((max(0.0, start - 0.15), "whoosh"))
+    recap = [x for x in edit.segments if x.label == "recap"]
+    if recap:
+        effects.append((max(0.0, recap[0].out_start - 0.15), "whoosh"))
+
     # --- overlay -----------------------------------------------------------------------------
     before, _ = post_progress(report, post)
     labels = [
@@ -159,6 +190,7 @@ def render_post(
         pack_done_at=edit.pack_done_at,
         labels=labels,
         titles=pack_titles(edit.segments, pack_numbers(report)),
+        prices=tuple(price_tags),
     )
 
     work = pdir / "render"
@@ -211,16 +243,18 @@ def render_post(
 
     # --- pass 2: assemble ----------------------------------------------------------------------
     out = pdir / "post.mp4"
+    sfx_wav = sfx.write_wav(work / "sfx.wav", SFX_VOLUME * sfx.sfx_track(effects, edit.duration))
     sprite = ffmpeg.Sprite(theme.draw_rocket(work / "rocket.png"),
                            rocket_keys(overlay, edit.duration, intro_len), ROCKET_Y)
     if narration:
         cmd = ffmpeg.final_cmd(
             concat, pdir / "voice.mp3", edit.lines, "captions.ass", edit.duration, out,
-            source_audio=source_audio, sprite=sprite,
+            source_audio=source_audio, sprite=sprite, sfx=sfx_wav,
         )
     else:
         cmd = ffmpeg.final_cmd_source_audio(
-            concat, "captions.ass", edit.duration, out, source_audio, sprite=sprite
+            concat, "captions.ass", edit.duration, out, source_audio, sprite=sprite,
+            sfx=sfx_wav,
         )
     ffmpeg.run(cmd, cwd=work)
     if not keep_temp:

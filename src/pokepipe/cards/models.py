@@ -61,6 +61,10 @@ class Card(BaseModel):
     image_large: str | None = None
     # Printings this card exists in (see VARIANT_KEYS). Empty = unknown → rarity rule.
     variants: list[str] = Field(default_factory=list)
+    # TCGplayer market price (USD) per printing, and when pokemontcg.io last updated it.
+    # Empty for brand-new sets until the API catches up (see cards/prices.py).
+    prices: dict[str, float] = Field(default_factory=dict)
+    prices_updated: str | None = None
 
     @classmethod
     def from_api(cls, raw: dict) -> Card:
@@ -77,6 +81,12 @@ class Card(BaseModel):
             image_small=images.get("small"),
             image_large=images.get("large"),
             variants=variants_from_price_keys(prices),
+            prices={
+                VARIANT_KEYS[k]: float(v["market"])
+                for k, v in prices.items()
+                if k in VARIANT_KEYS and isinstance(v, dict) and v.get("market") is not None
+            },
+            prices_updated=(raw.get("tcgplayer") or {}).get("updatedAt"),
         )
 
     def variant_list(self) -> list[str]:

@@ -113,7 +113,7 @@ def test_sleeve_slide_ends_where_the_sleeve_score_drops():
     p[(times >= 2.0) & (times <= 3.0)] = 0.9  # the card going in
     p[np.isclose(times, 5.0)] = 0.95  # a lone glare spike after it
     span = sleeve_slide(times, p)
-    assert span.end == pytest.approx(2.6) and span.length == pytest.approx(2.0)
+    assert span.end == pytest.approx(3.4) and span.length == pytest.approx(2.8)
     assert sleeve_slide(times, np.zeros_like(times)) is None
 
 

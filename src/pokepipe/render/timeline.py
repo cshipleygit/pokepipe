@@ -130,20 +130,26 @@ class EditParams:
     # stack, slips, re-showing a card) and after the last card, so a pack runs card to
     # card. The lead-in before the first card (the Energy lined up) stays.
     cut_gaps: bool = False
-    # ...but a card-to-card transition shorter than `min_gap` is kept as a "sliver" at
-    # this speed or faster: continuous motion instead of a jump cut, and any edge of the
-    # next card that shows is on screen for a frame or two.
-    sliver_speed: float = 5.0
+    # ...but a card-to-card transition up to `sliver_max` (the slide itself: 0.5-1.2 s on
+    # Allen's footage, longer when the next card is slow to recognise; his fumbles run
+    # 3.8 s and up) is kept as a "sliver" sped up to last about `sliver_out` on screen:
+    # continuous motion instead of a jump cut; any edge of the next card shows for a few
+    # frames at most.
+    sliver_max: float = 1.5
+    sliver_out: float = 0.12
+    sliver_speed: float = 5.0  # never slower than this
 
 
 FIXED = ("hit", "zoom", "clip")  # always play at 1×
 
 
 def gap_speed(seg: Segment, reveal_speed: float, p: EditParams) -> float:
-    """Gaps run `gap_factor` faster than reveals; a card-to-card sliver at least
-    `sliver_speed`."""
+    """Gaps run `gap_factor` faster than reveals; a card-to-card sliver fast enough to
+    last about `sliver_out` (and at least `sliver_speed`)."""
     speed = min(reveal_speed * p.gap_factor, p.max_gap_speed)
-    return max(speed, p.sliver_speed) if seg.label == "sliver" else speed
+    if seg.label == "sliver":
+        return max(speed, p.sliver_speed, seg.src_len / p.sliver_out)
+    return speed
 
 # --- building ------------------------------------------------------------------------------
 
@@ -201,7 +207,7 @@ def build_segments(
             last = segments[-1] if segments and segments[-1].pack == pack.index else None
             if last and last.kind != "gap" and start - cursor < p.min_gap and not p.cut_gaps:
                 last.src_end = start  # absorb a sliver of a gap instead of a tiny clip
-            elif p.cut_gaps and last and 0.01 < start - cursor < p.min_gap:
+            elif p.cut_gaps and last and 0.01 < start - cursor <= p.sliver_max:
                 segments.append(Segment(cursor, start, "gap", pack.index, label="sliver"))
             elif start > cursor + 0.05 and not (p.cut_gaps and last):
                 segments.append(Segment(cursor, start, "gap", pack.index))
