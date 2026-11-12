@@ -13,8 +13,8 @@ from pokepipe.detection.models import PullsFile
 from pokepipe.narration.models import PostPlan, PostScript, VoiceTiming
 from pokepipe.narration.script import pack_numbers, post_progress
 from pokepipe.narration.service import VideoFiles
-from pokepipe.render import ffmpeg
-from pokepipe.render.captions import Overlay, build_ass
+from pokepipe.render import ffmpeg, theme
+from pokepipe.render.captions import ROCKET_Y, Overlay, build_ass, rocket_keys
 from pokepipe.render.inputs import edit_inputs, load_moments
 from pokepipe.render.timeline import Edit, EditParams, Segment, VoiceLine, plan_edit
 from pokepipe.render.zoom import add_zoom_paths
@@ -211,14 +211,16 @@ def render_post(
 
     # --- pass 2: assemble ----------------------------------------------------------------------
     out = pdir / "post.mp4"
+    sprite = ffmpeg.Sprite(theme.draw_rocket(work / "rocket.png"),
+                           rocket_keys(overlay, edit.duration, intro_len), ROCKET_Y)
     if narration:
         cmd = ffmpeg.final_cmd(
             concat, pdir / "voice.mp3", edit.lines, "captions.ass", edit.duration, out,
-            source_audio=source_audio,
+            source_audio=source_audio, sprite=sprite,
         )
     else:
         cmd = ffmpeg.final_cmd_source_audio(
-            concat, "captions.ass", edit.duration, out, source_audio
+            concat, "captions.ass", edit.duration, out, source_audio, sprite=sprite
         )
     ffmpeg.run(cmd, cwd=work)
     if not keep_temp:

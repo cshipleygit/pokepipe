@@ -371,11 +371,18 @@ writer use the series edit (`render/inputs.edit_inputs`):
   current one. A colour check (next card's hues around the current card) was tried and
   dropped: hands and foil glare moved it as much as a real peek. Checked by eye on the
   last frames of all 40 card shots of part 1.
-- **Sleeving:** after a hit, a 2 s clip of it sliding into its sleeve (2x volume: it is
+- **Sleeving:** after a hit, a 2 s clip of it sliding into its sleeve (ending 0.4 s before the score drops, which lags the insert) (2x volume: it is
   recorded very quietly). Silent, so found visually: CLIP's "sliding a card into a
   sleeve" score is high while the card goes in and drops once it's in, in the 6 s before
   a post-pack showing (each showing is tried; Kecleon was held up before sleeving).
   3/3 sleeved hits found, Kyogre (not sleeved) correctly skipped.
+- **Fewer jump cuts:** a card-to-card transition under 0.5 s stays as a "sliver" at 5×+
+  (continuous motion; any edge of the next card shows for a frame or two). Longer
+  fumbles are still cut.
+- **Rocket theme** (`render/theme.py`): Gill Sans Ultra Bold Condensed, navy outlines,
+  flame-orange spoken word, mint badge, yellow rarity labels. The master-set bar is a
+  rounded navy pill whose orange fill is a flame trail; a Pillow-drawn rocket PNG rides
+  its tip (ffmpeg overlay, x keyframed with the fill, gentle sin bob). Captions at ~79%.
 - **On screen:** a master-set progress bar (ASS vector drawing, its fill clip animated
   when a pack is done), a "PACK 3 OF 9" title over each tear, and spoken captions at
   about 75% of the height, above TikTok's own caption and username.

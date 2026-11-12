@@ -9,6 +9,7 @@ NVENC (GPU) is used when available, else libx264.
 from __future__ import annotations
 
 import subprocess
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
@@ -164,6 +165,31 @@ def voice_filter(lines: list[PlacedLine], input_index: int = 1, under: str = "")
     return ";".join(chains)
 
 
+@dataclass(frozen=True)
+class Sprite:
+    """A PNG laid over the finished frame, moving along `keys` [(t, x)] at height `y`,
+    bobbing `bob` pixels: the progress-bar rocket."""
+
+    image: Path
+    keys: list[tuple[float, float]]
+    y: float
+    bob: float = 4.0
+
+
+def _video_graph(ass_name: str, sprite: Sprite | None, sprite_input: int) -> str:
+    """Burn in the ASS overlay, then the sprite on top. Ends in [vout]."""
+    if sprite is None:
+        return f"[0:v]subtitles={ass_name}[vout]"
+    x = _piecewise([t for t, _ in sprite.keys], [v for _, v in sprite.keys], "t")
+    y = f"{sprite.y:.1f}+{sprite.bob:.1f}*sin(2*PI*t*0.9)"
+    return (f"[0:v]subtitles={ass_name}[sub];"
+            f"[sub][{sprite_input}:v]overlay=x='{x}':y='{y}':eval=frame:shortest=1[vout]")
+
+
+def _sprite_input(sprite: Sprite | None) -> list[str]:
+    return ["-loop", "1", "-i", str(sprite.image)] if sprite else []
+
+
 def final_cmd(
     concat_list: Path,
     voice: Path,
@@ -172,59 +198,36 @@ def final_cmd(
     duration: float,
     out: Path,
     source_audio: bool = False,
+    sprite: Sprite | None = None,
 ) -> list[str]:
     """`source_audio`: the clips carry the (already levelled) source sound; mix the
-    voice over it."""
-    graph = f"[0:v]subtitles={ass_name}[vout];" + voice_filter(
+    voice over it. Inputs: 0 the clips, 1 the voice, 2 the sprite."""
+    graph = _video_graph(ass_name, sprite, 2) + ";" + voice_filter(
         lines, under="[0:a]" if source_audio else "")
     return [
-        require_tool("ffmpeg"),
-        "-v",
-        "error",
-        "-y",
-        "-f",
-        "concat",
-        "-safe",
-        "0",
-        "-i",
-        str(concat_list),
-        "-i",
-        str(voice),
-        "-filter_complex",
-        graph,
-        "-map",
-        "[vout]",
-        "-map",
-        "[aout]",
-        "-t",
-        f"{duration:.3f}",
-        *_encoder(21),
-        "-pix_fmt",
-        "yuv420p",
-        "-c:a",
-        "aac",
-        "-b:a",
-        "192k",
-        "-ar",
-        "48000",
-        "-movflags",
-        "+faststart",
-        str(out),
+        require_tool("ffmpeg"), "-v", "error", "-y",
+        "-f", "concat", "-safe", "0", "-i", str(concat_list),
+        "-i", str(voice), *_sprite_input(sprite),
+        "-filter_complex", graph, "-map", "[vout]", "-map", "[aout]",
+        "-t", f"{duration:.3f}", *_encoder(21), "-pix_fmt", "yuv420p",
+        "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
+        "-movflags", "+faststart", str(out),
     ]
 
 
 def final_cmd_source_audio(
-    concat_list: Path, ass_name: str, duration: float, out: Path, audio: bool
+    concat_list: Path, ass_name: str, duration: float, out: Path, audio: bool,
+    sprite: Sprite | None = None,
 ) -> list[str]:
     """No narration: concat the clips, burn in the overlay, keep the clips' own audio
     (the source's, already speed-matched per shot) or none."""
     cmd = [
         require_tool("ffmpeg"), "-v", "error", "-y",
-        "-f", "concat", "-safe", "0", "-i", str(concat_list),
-        "-vf", f"subtitles={ass_name}", "-t", f"{duration:.3f}",
-        *_encoder(21), "-pix_fmt", "yuv420p",
+        "-f", "concat", "-safe", "0", "-i", str(concat_list), *_sprite_input(sprite),
+        "-filter_complex", _video_graph(ass_name, sprite, 1), "-map", "[vout]",
+        "-t", f"{duration:.3f}", *_encoder(21), "-pix_fmt", "yuv420p",
     ]
-    cmd += ["-map", "0:v:0", "-map", "0:a:0", *AUDIO_OUT] if audio else ["-an"]
+    cmd += ["-map", "0:a:0", *AUDIO_OUT] if audio else ["-an"]
     return cmd + ["-movflags", "+faststart", str(out)]
 
 

@@ -144,12 +144,12 @@ def sleeve_slide(times: np.ndarray, p_sleeve: np.ndarray, clip: float = 2.0) -> 
     Sleeving makes almost no sound (-60 to -80 dB), so this is visual: CLIP's "sliding a
     card into a sleeve" score stays high while the card goes in and drops once it's in.
     The slide ends at the last confident sample that has a confident neighbour (lone
-    spikes are glare); the clip is the 2 s up to just after that."""
+    spikes are glare); the clip is the 2 s just before that."""
     ok = p_sleeve >= SLEEVE_P
     for i in range(len(times) - 1, -1, -1):
         near = (i > 0 and p_sleeve[i - 1] >= 0.4) or (i + 1 < len(times) and p_sleeve[i + 1] >= 0.4)
         if ok[i] and near:
-            end = float(times[i]) + 0.4  # let the card settle fully into the sleeve
+            end = float(times[i]) - 0.4  # the score lags: the card is in by then
             return Span(start=end - clip, end=end)
     return None
 

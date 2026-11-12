@@ -113,7 +113,7 @@ def test_sleeve_slide_ends_where_the_sleeve_score_drops():
     p[(times >= 2.0) & (times <= 3.0)] = 0.9  # the card going in
     p[np.isclose(times, 5.0)] = 0.95  # a lone glare spike after it
     span = sleeve_slide(times, p)
-    assert span.end == pytest.approx(3.4) and span.length == pytest.approx(2.0)
+    assert span.end == pytest.approx(2.6) and span.length == pytest.approx(2.0)
     assert sleeve_slide(times, np.zeros_like(times)) is None
 
 
@@ -137,3 +137,6 @@ def test_series_cuts_exactly_where_cards_are_recognised():
     shots = {s.pull_id: s for s in e.segments if s.kind == "reveal"}
     assert (shots["p1-1"].src_start, shots["p1-1"].src_end) == (8.0, 9.5)  # not to 9.8
     assert (shots["p1-2"].src_start, shots["p1-2"].src_end) == (9.8, 11.3)
+    # the 0.3 s between them stays (no jump cut), but flashes by at 5x or faster
+    sliver = next(s for s in e.segments if s.label == "sliver")
+    assert (sliver.src_start, sliver.src_end) == (9.5, 9.8) and sliver.speed >= 5.0

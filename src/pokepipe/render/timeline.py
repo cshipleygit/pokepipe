@@ -130,9 +130,20 @@ class EditParams:
     # stack, slips, re-showing a card) and after the last card, so a pack runs card to
     # card. The lead-in before the first card (the Energy lined up) stays.
     cut_gaps: bool = False
+    # ...but a card-to-card transition shorter than `min_gap` is kept as a "sliver" at
+    # this speed or faster: continuous motion instead of a jump cut, and any edge of the
+    # next card that shows is on screen for a frame or two.
+    sliver_speed: float = 5.0
 
 
 FIXED = ("hit", "zoom", "clip")  # always play at 1×
+
+
+def gap_speed(seg: Segment, reveal_speed: float, p: EditParams) -> float:
+    """Gaps run `gap_factor` faster than reveals; a card-to-card sliver at least
+    `sliver_speed`."""
+    speed = min(reveal_speed * p.gap_factor, p.max_gap_speed)
+    return max(speed, p.sliver_speed) if seg.label == "sliver" else speed
 
 # --- building ------------------------------------------------------------------------------
 
@@ -190,6 +201,8 @@ def build_segments(
             last = segments[-1] if segments and segments[-1].pack == pack.index else None
             if last and last.kind != "gap" and start - cursor < p.min_gap and not p.cut_gaps:
                 last.src_end = start  # absorb a sliver of a gap instead of a tiny clip
+            elif p.cut_gaps and last and 0.01 < start - cursor < p.min_gap:
+                segments.append(Segment(cursor, start, "gap", pack.index, label="sliver"))
             elif start > cursor + 0.05 and not (p.cut_gaps and last):
                 segments.append(Segment(cursor, start, "gap", pack.index))
             if end > start:
@@ -226,7 +239,7 @@ def solve_speeds(segments: list[Segment], p: EditParams) -> float:
         elif s.kind == "reveal":
             s.speed = speed
         else:
-            s.speed = min(speed * p.gap_factor, p.max_gap_speed)
+            s.speed = gap_speed(s, speed, p)
     # Still too long at max speed: trim the start of each gap (keep the lead-in to the card).
     if sum(s.out_len for s in segments) > p.target + 0.5:
         for s in segments:
@@ -431,7 +444,7 @@ class Region:
             elif s.kind == "reveal":
                 total += s.src_len / speed
             else:
-                total += s.src_len / min(speed * p.gap_factor, p.max_gap_speed)
+                total += s.src_len / gap_speed(s, speed, p)
         return total
 
     def apply(self, speed: float, p: EditParams) -> None:
@@ -441,7 +454,7 @@ class Region:
                 if s.kind in FIXED
                 else speed
                 if s.kind == "reveal"
-                else min(speed * p.gap_factor, p.max_gap_speed)
+                else gap_speed(s, speed, p)
             )
 
     def speed_for(self, want: float, p: EditParams) -> float:

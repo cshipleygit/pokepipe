@@ -3,13 +3,17 @@
 ASS gives styled, positioned, timed text without compositing images ourselves:
 - word-by-word captions (the spoken word highlighted) from ElevenLabs word timings
 - the hook caption for the first seconds
-- a master-set progress bar that fills at the end of each pack, with a "+N NEW" badge
+- a master-set progress bar (a rocket's flame trail) that fills at the end of each pack,
+  with a "+N NEW" badge; the rocket itself is a PNG overlay (`render.theme`) that
+  `rocket_keys` moves along with the fill
 - a "PACK 3 OF 9" title over each pack's tear
 - a rarity label while a big hit is zoomed in
 
-Layout respects TikTok's UI: nothing in the right-hand button column, the bottom
-~23% (the post's caption, username and sound), or the top ~9% (the feed tabs).
-Spoken captions sit at about 75% of the height: under the card, above TikTok's text.
+Look: the rocket-launch theme in `render.theme` (chunky font, navy outlines, flame
+orange, mint and sunny yellow). Layout respects TikTok's UI: nothing in the right-hand
+button column, the bottom ~20% (the post's caption, username and sound), or the top
+~9% (the feed tabs). Spoken captions sit at about 79% of the height: under the card,
+just above TikTok's text.
 """
 
 from __future__ import annotations
@@ -17,30 +21,32 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from pokepipe.narration.models import TimedWord
+from pokepipe.render import theme
 from pokepipe.render.timeline import OUT_H, OUT_W, PlacedLine
 
-WHITE, YELLOW, GREEN, BLACK = "&H00FFFFFF", "&H0000E5FF", "&H0066FF66", "&H00000000"
-SHADE = "&H64000000"
-FONT = "Arial Black"
+WHITE = theme.ass(theme.WHITE)
+HIGHLIGHT = theme.ass(theme.ORANGE)  # the word being spoken
+NAVY = theme.ass(theme.NAVY)
+SHADE = theme.ass(theme.NAVY, alpha=0x50)
+FONT = theme.FONT
 
 STYLES = [
     # name, size, primary, outline colour, back colour, border style, outline, shadow,
     # alignment (numpad), marginL, marginR, marginV
-    ("Caption", 88, WHITE, BLACK, SHADE, 1, 7, 2, 2, 90, 170, 470),
-    ("Hook", 64, WHITE, BLACK, SHADE, 3, 18, 0, 8, 90, 170, 430),
-    ("Counter", 44, WHITE, BLACK, SHADE, 1, 4, 1, 7, 60, 60, 270),
-    ("Badge", 46, GREEN, BLACK, SHADE, 1, 4, 1, 7, 60, 60, 330),
-    ("Label", 58, YELLOW, BLACK, SHADE, 1, 6, 2, 8, 90, 170, 430),
-    ("Title", 76, WHITE, BLACK, SHADE, 1, 7, 2, 8, 90, 170, 430),
-    ("Bar", 10, WHITE, BLACK, BLACK, 1, 0, 0, 7, 0, 0, 0),
+    ("Caption", 92, WHITE, NAVY, SHADE, 1, 8, 3, 2, 90, 170, 400),
+    ("Hook", 66, WHITE, SHADE, SHADE, 3, 20, 0, 8, 90, 170, 430),
+    ("Counter", 46, WHITE, NAVY, SHADE, 1, 5, 2, 7, 60, 60, 270),
+    ("Badge", 48, theme.ass(theme.MINT), NAVY, SHADE, 1, 5, 2, 7, 60, 60, 330),
+    ("Label", 60, theme.ass(theme.YELLOW), NAVY, SHADE, 1, 6, 3, 8, 90, 170, 430),
+    ("Title", 80, WHITE, NAVY, SHADE, 1, 8, 3, 8, 90, 170, 430),
+    ("Bar", 10, WHITE, NAVY, NAVY, 1, 0, 0, 7, 0, 0, 0),
 ]
 
 # Master-set progress bar (PlayRes pixels): below the feed tabs, clear of the buttons.
-BAR_X, BAR_Y, BAR_W, BAR_H = 90, 222, 620, 30
-BAR_TRACK_ALPHA = "&H70&"  # translucent black track
-BAR_FILL = YELLOW
-BAR_TICK = 0.7  # seconds for the fill to grow when a pack is done
-
+BAR_X, BAR_Y, BAR_W, BAR_H = 100, 232, 580, 36
+BAR_TRACK = theme.ass(theme.NAVY, alpha=0x40)  # translucent navy pill
+BAR_FILL = theme.ass(theme.ORANGE)  # the flame trail behind the rocket
+BAR_TICK = 0.7  # seconds for the fill (and the rocket) to move when a pack is done
 
 def ts(seconds: float) -> str:
     cs = max(0, round(seconds * 100))
@@ -97,19 +103,26 @@ def _fill_x(owned: int, total: int) -> int:
     return BAR_X + round(BAR_W * min(owned, total) / total)
 
 
-def _rect(w: int, h: int) -> str:
-    return f"m 0 0 l {w} 0 l {w} {h} l 0 {h}"
+def _pill(w: int, h: int) -> str:
+    """A rounded bar as ASS drawing commands (each end a half circle of 2 béziers)."""
+    r, k = h / 2, 0.5523 * h / 2
+    return (f"m {r:.1f} 0 l {w - r:.1f} 0 "
+            f"b {w - r + k:.1f} 0 {w:.1f} {r - k:.1f} {w:.1f} {r:.1f} "
+            f"b {w:.1f} {r + k:.1f} {w - r + k:.1f} {h:.1f} {w - r:.1f} {h:.1f} "
+            f"l {r:.1f} {h:.1f} "
+            f"b {r - k:.1f} {h:.1f} 0 {r + k:.1f} 0 {r:.1f} "
+            f"b 0 {r - k:.1f} {r - k:.1f} 0 {r:.1f} 0")
 
 
 def progress_track() -> str:
-    """The empty bar: a translucent black rectangle drawn with ASS vector commands."""
-    return (rf"{{\an7\pos({BAR_X},{BAR_Y})\bord0\shad0\1c&H000000&\1a{BAR_TRACK_ALPHA}\p1}}"
-            rf"{_rect(BAR_W, BAR_H)}{{\p0}}")
+    """The empty bar: a translucent navy pill drawn with ASS vector commands."""
+    return (rf"{{\an7\pos({BAR_X},{BAR_Y})\bord3\shad0\1c&H{BAR_TRACK[4:]}&\1a&H{BAR_TRACK[2:4]}&"
+            rf"\3c{NAVY}\p1}}{_pill(BAR_W, BAR_H)}{{\p0}}")
 
 
 def progress_fill(owned_from: int, owned_to: int, total: int) -> str:
-    """The filled part: a full-width bar clipped to the progress. When the count
-    changes, the clip animates from `owned_from` to `owned_to` (libass \\t)."""
+    """The flame trail: a full-width pill clipped to the progress. When the count
+    changes, the clip animates from `owned_from` to `owned_to` (libass \t)."""
     y2 = BAR_Y + BAR_H
     grow = ""
     if owned_to != owned_from:
@@ -117,17 +130,43 @@ def progress_fill(owned_from: int, owned_to: int, total: int) -> str:
         grow = rf"\t(0,{int(BAR_TICK * 1000)},{to})"
     clip = rf"\clip({BAR_X},{BAR_Y},{_fill_x(owned_from, total)},{y2})"
     return (rf"{{\an7\pos({BAR_X},{BAR_Y})\bord0\shad0\1c{BAR_FILL}{clip}{grow}\p1}}"
-            rf"{_rect(BAR_W, BAR_H)}{{\p0}}")
+            rf"{_pill(BAR_W, BAR_H)}{{\p0}}")
 
 
 def progress_label(owned: int, total: int) -> str:
     pct = round(100 * owned / total)
-    return (rf"{{\an1\pos({BAR_X},{BAR_Y - 8})}}MASTER SET  {{\c{YELLOW}}}{owned}"
+    return (rf"{{\an1\pos({BAR_X},{BAR_Y - 10})}}MASTER SET  {{\c{HIGHLIGHT}}}{owned}"
             rf"{{\c{WHITE}}}/{total}  {pct}%")
 
 
 def badge(new: int) -> str:
-    return rf"{{\an4\pos({BAR_X + BAR_W + 24},{BAR_Y + BAR_H // 2})}}+{new} NEW"
+    return rf"{{\an4\pos({BAR_X + BAR_W + 34},{BAR_Y + BAR_H // 2})}}+{new} NEW"
+
+
+def rocket_keys(
+    overlay: Overlay, duration: float, offset: float = 0.0
+) -> list[tuple[float, float]]:
+    """(time, x) for the rocket's left edge: parked at the fill's tip, flying forward
+    with the fill each time a pack is done."""
+    total = max(overlay.master_total, 1)
+    nose = theme.ROCKET_W * 0.6  # the rocket sits mostly ahead of the trail's end
+
+    def x(owned: int) -> float:
+        return _fill_x(owned, total) - nose
+
+    value = overlay.master_before
+    keys = [(offset, x(value))]
+    for pack in sorted(overlay.pack_done_at):
+        end = overlay.pack_done_at[pack]
+        after = overlay.master_after_pack.get(pack, value)
+        if after != value:
+            keys += [(end, x(value)), (min(end + BAR_TICK, duration), x(after))]
+        value = after
+    keys.append((max(duration, keys[-1][0]), x(value)))
+    return keys
+
+
+ROCKET_Y = BAR_Y + BAR_H / 2 - theme.ROCKET_H / 2
 
 
 def build_ass(
@@ -153,7 +192,7 @@ def build_ass(
                 end = chunk[i + 1].start if i + 1 < len(chunk) else w.end + 0.15
                 text = " ".join(
                     (
-                        f"{{\\c{YELLOW}}}{esc(x.text.upper())}{{\\c{WHITE}}}"
+                        f"{{\\c{HIGHLIGHT}}}{esc(x.text.upper())}{{\\c{WHITE}}}"
                         if j == i
                         else esc(x.text.upper())
                     )

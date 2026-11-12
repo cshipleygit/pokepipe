@@ -289,7 +289,9 @@ def test_build_ass_has_highlighted_words_counter_and_labels():
     )
     ass = build_ass(edit.lines, words, overlay, edit.duration)
     assert "PlayResX: 1080" in ass and "PlayResY: 1920" in ass
-    assert "{\\c&H0000E5FF&}".replace("&}", "}") in ass or "\\c&H0000E5FF" in ass
+    from pokepipe.render.captions import HIGHLIGHT
+
+    assert f"\\c{HIGHLIGHT}" in ass  # the spoken word in rocket orange
     assert "CHARIZARD" in ass and "EX!" in ass
     assert "MASTER SET" in ass and "}10{" in ass and "}14{" in ass and "/360" in ass
     assert "+4 NEW" in ass
@@ -466,3 +468,23 @@ def test_back_to_back_lines_never_show_two_captions_at_once():
     )
     assert len(spans) == 4
     assert all(end <= nxt + 1e-6 for (_, end), (nxt, _) in zip(spans, spans[1:], strict=False))
+
+
+def test_rocket_rides_the_fill_and_flies_when_a_pack_is_done():
+    from pokepipe.render.captions import BAR_TICK, rocket_keys
+
+    overlay = Overlay("", 3.0, 200, 20, {1: 30, 2: 30}, {1: 10}, {1: 5.0, 2: 9.0}, [])
+    keys = rocket_keys(overlay, 12.0)
+    xs = [x for _, x in keys]
+    assert keys[0][0] == 0.0 and keys[-1][0] == 12.0
+    assert xs == sorted(xs) and xs[-1] > xs[0]  # only ever moves forward
+    assert (5.0, xs[0]) in keys and (5.0 + BAR_TICK, xs[-1]) in keys  # pack 2 added nothing
+
+
+def test_final_command_overlays_the_moving_rocket(tmp_path):
+    sprite = ffmpeg.Sprite(tmp_path / "rocket.png", [(0.0, 10.0), (2.0, 50.0)], 200.0)
+    cmd = ffmpeg.final_cmd_source_audio(tmp_path / "l.txt", "c.ass", 5.0, tmp_path / "o.mp4",
+                                        True, sprite=sprite)
+    graph = cmd[cmd.index("-filter_complex") + 1]
+    assert "subtitles=c.ass[sub]" in graph and "[sub][1:v]overlay=" in graph
+    assert "sin(2*PI*t" in graph and "-loop" in cmd
