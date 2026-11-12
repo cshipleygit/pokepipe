@@ -442,3 +442,25 @@ def test_source_audio_render_keeps_audio_in_sync(tmp_path):
     durs = {s["codec_type"]: float(s["duration"]) for s in info["streams"]}
     assert durs["audio"] == pytest.approx(durs["video"], abs=0.25)
     assert durs["video"] == pytest.approx(edit.duration, abs=0.3)
+
+
+def test_back_to_back_lines_never_show_two_captions_at_once():
+    from pokepipe.render.timeline import PlacedLine
+
+    a, b = VoiceLine("p1-3", "to finish!", 0.0, 1.0), VoiceLine("outro", "that's it", 1.05, 2.0)
+    words = [TimedWord(text=t, start=s, end=e) for t, s, e in
+             [("to", 0.0, 0.4), ("finish!", 0.4, 0.95), ("that's", 1.05, 1.5), ("it", 1.5, 2.0)]]
+    placed = [PlacedLine(a, 10.0, 0.0), PlacedLine(b, 11.05, 0.0)]
+    overlay = Overlay("", 3.0, 360, 0, {}, {}, {}, [])
+    ass = build_ass(placed, words, overlay, 20.0)
+
+    def secs(t):
+        h, m, s = t.split(":")
+        return int(h) * 3600 + int(m) * 60 + float(s)
+
+    spans = sorted(
+        (secs(f[1]), secs(f[2])) for f in (line.split(",") for line in ass.splitlines())
+        if len(f) > 3 and f[3] == "Caption"
+    )
+    assert len(spans) == 4
+    assert all(end <= nxt + 1e-6 for (_, end), (nxt, _) in zip(spans, spans[1:], strict=False))

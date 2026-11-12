@@ -96,6 +96,9 @@ def build_ass(
             events.append(f"Dialogue: 0,{ts(start)},{ts(end)},{style},,0,0,0,,{text}")
 
     # Word-by-word captions: each word gets an event showing its chunk, itself highlighted.
+    # A chunk's last word lingers 0.15 s, but never past the next caption's start: with
+    # lines back to back, two captions would otherwise stack on screen.
+    captions: list[tuple[float, float, str]] = []
     for placed in lines:
         for chunk in caption_chunks(words_for_line(words, placed)):
             for i, w in enumerate(chunk):
@@ -108,7 +111,12 @@ def build_ass(
                     )
                     for j, x in enumerate(chunk)
                 )
-                add(w.start, end, "Caption", text)
+                captions.append((w.start, end, text))
+    captions.sort()
+    for k, (start, end, text) in enumerate(captions):
+        if k + 1 < len(captions):
+            end = min(end, captions[k + 1][0])
+        add(start, end, "Caption", text)
 
     # Hook at the top for the opening seconds.
     if overlay.hook:  # no hook without a script (narration-free render)
