@@ -103,3 +103,26 @@ def test_a_talky_ending_stretches_the_recap_instead_of_freezing():
     clips = [s for s in e.segments if s.label == "recap"]
     assert clips[0].src_len > 1.2 and clips[1].src_end <= 51.5 + 1e-6
     assert any("recap shots longer" in n for n in e.notes)
+
+
+def test_sleeve_slide_ends_where_the_sleeve_score_drops():
+    from pokepipe.detection.moments import sleeve_slide
+
+    times = np.arange(0, 6, 0.25)
+    p = np.zeros_like(times)
+    p[(times >= 2.0) & (times <= 3.0)] = 0.9  # the card going in
+    p[np.isclose(times, 5.0)] = 0.95  # a lone glare spike after it
+    span = sleeve_slide(times, p)
+    assert span.end == pytest.approx(3.2) and span.length == pytest.approx(1.2)
+    assert sleeve_slide(times, np.zeros_like(times)) is None
+
+
+def test_after_clips_play_right_after_their_pack():
+    pulls = [rp("p1-1", 8), rp("p1-2", 12, "Double Rare")]
+    lead = [Clip(1.0, 1.9, "rip", pack=1), Clip(30.0, 31.2, "sleeve", after=1)]
+    e = plan_edit([PackWindow(1, 7.0, 20.0)], pulls, [], (1080, 1920),
+                  EditParams(target=12, cut_gaps=True),
+                  lead=lead)
+    labels = [s.label or s.kind for s in e.segments]
+    assert labels[0] == "rip" and labels[-1] == "sleeve"
+    assert e.segments[-2].kind == "zoom"  # straight after the hit

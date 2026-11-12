@@ -17,10 +17,12 @@ from pokepipe.detection.models import PullsFile
 from pokepipe.detection.moments import (
     MomentsFile,
     PackMoments,
+    SleeveMoment,
     energy_start,
     intro_moments,
     loud_runs,
     rip_and_cards_out,
+    sleeve_slide,
 )
 
 HOP = 0.1  # seconds per sound level sample
@@ -129,6 +131,21 @@ def find_moments(video: Path, det: PullsFile, embedder, index: CardIndex) -> Mom
             wrap_runs = [r for r in loud_runs(db, HOP, max_gap=1.2) if r.end <= end]
             out.intro = intro_moments(times, crop_p["open"], full_p["fan"], crop_p["table"],
                                       wrap_runs, end)
+    # Sleeving: a card held up again after its pack was usually just sleeved. Look
+    # for the slide in the seconds before that showing.
+    for pack, _, last in packs:
+        for pull in (p for p in det.pulls if p.pack == pack.index):
+            # A hit may be held up before it's sleeved too (Kecleon: shown, then sleeved,
+            # then shown again), so try each later showing until a slide is found.
+            for showing in [s for s in pull.showings if s.start > last][:3]:
+                start = showing.start
+                times, crop_p, _ = zero_shot(video, embedder, max(0.0, start - 6), start, fps=4)
+                span = sleeve_slide(times, crop_p["sleeve"]) if len(times) else None
+                if span:
+                    out.sleeves.append(
+                        SleeveMoment(pack=pack.index, card_id=pull.card_id, clip=span))
+                    break
+    out.notes.append(f"sleeving found for {len(out.sleeves)} card(s)")
     found = [k for k, v in out.intro.model_dump().items() if v]
     out.notes.append(f"box shots found: {', '.join(found) or 'none'}")
     return out

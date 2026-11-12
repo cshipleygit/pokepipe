@@ -67,6 +67,7 @@ class Clip:
     box: tuple[float, float, float, float] | None = None
     max_end: float | None = None  # footage of this moment runs until here (room to stretch)
     pack: int | None = None  # play right before this pack (its tear); None: at the start
+    after: int | None = None  # play right after this pack instead (sleeving its hit)
 
 
 @dataclass
@@ -175,8 +176,16 @@ def build_segments(
         cursor = pack.clip_start
         for i, ev in enumerate(events):
             next_start = events[i + 1].start if i + 1 < len(events) else pack.clip_end
-            start, end = _shot(ev, max(cursor, ev.start - p.reveal_lead),
-                               ev.end + p.reveal_tail, p)
+            lead, tail = p.reveal_lead, p.reveal_tail
+            if p.cut_gaps:
+                # Next to footage that gets cut (a slip, the stack being straightened),
+                # the margins would show the start of the fumble: cut exactly where the
+                # card is recognised instead.
+                if i and ev.start - events[i - 1].end > p.min_gap:
+                    lead = 0.0
+                if i + 1 < len(events) and next_start - ev.end > p.min_gap:
+                    tail = 0.0
+            start, end = _shot(ev, max(cursor, ev.start - lead), ev.end + tail, p)
             end = min(end, max(next_start - p.reveal_lead, start + 0.5), pack.clip_end)
             last = segments[-1] if segments and segments[-1].pack == pack.index else None
             if last and last.kind != "gap" and start - cursor < p.min_gap:
@@ -560,11 +569,13 @@ def plan_edit(
 
     # Opening clips first; a pack's own clips (its tear, its cards coming out) right
     # before that pack, so later hits sitting on the table aren't seen early.
-    out = [clip(c, first) for c in lead if c.pack is None]
+    out = [clip(c, first) for c in lead if c.pack is None and c.after is None]
     for i, seg in enumerate(segments):
         if i == 0 or seg.pack != segments[i - 1].pack:
             out += [clip(c, seg.pack) for c in lead if c.pack == seg.pack]
         out.append(seg)
+        if i + 1 == len(segments) or segments[i + 1].pack != seg.pack:
+            out += [clip(c, seg.pack) for c in lead if c.after == seg.pack]
     segments = out + [clip(c, last) for c in recap]
     if recap:  # the outro plays over the recap: no running on into later footage
         tail_room = 0.0

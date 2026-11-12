@@ -365,6 +365,14 @@ writer use the series edit (`render/inputs.edit_inputs`):
   the table would show early). The packs run card to card (`EditParams.cut_gaps`):
   straightening, slips and re-shown cards between reveals are cut (part 1: 48 s of such
   footage), and so is the tail after the last card.
+- **Clean cuts:** next to cut footage, a card's shot starts and ends exactly where it is
+  recognised (no 0.3/0.4 s margins), which removed two late cuts that showed the next
+  card slipping out.
+- **Sleeving:** after a hit, a 1.2 s clip of it sliding into its sleeve (2x volume: it is
+  recorded very quietly). Silent, so found visually: CLIP's "sliding a card into a
+  sleeve" score is high while the card goes in and drops once it's in, in the 6 s before
+  a post-pack showing (each showing is tried; Kecleon was held up before sleeving).
+  3/3 sleeved hits found, Kyogre (not sleeved) correctly skipped.
 - **On screen:** a master-set progress bar (ASS vector drawing, its fill clip animated
   when a pack is done), a "PACK 3 OF 9" title over each tear, and spoken captions at
   about 75% of the height, above TikTok's own caption and username.

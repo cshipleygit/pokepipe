@@ -113,6 +113,11 @@ def edit_inputs(
             if span:
                 lead.append(Clip(span.start, span.end, name, pack=w.index))
 
+    hits = {(x.pack, x.card_id) for x in pulls if x.hit}
+    for sl in moments.sleeves:  # the hit sliding into its sleeve, right after its pack
+        if (sl.pack, sl.card_id) in hits and sl.pack in post.packs:
+            lead.append(Clip(sl.clip.start, sl.clip.end, "sleeve", after=sl.pack))
+
     packs = []
     for w in windows:
         pm = moments.pack(w.index)

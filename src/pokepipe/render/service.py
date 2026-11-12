@@ -22,6 +22,7 @@ from pokepipe.review.models import ReviewState
 
 UNDER_VOICE_VOLUME = 0.22  # source sound under the narration (about -13 dB)
 CLIP_VOLUME = 0.8  # quick clips: the tearing and crinkling is the point
+SLEEVE_VOLUME = 2.0  # sliding a card into a sleeve is recorded very quietly
 
 
 class RenderInputError(RuntimeError):
@@ -93,7 +94,9 @@ def render_post(
     def volume(seg: Segment) -> float:
         if not narration:
             return 1.0
-        return CLIP_VOLUME if seg.kind == "clip" else UNDER_VOICE_VOLUME
+        if seg.kind != "clip":
+            return UNDER_VOICE_VOLUME
+        return SLEEVE_VOLUME if seg.label == "sleeve" else CLIP_VOLUME
 
     target = post.seconds or (max(voice.duration + 1.0, 15.0) if voice else 45.0)
     inputs = edit_inputs(det, review, report, post, load_moments(files.root))
