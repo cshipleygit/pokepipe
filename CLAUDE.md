@@ -19,11 +19,13 @@ reviewer as much as for function.
 |---|---------|--------|---------|
 | 1 | `cards/` | **built** | Fetch any set's checklist + images from pokemontcg.io, cache locally, build CLIP image embeddings, GPU nearest-neighbour index. |
 | 2 | `detection/` | **built** | Sample frames, detect card-reveal moments, crop the card, match against the stage-1 index → pulls with confidence + timestamps. |
+| 2b | `recover/` | **built** | Claude agent (LangGraph tool loop) that looks for cards detection missed in short packs, using local GPU rescans and the pack layout → suggestions in review. |
 | 3 | `review/` | **built** | Small local web page to confirm/fix detected pulls before rendering. The only human-in-the-loop pause. |
 | 4 | `collection/` | **built** | Local master-set progress per set, updated from confirmed pulls of each video. |
 | 5 | `narration/` | **built** | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
 | 6 | `render/` | **built** | ffmpeg: one vertical post per pack group, narration-driven speed ramps, zoom on hits, optional reusable intro, word captions, master-set progress overlay. |
 | 7 | `watch/` | **built** | Watch folder: drop a video in → run stages 2→6, pausing only at review. |
+| 7 | `graph/` | **built** | The same pipeline as a LangGraph state graph: SQLite checkpoints, review as `interrupt()` (`--engine graph`). |
 
 Work proceeds **one stage at a time**; stop and show the user after each stage
 before starting the next.
@@ -166,11 +168,9 @@ hits held up again, a preview before a pack, an end recap.
 Delta Reign also has split-art twins (Legendary Trench #98/#99) that look like one card
 read twice.
 
-Next improvements, ranked:
-1. Use the pack layout to settle near-ties (slot 5 must be an Uncommon, so Enamorus U).
-2. Don't merge an in-pack repeat when the pack is short and the repeat sits in a
-   reverse slot.
-3. Re-scan short packs' windows with a frame offset to catch borderline cards.
+All three causes are now handled by the recovery agent (`recover/`, see "LangGraph
+engine, recovery agent, script critic" below), which found all 3 cards the reviewer
+had to add by hand.
 
 ### Pack layouts → automatic reverse holos (`detection/layout.py`)
 
@@ -389,8 +389,8 @@ writer use the series edit (`render/inputs.edit_inputs`):
   caption and username.
 - **Script:** the first line is a hook aimed at the viewer, with 2–3 interactive
   prompts. **No spoilers:** `narration/script.spoilers` flags any line (and the
-  hook caption) that names a hit, or a special rarity, before it appears. A spoiling
-  draft is rewritten once with the exact problems listed; a second miss is a warning.
+  hook caption) that names a hit, or a special rarity, before it appears. It is one of
+  the critic's checks (`narration/critic.py`, below).
 
 Signals, measured on the Delta Reign ETB video:
 - **Sound** (high-passed >2.5 kHz): tearing foil and shrink-wrap are -25 to -40 dB in an
@@ -451,6 +451,57 @@ Signals, measured on the Delta Reign ETB video:
   not invalidated (delete `posts/<n>/` to redo one). No desktop notification when a
   review is waiting.
 
+### LangGraph engine, recovery agent, script critic
+
+Claude is always called through the official `anthropic` SDK (fallbacks, budget checks
+as elsewhere); LangGraph does the orchestration. `langchain-anthropic` is deliberately
+not used.
+
+**Graph engine** (`graph/pipeline.py`, `pokepipe watch run --engine graph`):
+- `ensure_set → detect → recover → review → collect → narrate → render`, wrapping the
+  same idempotent `PipelineOps` methods as `watch/runner.py`.
+- `SqliteSaver` at `data/graph/checkpoints.sqlite`, `thread_id` = video slug. A crash or
+  failed stage resumes at that node with `invoke(None)`.
+- The review node loops on `interrupt()` until `review.json` is complete; the watcher
+  resumes with `Command(resume=True)`. A review re-opened meanwhile pauses again.
+- `job.json` is kept as a status view (`watch status` / `watch retry` work for both
+  engines). Videos started by the old runner start the graph from the top, and every
+  stage skips its finished work.
+
+**Recovery agent** (`recover/`, `pokepipe recover run|eval <slug>`):
+- Runs only when a pack is short. Tools (`evidence.py`, no model): `short_packs`,
+  `pack_overview` (slots, leads, in-pack repeats, gaps, possibly-missing slots),
+  `scan_window` (GPU rescan, loose thresholds 0.62 / no lead / 0.66 peak; interleaved
+  near-tie segments are merged into one stretch), `check_fit` (several cards at once,
+  via `layout.placements`), `find_cards`. Scans are capped at 8 per video.
+- `agent.py`: `agent ⇄ tools` LangGraph loop, strict tool schemas, `submit_findings`
+  to finish, turn limit (14) enforced by an edge, budget check before each call. Any
+  agent failure is written to `recovered.json` and the video carries on to review.
+- Suggestions seed a *new* review as pending pulls (`ReviewedPull.suggested`), shown
+  with an "agent: missed card?" badge. They never enter an already-started review.
+- `recover eval` scores against hand-added pulls (not agent suggestions the reviewer
+  kept). **Delta Reign: 3/3 (Enamorus U in pack 9; Nidoran♀ and a second Tornadus as
+  reverse holos in pack 10, shown together in one stretch), 0 wrong, 5 turns, $0.13.**
+  This video was also used to design the tools: validate on new footage.
+
+**Script critic** (`narration/critic.py`, `narration/writer.py`):
+- Deterministic checks: contract (anchors, reveal order, ≤20-word lines, ≤8-word
+  caption, no money), spoilers, facts (pack numbers via `pack_numbers`, card names from
+  outside the post, rarity words no revealed card has, "new"/"duplicate" claims: a
+  duplicate claim is only wrong if the card is new in *every* printing), timing (words
+  per region vs `airtime`, 15% slack, regions cut like render's).
+- Optional style judge (`claude-opus-5-5`, effort low, structured `StyleVerdict`):
+  only *major* breaks of a written rule trigger a rewrite.
+- `write → critique → rewrite` loop, up to `SCRIPT_REWRITES` (2) rewrites with every
+  problem and the previous draft fed back; the attempt with the fewest problems is
+  kept; budget checked before each rewrite; `posts/<n>/critique.json` records all
+  attempts. Without critic settings `generate_script` keeps the old behaviour
+  (spoilers only, one rewrite).
+- `narrate critique <slug> --all` runs the checks over scripts on disk for free. On
+  Delta Reign's 8 existing drafts: 7 broke a rule (timing 6, spoiler 3, fact 3).
+- Settings: `SCRIPT_CRITIC`, `SCRIPT_REWRITES`, `SCRIPT_STYLE_JUDGE`,
+  `SCRIPT_JUDGE_EFFORT`. Not yet measured: a live before/after of the loop itself.
+
 ## Commands
 
 ```bash
@@ -463,6 +514,8 @@ pokepipe detect run video.mp4 --set sv3pt5 # → data/videos/<slug>/pulls.json +
 pokepipe detect layout <slug>             # re-run pack-slot / reverse-holo inference
 pokepipe detect regroup <slug>            # merge repeat showings + regroup + layout
 pokepipe detect moments <slug>            # box / tear / cards-out / Energy → series edit
+pokepipe recover run <slug>               # agent: missed cards in short packs → recovered.json
+pokepipe recover eval <slug>              # score it against hand-added pulls in review
 pokepipe review serve                     # review page at http://127.0.0.1:8765
 pokepipe review prefill <slug>            # copy reverse guesses onto pending pulls
 pokepipe review status                    # progress per video
@@ -472,12 +525,14 @@ pokepipe collection missing sv3pt5 --variant reverse
 pokepipe collection add sv3pt5 sv3pt5-25 --variant reverse   # cards owned already
 pokepipe collection value <slug>          # price every pull → values.json (P/L input)
 pokepipe narrate plan <slug> --posts "1-3, 9, 10-12"  # packs per post (omit = suggest)
-pokepipe narrate script <slug> [-p 2]     # Claude writes each post's voiceover
+pokepipe narrate script <slug> [-p 2]     # Claude writes each post's voiceover (+ critic)
+pokepipe narrate critique <slug> [--all]  # free: check scripts on disk against the critic
 pokepipe narrate voices                   # list ElevenLabs voices → ELEVENLABS_VOICE_ID
 pokepipe narrate voice <slug> [-p 2]      # synthesise (cached, budget-checked)
 pokepipe narrate cost <slug>              # spend so far vs the per-video budget
 pokepipe render post <slug> [-p 1]        # → posts/<n>/post.mp4 (1080x1920)
 pokepipe watch run                        # inbox watcher + review page, end to end
+pokepipe watch run --engine graph         # same, as a checkpointed LangGraph graph
 pokepipe watch status                     # where every video is
 pokepipe watch retry <slug>               # resume a failed video at its failed stage
 pytest                                    # unit tests (no network, no GPU)

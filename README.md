@@ -7,9 +7,10 @@
 **Turn a raw Pokémon TCG pack-opening video into narrated, edited vertical shorts,
 locally, for under $1 per video.**
 
-pokepipe watches the footage, recognises every card on a local GPU, lets you confirm
-the results in a small review page, tracks your master-set progress and what your pulls
-are worth, writes and voices a spoiler-free script grounded in what you actually pulled,
+pokepipe watches the footage, recognises every card on a local GPU, sends a Claude agent
+to look for any card detection missed, lets you confirm the results in a small review
+page, tracks your master-set progress and what your pulls are worth, writes and voices a
+script that a critic checks against the facts and the footage before it's kept,
 and renders 1080×1920 posts: the box opening and each pack's tear as quick cuts with
 their real sound, packs that run card to card, zooms that follow the card, price tags
 and sound effects on the hits, and a rocket-themed master-set progress bar.
@@ -22,7 +23,8 @@ and sound effects on the hits, and a rocket-themed master-set progress bar.
 flowchart LR
     V[opening.mp4] --> D["2 · Detect<br/>CLIP on GPU"]
     C["1 · Card data<br/>pokemontcg.io + embeddings"] --> D
-    D -->|pulls.json| R["3 · Review<br/>local web page"]
+    D -->|pulls.json| A["2b · Recover<br/>Claude agent, local tools"]
+    A -->|recovered.json| R["3 · Review<br/>local web page"]
     R -->|review.json| K["4 · Collection<br/>master-set progress"]
     K -->|collection.json| N["5 · Script + voice<br/>Claude + ElevenLabs"]
     N -->|script + voice.json| E["6 · Render<br/>ffmpeg, NVENC"]
@@ -33,11 +35,12 @@ flowchart LR
 |---|---|
 | **1 · Card data** | Fetches any set's checklist and hi-res scans, and builds a CLIP embedding index on the GPU. |
 | **2 · Detect** | Samples frames, scores a grid of card-shaped crops per frame in one batched GPU pass, groups confident votes into reveals and reveals into packs, and infers reverse holos from pack slot order. Then finds the moments worth editing around: the box opening, each pack's tear (by sound), where its cards start (the basic Energy) and hits being sleeved. |
+| **2b · Recover** | A Claude agent (LangGraph tool loop) works through every pack that came up short. It rescans the gaps on the GPU and uses the pack's slot order to settle near-ties, then suggests the missing cards for review. Only scores and names reach the model, never frames. |
 | **3 · Review** | Local page (FastAPI, vanilla JS) to keep, reject or correct each pull, with the video jumping to every card. The only manual step. |
 | **4 · Collection** | Master-set tracking (every printing), marking which pulls are new and the progress after each pack, plus what each pull is worth (TCGplayer market price per printing) as the input for profit/loss. |
-| **5 · Script + voice** | You choose which packs form each post. Claude writes a script from computed facts only, with a hook and viewer prompts, checked so no hit is named before it appears. ElevenLabs voices it with per-word timings. |
+| **5 · Script + voice** | You choose which packs form each post. Claude writes a script from computed facts only, with a hook and viewer prompts. A critic checks every draft for timing against the footage, spoilers, wrong facts and style, and sends failing drafts back for a rewrite. ElevenLabs voices it with per-word timings. |
 | **6 · Render** | Vertical cuts paced by the narration: quick clips of the box and every tear with their own sound, packs card to card with fumbles cut, zooms that track the card, sleeving clips and an end recap. Word-by-word captions, price tags, synthesised sound effects and a progress bar, with each spoken line on its card. |
-| **7 · Watch folder** | Drop a video in and it runs end to end, pausing only for your review. Resumable, with failures recorded and retryable. |
+| **7 · Watch folder** | Drop a video in and it runs end to end, pausing only for your review. Resumable, with failures recorded and retryable. Two engines: a small state machine (default), or a LangGraph state graph with SQLite checkpoints and review as an `interrupt()` (`--engine graph`). |
 
 ## Results
 
@@ -57,6 +60,7 @@ And on a creator's own footage: a 16-minute vertical 4K HDR iPhone opening of a
 | | |
 |---|---|
 | Cards found | **86 / 90**; the 4 misses are understood (near-identical art, a borderline frame, a reverse-holo copy merged as a repeat) |
+| Missed cards recovered by the agent | **3 / 3** of those the reviewer had to add by hand, **0** wrong suggestions; 5 turns, **$0.13** |
 | Decode | 0.9× → **6.6× real time** with NVDEC; whole video about 4 min including CLIP |
 | Moments found automatically | 9/9 pack tears and Energy starts, 4/4 box shots, 3/3 sleeved hits |
 | Output | two 90 s posts; in-pack jump cuts 27 → 3 and 39 → 1, every voice line on its card |
@@ -109,9 +113,24 @@ The decisions that mattered, each backed by a measurement:
   against its own embedding (preferring the largest near-best box, since CLIP rates the
   artwork alone about as high as the whole card), then smoothed and widened wherever the
   card would be clipped.
-- **No spoilers, enforced.** A checker reads each script and flags any line, or the hook
-  caption, that names a hit or a special rarity before it appears; a failing draft is
-  rewritten once with the exact problems listed.
+- **Agent for the gaps, not the whole job.** CLIP finds most cards. A Claude agent
+  only looks at packs that came up short, using local tools: a pack overview, a GPU
+  rescan of a window with loose thresholds, and a check of whether a candidate fits the
+  pack's slot order. On *Delta Reign* that settled an Uncommon-vs-Illustration-Rare
+  near-tie (lead 0.009) and found a reverse-holo copy that had been merged as a repeat.
+  The turn limit is an edge in the graph, the budget is checked before every call, and
+  every suggestion still goes through human review.
+- **Writer ⇄ critic for scripts.** Free deterministic checks (timing against each
+  card's screen time, spoilers, pack numbers, cards not in the post, wrong rarities,
+  "new" vs "duplicate" claims) plus an optional style-guide judge. A failing draft goes
+  back with every problem listed, up to two rewrites, and the best attempt is kept. Run
+  over the scripts already on disk (`narrate critique`), the checks found 7 of 8 earlier
+  drafts broke at least one rule.
+- **LangGraph where it earns its place.** The watch pipeline can run as a state graph:
+  a SQLite checkpointer (one thread per video) resumes a crash or failed stage at the
+  node that didn't finish, and review is a real `interrupt()` resumed with
+  `Command(resume=True)`. Both engines share the same idempotent stage functions and
+  `job.json` status view.
 - **Nothing to license.** Sound effects are synthesised with numpy, and the rocket is
   drawn with Pillow.
 
@@ -148,6 +167,9 @@ scripts, voice and render then run on their own; any hit without a price is logg
 you can add it to `data/prices/<set_id>.csv` (see below). `pokepipe watch status` shows where every video is;
 `pokepipe watch retry <slug>` resumes a failed one.
 
+`pokepipe watch run --engine graph` runs the same pipeline as a LangGraph graph
+(checkpoints in `data/graph/`), with the missed-card agent before review.
+
 **Or stage by stage:**
 
 ```bash
@@ -158,6 +180,7 @@ pokepipe cards fetch sv3pt5 && pokepipe cards embed sv3pt5
 # 2. Detect pulls, then the box / tear / Energy / sleeving moments for the series edit
 pokepipe detect run opening.mp4 --set sv3pt5
 pokepipe detect moments <video-slug>
+pokepipe recover run <video-slug>          # optional: agent looks for missed cards
 
 # 3. Review in the browser (http://127.0.0.1:8765)
 pokepipe review serve
@@ -169,7 +192,7 @@ pokepipe collection value <video-slug>
 
 # 5. Plan posts, write and voice the scripts
 pokepipe narrate plan <video-slug> --posts "1-3, 9, 10-12" --seconds 45
-pokepipe narrate script <video-slug>
+pokepipe narrate script <video-slug>        # writer ⇄ critic; posts/<n>/critique.json
 pokepipe narrate voice <video-slug>
 
 # 6. Render
@@ -178,6 +201,11 @@ pokepipe render post <video-slug>          # → data/videos/<slug>/posts/<n>/po
 
 Every stage reads and writes JSON under `data/`, so any step can be re-run or
 inspected on its own. Run `pokepipe <stage> --help` for all options.
+
+**Measuring the AI parts:** `pokepipe recover eval <slug>` scores the agent's
+suggestions against the cards you added by hand in a finished review, and
+`pokepipe narrate critique <slug> --all` runs the script checks over every script on
+disk (no API calls). `SCRIPT_CRITIC=false` turns the critic off.
 
 **Prices.** Market prices come from pokemontcg.io (TCGplayer) once it has them; a
 brand-new set can take a few weeks. Until then, or to use your own numbers, list them in
@@ -196,12 +224,15 @@ src/pokepipe/
   cards/        stage 1  API client, cache, CLIP embedder, GPU index, price book
   detection/    stage 2  frame sampler, GPU matcher, segmenter, packs, slot layouts,
                          moments (box, tears, Energy starts, sleeving: sound + vision)
+  recover/      stage 2b missed-card agent: evidence tools, LangGraph tool loop, eval
   review/       stage 3  FastAPI app, edit rules, static UI
   collection/   stage 4  master-set model, per-video contributions, values (P/L input)
-  narration/    stage 5  post planning, Claude scripts, spoiler check, ElevenLabs, budget
+  narration/    stage 5  post planning, Claude scripts, writer ⇄ critic loop, ElevenLabs,
+                         budget
   render/       stage 6  edit timeline, pacing, card tracking, zoom paths, captions,
                          rocket theme, sound effects, ffmpeg
   watch/        stage 7  inbox intake, resumable job state machine, watcher loop
+  graph/        stage 7  the same pipeline as a checkpointed LangGraph state graph
 tests/          pytest; APIs mocked, no GPU needed except tests marked `gpu`
 config/         style guide (and optional intro clip)
 ```
@@ -211,7 +242,7 @@ Design notes for each stage, with calibration data, are in [CLAUDE.md](CLAUDE.md
 ## Testing
 
 ```bash
-pytest            # ~180 tests: no network, no GPU (a few render tiny clips with ffmpeg)
+pytest            # ~200 tests: no network, no GPU (a few render tiny clips with ffmpeg)
 pytest -m gpu     # real CLIP model on CUDA
 ruff check src tests
 ```
@@ -235,8 +266,10 @@ CI runs the CPU suite and lint on every push.
 
 - Profit/loss: record what each product cost and report value pulled minus cost per
   video and across a series (`values.json` is the input).
-- Recognition: use the pack's slot order to settle near-ties, keep reverse-holo copies
-  that look like repeats, and re-scan short packs.
+- Recovery agent: measure it on more labelled videos (one so far), and give it a
+  corner-OCR tool for tie-breaks.
+- More agents on the same graph: a price finder that proposes rows for the price sheet
+  and waits for approval, and an MCP server exposing collection status to chat clients.
 - Creator profiles (style guide, voice, theme, intro, collection per creator).
 - Set auto-detection and tie-breaking from the card's corner text (OCR).
 
