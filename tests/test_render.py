@@ -409,9 +409,21 @@ def test_build_ass_without_narration_has_no_hook_or_captions():
 def test_segment_cmd_with_audio_speed_matches_and_cuts_to_length():
     seg = Segment(1.0, 3.0, "reveal", 1, speed=2.0, crop=(606, 1080, 657, 0))
     with_audio = ffmpeg.segment_cmd(SRC_PATH, seg, SRC_PATH, audio=True)
-    assert "atempo=2.0000,volume=1.000,apad" in with_audio and "0:a:0" in with_audio
+    # the silence pad has an explicit length, so ffmpeg never relies on -t alone to stop
+    assert f"atempo=2.0000,volume=1.000,apad=whole_dur={seg.out_len:.3f}" in with_audio
+    assert "0:a:0" in with_audio
     assert with_audio[with_audio.index("-t", 10) + 1] == f"{seg.out_len:.3f}"
     assert "-an" in ffmpeg.segment_cmd(SRC_PATH, seg, SRC_PATH)
+
+
+def test_hwaccel_only_with_an_nvidia_driver(monkeypatch):
+    ffmpeg.hwaccel.cache_clear()
+    monkeypatch.setattr(ffmpeg.shutil, "which", lambda name: None)  # e.g. a CI runner
+    assert ffmpeg.hwaccel() == []
+    ffmpeg.hwaccel.cache_clear()
+    monkeypatch.setattr(ffmpeg.shutil, "which", lambda name: "/usr/bin/nvidia-smi")
+    assert ffmpeg.hwaccel() == ["-hwaccel", "auto"]
+    ffmpeg.hwaccel.cache_clear()
 
 
 @needs_ffmpeg

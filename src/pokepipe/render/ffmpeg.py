@@ -8,6 +8,7 @@ NVENC (GPU) is used when available, else libx264.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 from dataclasses import dataclass
 from functools import lru_cache
@@ -42,10 +43,19 @@ def video_encoder() -> list[str]:
             "-",
         ],
         capture_output=True,
+        stdin=subprocess.DEVNULL,
+        timeout=60,
     )
     if probe.returncode == 0:
         return ["-c:v", "h264_nvenc", "-preset", "p5", "-rc", "vbr", "-cq", "{cq}", "-b:v", "0"]
     return ["-c:v", "libx264", "-preset", "medium", "-crf", "{cq}"]
+
+
+@lru_cache
+def hwaccel() -> list[str]:
+    """Hardware decode only where an NVIDIA driver is installed. On a machine without
+    a GPU (like a CI runner) `-hwaccel auto` has nothing to gain and can stall."""
+    return ["-hwaccel", "auto"] if shutil.which("nvidia-smi") else []
 
 
 def _encoder(cq: int) -> list[str]:
@@ -107,13 +117,15 @@ def segment_cmd(
     along: sped up with pitch-preserving atempo, set to `volume`, padded through any
     freeze-frame, and cut to exactly the shot's length so clips concatenate in sync."""
     cmd = [
-        require_tool("ffmpeg"), "-v", "error", "-y", "-hwaccel", "auto",
+        require_tool("ffmpeg"), "-v", "error", "-y", *hwaccel(),
         "-ss", f"{seg.src_start:.3f}", "-t", f"{seg.src_len:.3f}", "-i", str(source),
         "-vf", segment_filter(seg), *_encoder(18), "-pix_fmt", "yuv420p",
     ]
     if audio:
+        # apad with an explicit length: an endless pad relies on -t alone to stop ffmpeg
         cmd += ["-map", "0:v:0", "-map", "0:a:0",
-                "-af", f"atempo={seg.speed:.4f},volume={volume:.3f},apad", *AUDIO_OUT,
+                "-af", f"atempo={seg.speed:.4f},volume={volume:.3f},"
+                       f"apad=whole_dur={seg.out_len:.3f}", *AUDIO_OUT,
                 "-t", f"{seg.out_len:.3f}"]
     else:
         cmd += ["-an"]
@@ -138,7 +150,7 @@ def has_audio(video: Path) -> bool:
     out = subprocess.run(
         [require_tool("ffprobe"), "-v", "error", "-select_streams", "a",
          "-show_entries", "stream=index", "-of", "csv=p=0", str(video)],
-        capture_output=True, text=True,
+        capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=60,
     )
     return bool(out.stdout.strip())
 
@@ -240,9 +252,16 @@ def final_cmd_source_audio(
     return cmd + ["-movflags", "+faststart", str(out)]
 
 
-def run(cmd: list[str], cwd: Path | None = None) -> None:
-    proc = subprocess.run(
-        cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace"
-    )
+def run(cmd: list[str], cwd: Path | None = None, timeout: float = 1800) -> None:
+    """Run ffmpeg. stdin is closed (ffmpeg otherwise listens for keyboard commands,
+    which can stall it without a terminal) and a hung command fails with its name
+    instead of blocking the pipeline."""
+    try:
+        proc = subprocess.run(
+            cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+            stdin=subprocess.DEVNULL, timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RenderError(f"ffmpeg timed out after {timeout:.0f}s: {' '.join(cmd)[:300]}") from exc
     if proc.returncode != 0:
         raise RenderError(f"ffmpeg failed ({proc.returncode}): {proc.stderr.strip()[-800:]}")
