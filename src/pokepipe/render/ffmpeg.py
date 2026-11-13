@@ -116,17 +116,22 @@ def segment_cmd(
     """One shot as its own clip. With `audio`, the source's first audio track comes
     along: sped up with pitch-preserving atempo, set to `volume`, padded through any
     freeze-frame, and cut to exactly the shot's length so clips concatenate in sync."""
+    # With audio, both streams are cut to the shot's length inside the filter graph
+    # (trim / apad + atrim), so each ends on its own. Leaning on the output -t alone to
+    # stop a padded audio stream hung ffmpeg 6.1 (Ubuntu 24.04's) forever; -t stays as a
+    # backstop.
+    length = f"{seg.out_len:.3f}"
+    vf = segment_filter(seg) + (f",trim=duration={length}" if audio else "")
     cmd = [
         require_tool("ffmpeg"), "-v", "error", "-y", *hwaccel(),
         "-ss", f"{seg.src_start:.3f}", "-t", f"{seg.src_len:.3f}", "-i", str(source),
-        "-vf", segment_filter(seg), *_encoder(18), "-pix_fmt", "yuv420p",
+        "-vf", vf, *_encoder(18), "-pix_fmt", "yuv420p",
     ]
     if audio:
-        # apad with an explicit length: an endless pad relies on -t alone to stop ffmpeg
         cmd += ["-map", "0:v:0", "-map", "0:a:0",
                 "-af", f"atempo={seg.speed:.4f},volume={volume:.3f},"
-                       f"apad=whole_dur={seg.out_len:.3f}", *AUDIO_OUT,
-                "-t", f"{seg.out_len:.3f}"]
+                       f"apad=whole_dur={length},atrim=duration={length}", *AUDIO_OUT,
+                "-t", length]
     else:
         cmd += ["-an"]
     return cmd + [str(out)]
@@ -155,7 +160,16 @@ def has_audio(video: Path) -> bool:
     return bool(out.stdout.strip())
 
 
-def voice_filter(lines: list[PlacedLine], input_index: int = 1, under: str = "") -> str:
+def pad_to(duration: float | None) -> str:
+    """Pad audio with silence to `duration` and cut it there, so the stream ends on its
+    own (see segment_cmd). Without a duration: an open-ended pad, stopped by -t."""
+    if duration is None:
+        return "apad"
+    return f"apad=whole_dur={duration:.3f},atrim=duration={duration:.3f}"
+
+
+def voice_filter(lines: list[PlacedLine], input_index: int = 1, under: str = "",
+                 duration: float | None = None) -> str:
     """Cut each line out of voice.mp3 and delay it to its place on the timeline. `under`
     (e.g. "[0:a]"): another audio stream mixed in beneath, the source sound."""
     n = len(lines)
@@ -172,7 +186,8 @@ def voice_filter(lines: list[PlacedLine], input_index: int = 1, under: str = "")
         )
     chains.append(
         "".join(f"[l{i}]" for i in range(n)) + under
-        + f"amix=inputs={n + under.count('[')}:normalize=0:dropout_transition=0,apad[aout]"
+        + f"amix=inputs={n + under.count('[')}:normalize=0:dropout_transition=0,"
+        + f"{pad_to(duration)}[aout]"
     )
     return ";".join(chains)
 
@@ -217,7 +232,8 @@ def final_cmd(
     voice over it, plus the `sfx` track. Inputs: 0 clips, 1 voice, 2 sprite, then sfx."""
     sfx_input = 2 + bool(sprite)
     under = ("[0:a]" if source_audio else "") + (f"[{sfx_input}:a]" if sfx else "")
-    graph = _video_graph(ass_name, sprite, 2) + ";" + voice_filter(lines, under=under)
+    graph = (_video_graph(ass_name, sprite, 2) + ";"
+             + voice_filter(lines, under=under, duration=duration))
     return [
         require_tool("ffmpeg"), "-v", "error", "-y",
         "-f", "concat", "-safe", "0", "-i", str(concat_list),
@@ -240,7 +256,7 @@ def final_cmd_source_audio(
     streams = ("[0:a]" if audio else "") + (f"[{sfx_input}:a]" if sfx else "")
     if streams:
         graph += (f";{streams}amix=inputs={streams.count('[')}:normalize=0"
-                  ":dropout_transition=0,apad[aout]")
+                  f":dropout_transition=0,{pad_to(duration)}[aout]")
     cmd = [
         require_tool("ffmpeg"), "-v", "error", "-y",
         "-f", "concat", "-safe", "0", "-i", str(concat_list), *_sprite_input(sprite),
@@ -262,6 +278,9 @@ def run(cmd: list[str], cwd: Path | None = None, timeout: float = 1800) -> None:
             stdin=subprocess.DEVNULL, timeout=timeout,
         )
     except subprocess.TimeoutExpired as exc:
-        raise RenderError(f"ffmpeg timed out after {timeout:.0f}s: {' '.join(cmd)[:300]}") from exc
+        said = exc.stderr.decode("utf-8", "replace") if isinstance(exc.stderr, bytes) else (
+            exc.stderr or "")
+        raise RenderError(f"ffmpeg timed out after {timeout:.0f}s: {' '.join(cmd)}\n"
+                          f"stderr: {said.strip()[-800:]}") from exc
     if proc.returncode != 0:
         raise RenderError(f"ffmpeg failed ({proc.returncode}): {proc.stderr.strip()[-800:]}")

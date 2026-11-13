@@ -409,9 +409,13 @@ def test_build_ass_without_narration_has_no_hook_or_captions():
 def test_segment_cmd_with_audio_speed_matches_and_cuts_to_length():
     seg = Segment(1.0, 3.0, "reveal", 1, speed=2.0, crop=(606, 1080, 657, 0))
     with_audio = ffmpeg.segment_cmd(SRC_PATH, seg, SRC_PATH, audio=True)
-    # the silence pad has an explicit length, so ffmpeg never relies on -t alone to stop
-    assert f"atempo=2.0000,volume=1.000,apad=whole_dur={seg.out_len:.3f}" in with_audio
+    # both streams end on their own at the shot's length; -t alone hung ffmpeg 6.1
+    out = f"{seg.out_len:.3f}"
+    assert f"atempo=2.0000,volume=1.000,apad=whole_dur={out},atrim=duration={out}" in with_audio
+    assert with_audio[with_audio.index("-vf") + 1].endswith(f",trim=duration={out}")
     assert "0:a:0" in with_audio
+    final = ffmpeg.final_cmd_source_audio(SRC_PATH, "c.ass", 12.5, SRC_PATH, True)
+    assert "apad=whole_dur=12.500,atrim=duration=12.500[aout]" in " ".join(final)
     assert with_audio[with_audio.index("-t", 10) + 1] == f"{seg.out_len:.3f}"
     assert "-an" in ffmpeg.segment_cmd(SRC_PATH, seg, SRC_PATH)
 
@@ -440,7 +444,8 @@ def test_source_audio_render_keeps_audio_in_sync(tmp_path):
     clips = []
     for i, seg in enumerate(edit.segments):
         clip = tmp_path / f"seg_{i}.mp4"
-        ffmpeg.run(ffmpeg.segment_cmd(src, seg, clip, audio=True))
+        # A shot this short takes seconds; a hang should fail fast with ffmpeg's output.
+        ffmpeg.run(ffmpeg.segment_cmd(src, seg, clip, audio=True), timeout=120)
         clips.append(clip)
     concat = tmp_path / "list.txt"
     concat.write_text("".join(f"file '{c.as_posix()}'\n" for c in clips))
@@ -448,7 +453,8 @@ def test_source_audio_render_keeps_audio_in_sync(tmp_path):
     (tmp_path / "c.ass").write_text(build_ass([], [], overlay, edit.duration), encoding="utf-8")
     out = tmp_path / "post.mp4"
     ffmpeg.run(
-        ffmpeg.final_cmd_source_audio(concat, "c.ass", edit.duration, out, True), cwd=tmp_path
+        ffmpeg.final_cmd_source_audio(concat, "c.ass", edit.duration, out, True), cwd=tmp_path,
+        timeout=120,
     )
     import json
 
