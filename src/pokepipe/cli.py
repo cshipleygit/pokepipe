@@ -6,6 +6,7 @@ from pokepipe.cards.cli import app as cards_app
 from pokepipe.collection.cli import app as collection_app
 from pokepipe.detection.cli import app as detect_app
 from pokepipe.narration.cli import app as narrate_app
+from pokepipe.recover.cli import app as recover_app
 from pokepipe.render.cli import app as render_app
 from pokepipe.review.cli import app as review_app
 from pokepipe.watch.cli import app as watch_app
@@ -13,6 +14,7 @@ from pokepipe.watch.cli import app as watch_app
 app = typer.Typer(help="Pokémon pack-opening → TikTok shorts pipeline.", no_args_is_help=True)
 app.add_typer(cards_app, name="cards")
 app.add_typer(detect_app, name="detect")
+app.add_typer(recover_app, name="recover")
 app.add_typer(review_app, name="review")
 app.add_typer(collection_app, name="collection")
 app.add_typer(narrate_app, name="narrate")

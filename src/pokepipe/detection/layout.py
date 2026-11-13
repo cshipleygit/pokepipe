@@ -89,6 +89,15 @@ def _fits(pulls: list[Pull], slots: tuple[Slot, ...]) -> int | None:
     return None
 
 
+def placements(pulls: list[Pull], layout: PackLayout) -> list[tuple[int, ...]]:
+    """Every way to put `pulls` (in reveal order) into the layout's slots that keeps
+    their order and fits each rarity — the slot indices each pull could occupy."""
+    return [
+        combo for combo in combinations(range(len(layout)), len(pulls))
+        if all(layout.slots[s].fits(p.rarity) for p, s in zip(pulls, combo, strict=True))
+    ]
+
+
 def apply_layout(pulls: list[Pull], layout: PackLayout) -> LayoutResult:
     """Assign `slot` and `reverse_guess` on one pack's pulls (in reveal order).
 
@@ -107,14 +116,11 @@ def apply_layout(pulls: list[Pull], layout: PackLayout) -> LayoutResult:
         if bad is not None:
             return LayoutResult(None, f"card {bad + 1} ({pulls[bad].rarity}) doesn't fit the "
                                       f"{layout.slots[bad].kind} slot — shuffled or misread?")
-        placements = [tuple(range(size))]
+        placed = [tuple(range(size))]
         mode = "full"
     elif layout.tail <= n < size:
-        placements = [
-            combo for combo in combinations(range(size), n)
-            if all(layout.slots[s].fits(p.rarity) for p, s in zip(pulls, combo, strict=True))
-        ]
-        if not placements:
+        placed = placements(pulls, layout)
+        if not placed:
             return LayoutResult(None, f"{size - n} card(s) missing and the rest don't fit the "
                                       "pack order")
         mode = "partial"
@@ -124,7 +130,7 @@ def apply_layout(pulls: list[Pull], layout: PackLayout) -> LayoutResult:
     result = LayoutResult(mode, "" if mode == "full" else
                           f"{size - n} card(s) missing; only unambiguous slots inferred")
     for i, pull in enumerate(pulls):
-        slots = {combo[i] for combo in placements}
+        slots = {combo[i] for combo in placed}
         reverse = {pull.rarity in layout.slots[s].reverse_if for s in slots}
         if len(slots) == 1:
             pull.slot = next(iter(slots)) + 1

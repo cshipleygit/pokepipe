@@ -30,6 +30,9 @@ class ReviewedPull(BaseModel):
     time: float = Field(description="seconds — where the card is shown")
     status: Status = Status.PENDING
     reverse_holo: bool = False
+    suggested: str | None = Field(
+        None, description="evidence, when the recovery agent suggested this missed card"
+    )
 
     @property
     def corrected(self) -> bool:

@@ -8,7 +8,7 @@ from pathlib import Path
 from pokepipe.collection.models import VideoReport
 from pokepipe.narration import posts as posts_mod
 from pokepipe.narration.models import CostEntry, CostLedger, PostPlan, PostScript, VoiceTiming
-from pokepipe.narration.script import ScriptSettings, generate_script
+from pokepipe.narration.script import CriticSettings, ScriptSettings, write_post_script
 from pokepipe.narration.voice import (
     ElevenLabsClient,
     VoiceCache,
@@ -137,6 +137,20 @@ def _airtime(files: VideoFiles, report: VideoReport, post, settings: ScriptSetti
         return None
 
 
+def critic_settings(s, set_id: str) -> CriticSettings | None:
+    """The critic as configured (`SCRIPT_CRITIC`, `SCRIPT_REWRITES`, ...); `s` is
+    `config.Settings`. The set's card names let it catch cards from outside the post."""
+    from pokepipe.cards.cache import SetCache
+    from pokepipe.narration.critic import JudgeSettings
+
+    if not s.script_critic:
+        return None
+    names = frozenset(c.name for c in SetCache(s.sets_dir, set_id).load_cards())
+    judge = (JudgeSettings(model=s.script_model, effort=s.script_judge_effort)
+             if s.script_style_judge else None)
+    return CriticSettings(set_card_names=names, max_rewrites=s.script_rewrites, judge=judge)
+
+
 def write_scripts(
     files: VideoFiles,
     client,
@@ -144,12 +158,20 @@ def write_scripts(
     settings: ScriptSettings,
     budget: Budget,
     only: list[int] | None = None,
+    critic: CriticSettings | None = None,
 ) -> list[ScriptRun]:
+    """`critic`: run the writer ⇄ critic loop (narration/writer.py) and save each post's
+    critique.json. Without it, only spoilers are checked (one rewrite)."""
     report, plan, ledger = files.load_report(), files.load_plan(), files.load_ledger()
     runs = []
     for post in _select(plan, only):
         budget.check(ledger, SCRIPT_ESTIMATE_USD, f"script for post {post.index}")
-        script, cost, warnings = generate_script(
+
+        def before_rewrite(spent: float, post=post) -> None:
+            budget.check(ledger, spent + SCRIPT_ESTIMATE_USD,
+                         f"script rewrite for post {post.index}")
+
+        script, cost, warnings, critique = write_post_script(
             client,
             report,
             post,
@@ -157,8 +179,12 @@ def write_scripts(
             style,
             settings,
             airtime=_airtime(files, report, post, settings),
+            critic=critic,
+            budget_check=before_rewrite,
         )
         files.save(files.post_dir(post.index) / "script.json", script)
+        if critic is not None:
+            files.save(files.post_dir(post.index) / "critique.json", critique)
         ledger.entries.append(
             CostEntry(
                 kind="script",

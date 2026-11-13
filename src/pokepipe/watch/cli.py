@@ -41,12 +41,30 @@ def _start_review_server(port: int) -> str:
     return f"http://127.0.0.1:{port}/"
 
 
+def _runner(engine: str, ops, jobs: JobStore):
+    def on_event(job, message):
+        _log(f"{job.slug}: {message}")
+
+    if engine == "runner":
+        return Runner(ops, jobs, on_event=on_event)
+    if engine == "graph":
+        from pokepipe.graph.pipeline import GraphRunner, open_checkpointer
+
+        saver = open_checkpointer(get_settings().graph_checkpoints)
+        return GraphRunner(ops, jobs, saver, on_event=on_event)
+    console.print(f"[red]unknown engine {engine!r}; use 'runner' or 'graph'[/]")
+    raise typer.Exit(2)
+
+
 @app.command()
 def run(
     once: bool = typer.Option(False, help="One pass, then exit (no loop, no review server)"),
     review: bool = typer.Option(True, "--review/--no-review", help="Serve the review page too"),
     port: int = typer.Option(8765, help="Review page port (127.0.0.1)"),
     open_browser: bool = typer.Option(False, "--open", help="Open the review page"),
+    engine: str = typer.Option(
+        "runner", help="'runner' (default state machine) or 'graph' (LangGraph, checkpointed, "
+                       "with the missed-card recovery agent)"),
 ):
     """Watch the inbox and run every video through the pipeline."""
     from pokepipe.watch.pipeline import PipelineOps
@@ -56,7 +74,9 @@ def run(
     s.inbox_dir.mkdir(parents=True, exist_ok=True)
     jobs = _jobs()
     inbox = Inbox(s.inbox_dir, jobs, s.watch_default_set, s.watch_settle_seconds)
-    runner = Runner(PipelineOps(s, log=_log), jobs, on_event=lambda j, m: _log(f"{j.slug}: {m}"))
+    runner = _runner(engine, PipelineOps(s, log=_log), jobs)
+    if engine == "graph":
+        _log(f"engine: LangGraph (checkpoints in {s.graph_checkpoints})")
     watcher = Watcher(inbox, runner, jobs, log=_log)
 
     if once:
@@ -102,13 +122,13 @@ def retry(
     slug: str,
     force_budget: bool = typer.Option(False, help="Allow this video to exceed the budget"),
 ):
-    """Retry a failed video from the stage that failed."""
-    from pokepipe.watch.pipeline import PipelineOps
-
+    """Retry a failed video from the stage that failed (either engine)."""
     jobs = _jobs()
     try:
         job = jobs.load(slug)
-        Runner(PipelineOps(get_settings(), log=_log), jobs).retry(job, force_budget)
+        # Clearing the failure is the same for both engines: the runner resumes from
+        # job.status, the graph from its checkpoint.
+        Runner(None, jobs).retry(job, force_budget)  # type: ignore[arg-type]
     except (FileNotFoundError, ValueError) as exc:
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(1) from exc

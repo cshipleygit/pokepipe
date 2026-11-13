@@ -108,6 +108,36 @@ class PipelineOps:
         for note in found.notes:
             self.log(f"{job.slug}: {note}")
 
+    def recover(self, job: Job) -> None:
+        """Missed-card agent (graph engine only): suggestions for review in
+        recovered.json. Skipped if switched off, already run, or the review has started
+        (suggestions only seed a new review)."""
+        from pokepipe.cards import service as cards
+        from pokepipe.detection.models import PullsFile
+        from pokepipe.narration.script import anthropic_client
+        from pokepipe.recover.agent import AgentSettings
+        from pokepipe.recover.scan import VideoScanner
+        from pokepipe.recover.service import recover
+
+        root = self._files(job).root
+        if (not self.s.recover or (root / "recovered.json").exists()
+                or (root / "review.json").exists()):
+            return
+        det = PullsFile.model_validate_json((root / "pulls.json").read_text(encoding="utf-8"))
+        emb = self.embedder()
+        scanner = VideoScanner(Path(det.video), emb,
+                               cards.load_index(self.s.sets_dir, job.set_id, emb.model_tag))
+        out = recover(
+            root, self.s.sets_dir,
+            anthropic_client(self.s.anthropic_api_key, self.s.anthropic_workspace_id),
+            scanner,
+            AgentSettings(model=self.s.recover_model, effort=self.s.recover_effort,
+                          max_turns=self.s.recover_max_turns),
+            self._budget(job),
+        )
+        self.log(f"{job.slug}: recovery suggested {len(out.suggestions)} missed card(s) "
+                 f"(${out.usd:.2f}{'; ' + out.error if out.error else ''})")
+
     def review_done(self, job: Job) -> bool:
         from pokepipe.review.store import ReviewStore
 
@@ -177,6 +207,7 @@ class PipelineOps:
                 ScriptSettings(model=self.s.script_model, effort=self.s.script_effort),
                 self._budget(job),
                 need_script,
+                critic=narration.critic_settings(self.s, job.set_id),
             )
 
         need_voice = [

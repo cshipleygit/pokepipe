@@ -10,6 +10,7 @@ from pathlib import Path
 from pokepipe.cards.cache import SetCache
 from pokepipe.cards.models import Card
 from pokepipe.detection.models import PullsFile
+from pokepipe.recover.models import load_recovered
 from pokepipe.review.models import (
     NewPull,
     PullUpdate,
@@ -95,6 +96,18 @@ class ReviewStore:
             )
             for i, p in enumerate(det.pulls)
         ]
+        # Cards the recovery agent thinks detection missed start as pending, like any
+        # detection: the reviewer keeps, rejects or deletes each one.
+        recovered = load_recovered(self.video_dir(slug))
+        cards = self.cards(det.set_id)
+        for s in recovered.suggestions if recovered else []:
+            if s.card_id not in cards:
+                continue
+            pulls.append(ReviewedPull(
+                id=len(pulls), card_id=s.card_id, pack=s.pack, time=s.time,
+                reverse_holo=s.reverse_holo,
+                suggested=f"{s.confidence} confidence: {s.evidence}",
+            ))
         return ReviewState(video_slug=slug, set_id=det.set_id, pulls=pulls)
 
     def prefill_reverse(self, slug: str) -> int:

@@ -85,10 +85,11 @@ def script(slug: str, post: list[int] = PostsOpt, force: bool = ForceOpt):
     style = s.style_guide.read_text(encoding="utf-8") if s.style_guide.exists() else ""
     client = anthropic_client(s.anthropic_api_key, s.anthropic_workspace_id)
     settings = ScriptSettings(model=s.script_model, effort=s.script_effort)
+    critic = service.critic_settings(s, _files(slug).load_report().set_id)
     try:
         runs = _run(
             lambda: service.write_scripts(
-                _files(slug), client, style, settings, _budget(force), post or None
+                _files(slug), client, style, settings, _budget(force), post or None, critic
             )
         )
     except anthropic.BadRequestError as exc:
@@ -173,3 +174,37 @@ def cost(slug: str):
         table.add_row(str(e.post), e.kind, f"${e.usd:.4f}", e.detail, e.at)
     console.print(table)
     console.print(f"Total ${ledger.total:.4f} of ${get_settings().budget_usd_per_video:.2f} budget")
+
+
+@app.command()
+def critique(
+    slug: str,
+    post: list[int] = PostsOpt,
+    all_versions: bool = typer.Option(False, "--all", help="Also script_v*.json backups"),
+):
+    """Check scripts already on disk against the critic's rules (free: no model calls)."""
+    from collections import Counter
+
+    from rich.markup import escape
+
+    from pokepipe.cards.cache import SetCache
+    from pokepipe.narration import critic
+    from pokepipe.narration.models import PostScript
+
+    s, files = get_settings(), _files(slug)
+    report, plan = files.load_report(), files.load_plan()
+    names = {c.name for c in SetCache(s.sets_dir, report.set_id).load_cards()}
+    failed, total = Counter(), 0
+    for p in service._select(plan, post or None):
+        air = service._airtime(files, report, p, ScriptSettings())
+        pattern = "script*.json" if all_versions else "script.json"
+        for path in sorted(files.post_dir(p.index).glob(pattern)):
+            script = PostScript.model_validate_json(path.read_text(encoding="utf-8"))
+            problems = critic.check(script, report, p, names, air)
+            total += 1
+            colour = "green" if not problems else "yellow"
+            console.print(f"[{colour}]post {p.index} {path.name}: {len(problems)} problem(s)[/]")
+            for prob in problems:
+                console.print(f"  {escape(str(prob))}")  # "[p3-6]" is not Rich markup
+            failed.update({prob.kind for prob in problems})
+    console.print(f"{total} script(s); scripts failing each check: {dict(failed) or 'none'}")

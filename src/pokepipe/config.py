@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     anthropic_workspace_id: str | None = None
     script_model: str = "claude-opus-5-5"
     script_effort: str = "medium"
+    # Writer ⇄ critic loop (narration/writer.py): checks every draft, rewrites on problems
+    script_critic: bool = True
+    script_rewrites: int = 2
+    script_style_judge: bool = True  # a cheap model check of the draft against style.md
+    script_judge_effort: str = "low"
     elevenlabs_api_key: str | None = None
     elevenlabs_voice_id: str | None = None
     elevenlabs_model_id: str = "eleven_multilingual_v2"
@@ -47,6 +52,12 @@ class Settings(BaseSettings):
     watch_poll_seconds: float = 5.0
     watch_settle_seconds: float = 10.0  # a file must stop changing this long before intake
     default_post_seconds: float = 45.0
+
+    # Missed-card recovery agent (runs in the graph engine, before review)
+    recover: bool = True
+    recover_model: str = "claude-opus-5-5"
+    recover_effort: str = "medium"
+    recover_max_turns: int = 14
 
     @property
     def sets_dir(self) -> Path:
@@ -63,6 +74,10 @@ class Settings(BaseSettings):
     @property
     def inbox_dir(self) -> Path:
         return self.watch_inbox or self.data_dir / "inbox"
+
+    @property
+    def graph_checkpoints(self) -> Path:
+        return self.data_dir / "graph" / "checkpoints.sqlite"
 
 
 @lru_cache

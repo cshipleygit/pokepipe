@@ -114,6 +114,11 @@ function render() {
   $("#pulls").innerHTML = pulls.map((p, i) => pullTile(p, i)).join("");
 }
 
+// Model-written text (agent evidence) goes into an attribute: escape it.
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+}
+
 function pullTile(p, i) {
   const det = p.detected_index != null ? state.data.detection.pulls[p.detected_index] : null;
   const c = card(p.card_id);
@@ -121,7 +126,8 @@ function pullTile(p, i) {
   if (isHit(c.rarity)) badges.push(`<span class="badge hit">${c.rarity}</span>`);
   if (det && det.confidence < LOW_CONFIDENCE && p.status === "pending") badges.push(`<span class="badge low">check</span>`);
   if (det && p.card_id !== p.detected_card_id) badges.push(`<span class="badge fixed">was ${card(p.detected_card_id).name}</span>`);
-  if (!det) badges.push(`<span class="badge added">added</span>`);
+  if (!det && p.suggested) badges.push(`<span class="badge low" title="${esc(p.suggested)}">agent: missed card?</span>`);
+  else if (!det) badges.push(`<span class="badge added">added</span>`);
   if (det && det.showings && det.showings.length) {
     const times = det.showings.map((s) => fmt(s.peak_time)).join(", ");
     badges.push(`<span class="badge rev" title="Shown again at ${times} — kept as footage for the edit">shown ${det.showings.length + 1}×</span>`);
@@ -132,7 +138,7 @@ function pullTile(p, i) {
   }
   const shot = det && det.thumbnail
     ? `<img src="/media/${state.slug}/${det.thumbnail}" alt="Frame from video" loading="lazy">`
-    : `<div class="no-shot">added by hand</div>`;
+    : `<div class="no-shot">${p.suggested ? "suggested by the recovery agent — play to check" : "added by hand"}</div>`;
   const conf = det ? Math.round(det.confidence * 100) : 100;
   return `<li class="pull ${p.status} ${i === state.selected ? "selected" : ""}" data-id="${p.id}" data-i="${i}">
     <div class="imgs">

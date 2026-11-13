@@ -316,6 +316,16 @@ def _draft(client, settings: ScriptSettings, system: str, user: str):
     return draft, response, cost
 
 
+@dataclass(frozen=True)
+class CriticSettings:
+    """The full critic (narration/critic.py). Without it, only spoilers are checked and
+    a spoiling draft gets one rewrite (the original behaviour)."""
+
+    set_card_names: frozenset[str] = frozenset()
+    max_rewrites: int = 2
+    judge: object | None = None  # critic.JudgeSettings, or None for no style check
+
+
 def generate_script(
     client,
     report: VideoReport,
@@ -326,17 +336,53 @@ def generate_script(
     airtime=None,
 ) -> tuple[PostScript, float, list[str]]:
     """Returns (script, cost in USD, warnings). `client` is an `anthropic.Anthropic`."""
+    script, cost, warnings, _ = write_post_script(
+        client, report, post, total_posts, style, settings, airtime)
+    return script, cost, warnings
+
+
+def write_post_script(
+    client,
+    report: VideoReport,
+    post: Post,
+    total_posts: int,
+    style: str,
+    settings: ScriptSettings | None = None,
+    airtime=None,
+    critic: CriticSettings | None = None,
+    budget_check=lambda spent: None,
+):
+    """Draft, critique, rewrite (narration/writer.py). Returns (script, cost, warnings,
+    critique record). The kept draft is the attempt with the fewest problems; its
+    remaining problems become warnings."""
+    from pokepipe.narration import critic as checks
+    from pokepipe.narration.writer import best, build_writer, record
+
     settings = settings or ScriptSettings()
     system, user = build_prompt(report, post, total_posts, style, settings, airtime)
-    draft, response, cost = _draft(client, settings, system, user)
-    warnings = []
-    found = spoilers(draft, report, post)
-    if found:  # one rewrite with the exact problems; a second miss is only a warning
-        retry = (user + "\n\nYour previous draft broke the no-spoiler rule:\n- "
-                 + "\n- ".join(found) + "\nRewrite the whole script without these.")
-        draft, response, extra = _draft(client, settings, system, retry)
-        cost += extra
-        warnings += [f"spoiler: {f}" for f in spoilers(draft, report, post)]
+
+    def write(feedback: str):
+        return _draft(client, settings, system, user + feedback)
+
+    def critique(draft: ScriptDraft):
+        if critic is None:
+            return checks.check_spoilers(draft, report, post), [], 0.0
+        problems = checks.check(draft, report, post, set(critic.set_card_names), airtime)
+        notes, cost = [], 0.0
+        if critic.judge is not None and style.strip():
+            major, notes, cost = checks.judge_style(client, draft, style, critic.judge)
+            problems += major
+        return problems, notes, cost
+
+    graph = build_writer(write, critique, critic.max_rewrites if critic else 1, budget_check)
+    state = graph.invoke({})
+    attempts = state["attempts"]
+    chosen = best(attempts)
+    draft, response, cost = chosen.draft, chosen.response, state.get("cost", 0.0)
+    warnings = [str(p) for p in chosen.problems] + [f"style (minor): {n}" for n in chosen.notes]
+    if state.get("stop"):
+        warnings.append(state["stop"])
+    critique_record = record(post.index, attempts, chosen, state.get("stop"))
 
     valid = {"intro", "outro"} | {
         pid for pid, p in pull_ids(report).items() if p.pack in post.packs
@@ -361,4 +407,4 @@ def generate_script(
         hashtags=draft.hashtags,
         words=sum(len(b.text.split()) for b in beats),
     )
-    return script, round(cost, 5), warnings
+    return script, round(cost, 5), warnings, critique_record
