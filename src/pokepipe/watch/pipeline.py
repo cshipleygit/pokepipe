@@ -77,14 +77,36 @@ class PipelineOps:
         from pokepipe.detection import service as detection
 
         files = self._files(job)
-        if (files.root / "pulls.json").exists():
+        if not (files.root / "pulls.json").exists():
+            emb = self.embedder()
+            index = cards.load_index(self.s.sets_dir, job.set_id, emb.model_tag)
+            result = detection.detect_pulls(
+                Path(job.source), job.set_id, self.s.sets_dir, index, emb, files.root
+            )
+            self.log(f"{job.slug}: {len(result.pulls)} pulls in {len(result.packs)} packs")
+        if self.s.series_edit:
+            self.find_moments(job)
+
+    def find_moments(self, job: Job) -> None:
+        """The box opening, each pack's tear and Energy, and hits being sleeved
+        (moments.json): what the series edit and its script are built from. Runs right
+        after detection, while CLIP is loaded, so the review wait isn't spent on it."""
+        from pokepipe.cards import service as cards
+        from pokepipe.detection.models import PullsFile
+        from pokepipe.detection.moments_scan import find_moments
+
+        files = self._files(job)
+        path = files.root / "moments.json"
+        if path.exists():
             return
+        det = PullsFile.model_validate_json((files.root / "pulls.json").read_text(
+            encoding="utf-8"))
         emb = self.embedder()
-        index = cards.load_index(self.s.sets_dir, job.set_id, emb.model_tag)
-        result = detection.detect_pulls(
-            Path(job.source), job.set_id, self.s.sets_dir, index, emb, files.root
-        )
-        self.log(f"{job.slug}: {len(result.pulls)} pulls in {len(result.packs)} packs")
+        found = find_moments(Path(det.video), det, emb,
+                             cards.load_index(self.s.sets_dir, job.set_id, emb.model_tag))
+        path.write_text(found.model_dump_json(indent=2), encoding="utf-8")
+        for note in found.notes:
+            self.log(f"{job.slug}: {note}")
 
     def review_done(self, job: Job) -> bool:
         from pokepipe.review.store import ReviewStore
@@ -110,6 +132,21 @@ class PipelineOps:
             f"{report.set_name} master set ({report.after.master_owned}/"
             f"{report.after.master_total})"
         )
+        self.value(job, report)
+
+    def value(self, job: Job, report) -> None:
+        """values.json (what the pulls are worth, for P/L) and a nudge for any hit
+        without a price, before the posts that would show its price tag are made."""
+        from pokepipe.cards.prices import PriceBook
+        from pokepipe.collection.values import unpriced_hits, write_values
+
+        book = PriceBook.load(self.s.sets_dir, report.set_id, self.s.prices_dir)
+        values = write_values(self._files(job).root, report, book)
+        self.log(f"{job.slug}: pulls worth ${values.total_usd:,.2f} "
+                 f"({values.priced} priced, {values.unpriced} not)")
+        for x in unpriced_hits(values):
+            self.log(f"{job.slug}: no price for hit {x.name} ({x.variant}); add it to "
+                     f"{self.s.prices_dir / (report.set_id + '.csv')} for its price tag")
 
     def narrate(self, job: Job) -> None:
         from pokepipe.narration import service as narration

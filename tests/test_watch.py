@@ -179,3 +179,64 @@ def test_watcher_tick_takes_in_and_runs_to_review(env):
     [job] = jobs.all()
     assert job.status == Status.AWAITING_REVIEW
     assert messages == ["new video: pack-day (set sv3pt5)", "pack-day is ready for review"]
+
+
+# --- the real ops: series edit and values ---------------------------------------------------
+
+
+def _report():
+    from pokepipe.collection.models import PackResult, Progress, PullResult, VideoReport
+
+    prog = Progress(master_owned=1, master_total=9, full_owned=1, full_total=9,
+                    base_owned=1, base_total=9)
+    pulls = [PullResult(card_id=c, name=c, number="1", rarity=r, variant=v, pack=1, time=t,
+                        new=True, new_card=True, copy_number=1)
+             for c, r, v, t in [("s-1", "Common", "normal", 1), ("s-2", "Rare", "holo", 2),
+                                ("s-3", "Illustration Rare", "holo", 3)]]
+    return VideoReport(video_slug="v", collection="t", set_id="s", set_name="S", before=prog,
+                       after=prog, packs=[PackResult(index=1, new_slots=3, progress_after=prog)],
+                       pulls=pulls)
+
+
+def test_collection_step_writes_values_and_flags_unpriced_hits(tmp_path):
+    from pokepipe.cards.prices import Price, write_sheet
+    from pokepipe.config import Settings
+    from pokepipe.watch.pipeline import PipelineOps
+
+    s = Settings(data_dir=tmp_path)
+    write_sheet(s.prices_dir / "s.csv", [Price(card_id="s-3", variant="holo", usd=31.11,
+                                              source="test", as_of="2026-11-12")])
+    (s.videos_dir / "v").mkdir(parents=True)
+    logs: list[str] = []
+    PipelineOps(s, log=logs.append).value(new_job_obj(), _report())
+    values = (s.videos_dir / "v" / "values.json").read_text(encoding="utf-8")
+    assert '"total_usd": 31.11' in values
+    flagged = [m for m in logs if "no price for hit" in m]
+    assert len(flagged) == 1 and "s-2" in flagged[0]  # the Rare; the Common isn't a hit
+
+
+def test_moments_run_once_and_can_be_switched_off(tmp_path):
+    from pokepipe.config import Settings
+    from pokepipe.watch.pipeline import PipelineOps
+
+    (tmp_path / "videos" / "v").mkdir(parents=True)
+    (tmp_path / "videos" / "v" / "pulls.json").write_text("{}")
+    calls: list[str] = []
+
+    class Ops(PipelineOps):
+        def find_moments(self, job):
+            calls.append(job.slug)
+
+        def embedder(self):  # detection must not reload anything when pulls.json exists
+            raise AssertionError("should not be needed")
+
+    Ops(Settings(data_dir=tmp_path)).detect(new_job_obj())
+    Ops(Settings(data_dir=tmp_path, series_edit=False)).detect(new_job_obj())
+    assert calls == ["v"]
+
+    (tmp_path / "videos" / "v" / "moments.json").write_text("{}")
+    PipelineOps(Settings(data_dir=tmp_path)).find_moments(new_job_obj())  # exists: no-op
+
+
+def new_job_obj() -> Job:
+    return Job(slug="v", source="x.mp4", set_id="s")

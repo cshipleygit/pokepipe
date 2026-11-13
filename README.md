@@ -8,9 +8,11 @@
 locally, for under $1 per video.**
 
 pokepipe watches the footage, recognises every card on a local GPU, lets you confirm
-the results in a small review page, tracks your master-set progress, writes and voices
-a script grounded in what you actually pulled, and renders 1080×1920 posts whose edit
-is paced by the narration.
+the results in a small review page, tracks your master-set progress and what your pulls
+are worth, writes and voices a spoiler-free script grounded in what you actually pulled,
+and renders 1080×1920 posts: the box opening and each pack's tear as quick cuts with
+their real sound, packs that run card to card, zooms that follow the card, price tags
+and sound effects on the hits, and a rocket-themed master-set progress bar.
 
 <!-- Demo: add a GIF/MP4 here rendered from your own footage, e.g. docs/demo.gif -->
 
@@ -30,11 +32,11 @@ flowchart LR
 | Stage | What it does |
 |---|---|
 | **1 · Card data** | Fetches any set's checklist and hi-res scans, and builds a CLIP embedding index on the GPU. |
-| **2 · Detect** | Samples frames, scores a grid of card-shaped crops per frame in one batched GPU pass, groups confident votes into reveals and reveals into packs, and infers reverse holos from pack slot order. |
+| **2 · Detect** | Samples frames, scores a grid of card-shaped crops per frame in one batched GPU pass, groups confident votes into reveals and reveals into packs, and infers reverse holos from pack slot order. Then finds the moments worth editing around: the box opening, each pack's tear (by sound), where its cards start (the basic Energy) and hits being sleeved. |
 | **3 · Review** | Local page (FastAPI, vanilla JS) to keep, reject or correct each pull, with the video jumping to every card. The only manual step. |
-| **4 · Collection** | Master-set tracking (every printing), marking which pulls are new and the progress after each pack. |
-| **5 · Script + voice** | You choose which packs form each post. Claude writes a script from computed facts only, and ElevenLabs voices it with per-word timings. |
-| **6 · Render** | Vertical cuts with speed ramps, zooms on hits, word-by-word captions, a master-set counter and rarity labels, with each spoken line synced to its card. |
+| **4 · Collection** | Master-set tracking (every printing), marking which pulls are new and the progress after each pack, plus what each pull is worth (TCGplayer market price per printing) as the input for profit/loss. |
+| **5 · Script + voice** | You choose which packs form each post. Claude writes a script from computed facts only, with a hook and viewer prompts, checked so no hit is named before it appears. ElevenLabs voices it with per-word timings. |
+| **6 · Render** | Vertical cuts paced by the narration: quick clips of the box and every tear with their own sound, packs card to card with fumbles cut, zooms that track the card, sleeving clips and an end recap. Word-by-word captions, price tags, synthesised sound effects and a progress bar, with each spoken line on its card. |
 | **7 · Watch folder** | Drop a video in and it runs end to end, pausing only for your review. Resumable, with failures recorded and retryable. |
 
 ## Results
@@ -49,8 +51,18 @@ Measured on one 10.6-minute 1080p60 opening of 12 packs of *151* (120 cards):
 | 45-second post | rendered in **39 s**, all 9 voice lines within 0.1 s of their card |
 | API cost | about **$0.20 per 45 s post** (script ≈ $0.04, voice ≈ $0.16) |
 
-*One video is not a benchmark. Thresholds were calibrated on this footage, and other
-cameras and lighting may need recalibrating (see [Limitations](#limitations)).*
+And on a creator's own footage: a 16-minute vertical 4K HDR iPhone opening of a
+*Delta Reign* Elite Trainer Box (9 packs, 90 cards):
+
+| | |
+|---|---|
+| Cards found | **86 / 90**; the 4 misses are understood (near-identical art, a borderline frame, a reverse-holo copy merged as a repeat) |
+| Decode | 0.9× → **6.6× real time** with NVDEC; whole video about 4 min including CLIP |
+| Moments found automatically | 9/9 pack tears and Energy starts, 4/4 box shots, 3/3 sleeved hits |
+| Output | two 90 s posts; in-pack jump cuts 27 → 3 and 39 → 1, every voice line on its card |
+
+*Two videos are not a benchmark. Thresholds were calibrated on this footage, and other
+cameras, rooms and lighting may need recalibrating (see [Limitations](#limitations)).*
 
 ## Engineering notes
 
@@ -83,6 +95,25 @@ The decisions that mattered, each backed by a measurement:
   exceed $1 per video, and TTS audio is cached by content hash so re-renders are free.
 - **Human-in-the-loop as data.** Detection output is never edited. Review decisions are
   stored separately, so the pair forms labelled data for recalibration.
+- **Sound finds the tears.** Zero-shot CLIP prompts ("tearing a booster pack") fired on
+  almost every frame, because the opener's display of boxes sits behind every shot.
+  High-passed audio didn't: tearing foil is -25 to -40 dB in an otherwise quiet room.
+  The last crinkle before each pack's basic Energy is its tear and then the cards coming
+  out, and that Energy (already in the index as a decoy) is where its cards start.
+- **Cut on recognition, not margins.** Padding each card's shot by a few tenths of a
+  second was exactly when the next card's edge peeked out. Shots now start and end where
+  each card is recognised; the slide between two cards plays through in about 0.12 s,
+  and only real fumbles are cut.
+- **Zooms that track the card.** Detection boxes are grid cells, too rough to frame a
+  card. During each zoom the known card is re-found 5×/s by a coarse-to-fine box search
+  against its own embedding (preferring the largest near-best box, since CLIP rates the
+  artwork alone about as high as the whole card), then smoothed and widened wherever the
+  card would be clipped.
+- **No spoilers, enforced.** A checker reads each script and flags any line, or the hook
+  caption, that names a hit or a special rarity before it appears; a failing draft is
+  rewritten once with the exact problems listed.
+- **Nothing to license.** Sound effects are synthesised with numpy, and the rocket is
+  drawn with Pillow.
 
 ## Quick start
 
@@ -110,10 +141,11 @@ pokepipe watch run          # watcher + review page at http://127.0.0.1:8765
 ```
 
 Drop a video into `data/inbox/<set_id>/` (e.g. `data/inbox/sv3pt5/`). It's taken in
-once it finishes copying, and card data is fetched if the set is new. Detection then
-runs and the job waits for you. On the review page, confirm the cards and, on
-**Finish**, choose which packs go into each post. Collection, scripts, voice and
-render then run on their own. `pokepipe watch status` shows where every video is;
+once it finishes copying, and card data is fetched if the set is new. Detection and
+moment-finding then run and the job waits for you. On the review page, confirm the
+cards and, on **Finish**, choose which packs go into each post. Collection, valuation,
+scripts, voice and render then run on their own; any hit without a price is logged so
+you can add it to `data/prices/<set_id>.csv` (see below). `pokepipe watch status` shows where every video is;
 `pokepipe watch retry <slug>` resumes a failed one.
 
 **Or stage by stage:**
@@ -123,15 +155,17 @@ render then run on their own. `pokepipe watch status` shows where every video is
 pokepipe cards sets --search "151"
 pokepipe cards fetch sv3pt5 && pokepipe cards embed sv3pt5
 
-# 2. Detect pulls
+# 2. Detect pulls, then the box / tear / Energy / sleeving moments for the series edit
 pokepipe detect run opening.mp4 --set sv3pt5
+pokepipe detect moments <video-slug>
 
 # 3. Review in the browser (http://127.0.0.1:8765)
 pokepipe review serve
 
-# 4. Update your collection
+# 4. Update your collection, and price the pulls (→ values.json, for P/L)
 pokepipe collection apply <video-slug>
 pokepipe collection status sv3pt5
+pokepipe collection value <video-slug>
 
 # 5. Plan posts, write and voice the scripts
 pokepipe narrate plan <video-slug> --posts "1-3, 9, 10-12" --seconds 45
@@ -145,20 +179,28 @@ pokepipe render post <video-slug>          # → data/videos/<slug>/posts/<n>/po
 Every stage reads and writes JSON under `data/`, so any step can be re-run or
 inspected on its own. Run `pokepipe <stage> --help` for all options.
 
+**Prices.** Market prices come from pokemontcg.io (TCGplayer) once it has them; a
+brand-new set can take a few weeks. Until then, or to use your own numbers, list them in
+`data/prices/<set_id>.csv` with columns `card_id,variant,usd,source,as_of` (variant is
+`normal`, `holo` or `reverse`). The sheet wins over the API.
+
 **Make it yours:** edit [`config/style.md`](config/style.md) (the narration style
 guide), choose a voice with `pokepipe narrate voices`, and optionally drop a branded
-intro at `config/intro.mp4`.
+intro at `config/intro.mp4`. `render post --no-narration` renders the edit alone, with
+the source audio and no API spend.
 
 ## Project layout
 
 ```
 src/pokepipe/
-  cards/        stage 1  API client, cache, CLIP embedder, GPU index
-  detection/    stage 2  frame sampler, GPU matcher, segmenter, packs, slot layouts
+  cards/        stage 1  API client, cache, CLIP embedder, GPU index, price book
+  detection/    stage 2  frame sampler, GPU matcher, segmenter, packs, slot layouts,
+                         moments (box, tears, Energy starts, sleeving: sound + vision)
   review/       stage 3  FastAPI app, edit rules, static UI
-  collection/   stage 4  master-set model, per-video contributions
-  narration/    stage 5  post planning, Claude scripts, ElevenLabs voice, budget
-  render/       stage 6  edit timeline, pacing solver, ASS captions, ffmpeg
+  collection/   stage 4  master-set model, per-video contributions, values (P/L input)
+  narration/    stage 5  post planning, Claude scripts, spoiler check, ElevenLabs, budget
+  render/       stage 6  edit timeline, pacing, card tracking, zoom paths, captions,
+                         rocket theme, sound effects, ffmpeg
   watch/        stage 7  inbox intake, resumable job state machine, watcher loop
 tests/          pytest; APIs mocked, no GPU needed except tests marked `gpu`
 config/         style guide (and optional intro clip)
@@ -169,7 +211,7 @@ Design notes for each stage, with calibration data, are in [CLAUDE.md](CLAUDE.md
 ## Testing
 
 ```bash
-pytest            # ~100 tests: no network, no GPU (one renders a tiny clip with ffmpeg)
+pytest            # ~180 tests: no network, no GPU (a few render tiny clips with ffmpeg)
 pytest -m gpu     # real CLIP model on CUDA
 ruff check src tests
 ```
@@ -178,20 +220,25 @@ CI runs the CPU suite and lint on every push.
 
 ## Limitations
 
-- **Calibrated on one video.** Detection thresholds come from a single opening, so
-  check results on your own footage first.
-- **Pack layouts:** only the Scarlet & Violet slot order is defined, verified on
-  *151*. Shuffled packs get no reverse-holo guesses (review handles them).
-- **New sets:** pack-order reverse-holo inference is only defined for Scarlet &
-  Violet. A brand-new set may also lack price data for a few weeks, which makes
-  master-set totals approximate.
+- **Calibrated on two videos.** Detection thresholds and the moment rules (sound
+  levels, sleeve timing) come from two openings, so check `pulls.json` and
+  `moments.json` on new footage. Talking, music or a noisy room would break the
+  sound-based tear detection.
+- **Pack layouts:** slot order is defined for Scarlet & Violet (verified on *151*) and
+  Mega Evolution (verified on *Delta Reign*). Shuffled packs get no reverse-holo
+  guesses (review handles them).
+- **New sets** may lack API price data for a few weeks: printings then come from a
+  rarity rule (master-set totals approximate) and prices from your price sheet.
 - **Detection needs an NVIDIA GPU.** It can run on CPU, but slowly.
 
 ## Roadmap
 
-- Creator profiles (style guide, voice, intro, collection per creator).
+- Profit/loss: record what each product cost and report value pulled minus cost per
+  video and across a series (`values.json` is the input).
+- Recognition: use the pack's slot order to settle near-ties, keep reverse-holo copies
+  that look like repeats, and re-scan short packs.
+- Creator profiles (style guide, voice, theme, intro, collection per creator).
 - Set auto-detection and tie-breaking from the card's corner text (OCR).
-- Optional source audio (pack-rip sounds) under the narration.
 
 ## Disclaimer
 

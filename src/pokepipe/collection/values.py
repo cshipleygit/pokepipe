@@ -9,6 +9,7 @@ Cost basis (what the product cost) is left for the P/L step that builds on this.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 
@@ -37,6 +38,24 @@ class VideoValues(BaseModel):
     per_pack_usd: dict[int, float]
     pulls: list[PricedPull]
     created_at: str = Field(default_factory=lambda: datetime.now(UTC).isoformat())
+
+
+def unpriced_hits(values: VideoValues) -> list[PricedPull]:
+    """Hits (the rare slot and better, not reverse holos) with no price: worth adding to
+    data/prices/<set>.csv before posting, since their price tag would be missing."""
+    from pokepipe.cards.rarity import is_special
+
+    def hit(x: PricedPull) -> bool:
+        return x.variant != "reverse" and (x.rarity in ("Rare", "Rare Holo")
+                                           or is_special(x.rarity))
+
+    return [x for x in values.pulls if x.usd is None and hit(x)]
+
+
+def write_values(video_dir: Path, report: VideoReport, book: PriceBook) -> VideoValues:
+    values = video_values(report, book)
+    (video_dir / "values.json").write_text(values.model_dump_json(indent=2), encoding="utf-8")
+    return values
 
 
 def video_values(report: VideoReport, book: PriceBook) -> VideoValues:

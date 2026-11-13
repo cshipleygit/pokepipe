@@ -134,7 +134,7 @@ def value(slug: str):
     """Price every pull of a video (exact printing) → data/videos/<slug>/values.json.
     Prices come from data/prices/<set>.csv, then pokemontcg.io's TCGplayer market."""
     from pokepipe.cards.prices import PriceBook
-    from pokepipe.collection.values import video_values
+    from pokepipe.collection.values import unpriced_hits, write_values
     from pokepipe.narration.service import NarrationError, VideoFiles
 
     s = get_settings()
@@ -145,11 +145,13 @@ def value(slug: str):
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(1) from exc
     book = PriceBook.load(s.sets_dir, report.set_id, s.prices_dir)
-    values = video_values(report, book)
-    (files.root / "values.json").write_text(values.model_dump_json(indent=2), encoding="utf-8")
+    values = write_values(files.root, report, book)
     table = Table("pull", "card", "printing", "price", "source")
     for x in sorted((x for x in values.pulls if x.usd is not None), key=lambda x: -x.usd):
         table.add_row(x.pull_id, x.name, x.variant, f"${x.usd:,.2f}", f"{x.source} {x.as_of or ''}")
     console.print(table)
     console.print(f"Total ${values.total_usd:,.2f} from {values.priced} priced pulls "
                   f"({values.unpriced} unpriced) → {files.root / 'values.json'}")
+    for x in unpriced_hits(values):
+        console.print(f"[yellow]no price for hit {x.pull_id} {x.name} ({x.variant}): add it "
+                      f"to {s.prices_dir / (report.set_id + '.csv')}[/]")

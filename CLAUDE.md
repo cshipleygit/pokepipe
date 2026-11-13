@@ -345,8 +345,8 @@ Known limitations:
   sped up per shot with pitch-preserving `atempo` and padded through freezes, so it stays
   in sync. There's no hook and no word captions; the counter and labels stay. Allen's Delta
   Reign posts (90 s each) rendered this way in about 5 min each.
-- To tune next: bigger counter/badge (the badge overlaps the card name), optional
-  source audio (pack-rip sounds), and motion blur on commons at ~3.6×.
+- To tune next: motion blur on fast slivers and quick commons; a rounder font (e.g.
+  Fredoka, OFL) if the user OKs downloading it; listen-test the synthesised effects.
 
 ### Series edit (moments.json)
 
@@ -383,9 +383,10 @@ writer use the series edit (`render/inputs.edit_inputs`):
   flame-orange spoken word, mint badge, yellow rarity labels. The master-set bar is a
   rounded navy pill whose orange fill is a flame trail; a Pillow-drawn rocket PNG rides
   its tip (ffmpeg overlay, x keyframed with the fill, gentle sin bob). Captions at ~79%.
-- **On screen:** a master-set progress bar (ASS vector drawing, its fill clip animated
-  when a pack is done), a "PACK 3 OF 9" title over each tear, and spoken captions at
-  about 75% of the height, above TikTok's own caption and username.
+- **On screen:** the progress bar (ASS vector drawing, its fill clip animated when a
+  pack is done, the rocket overlaid on its tip), a "PACK 3 OF 9" title over each tear,
+  price tags on hits, and spoken captions at about 79% of the height, above TikTok's own
+  caption and username.
 - **Script:** the first line is a hook aimed at the viewer, with 2–3 interactive
   prompts. **No spoilers:** `narration/script.spoilers` flags any line (and the
   hook caption) that names a hit, or a special rarity, before it appears. A spoiling
@@ -437,6 +438,11 @@ Signals, measured on the Delta Reign ETB video:
 - **One human stop.** The review page's Finish step also chooses which packs go into
   each post (`posts.json`), pre-filled with a suggestion. If none is saved, the
   suggestion is used.
+- **Series edit and values in the watcher** (`watch/pipeline.py`): the detecting step
+  also runs `find_moments` (reusing the loaded CLIP; skipped if `moments.json` exists or
+  `SERIES_EDIT=false`), so the review wait isn't spent on it. The collecting step writes
+  `values.json` and logs every hit without a price, so it can be added to
+  `data/prices/<set>.csv` before the posts that would show its price tag.
 - End to end on a 3-minute, 3-pack clip: taken in 8 s after dropping, detection 27 s
   (30 pulls), then after review: collection, script + voice ($0.19), render. Result:
   a 46.7 s post, 10/10 lines in sync, no freeze, about 1 min of machine time after
@@ -464,6 +470,7 @@ pokepipe collection apply <slug>          # add a finished review → collection
 pokepipe collection status sv3pt5         # master-set progress by rarity
 pokepipe collection missing sv3pt5 --variant reverse
 pokepipe collection add sv3pt5 sv3pt5-25 --variant reverse   # cards owned already
+pokepipe collection value <slug>          # price every pull → values.json (P/L input)
 pokepipe narrate plan <slug> --posts "1-3, 9, 10-12"  # packs per post (omit = suggest)
 pokepipe narrate script <slug> [-p 2]     # Claude writes each post's voiceover
 pokepipe narrate voices                   # list ElevenLabs voices → ELEVENLABS_VOICE_ID
