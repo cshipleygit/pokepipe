@@ -272,3 +272,10 @@ class PipelineOps:
                                  narration=self.s.narration, track=self.s.render_track,
                                  tracker=self._tracker(job) if self.s.render_track else None)
             self.log(f"{job.slug}: post {post.index} → {result.path} ({result.edit.duration:.0f}s)")
+        from pokepipe.narration.caption import write_captions
+
+        try:
+            for path in write_captions(files.root, self.s.caption_extra_path):
+                self.log(f"{job.slug}: caption → {path}")
+        except Exception as exc:  # noqa: BLE001 — a caption must never fail a render
+            self.log(f"{job.slug}: captions skipped ({type(exc).__name__}: {exc})")

@@ -181,6 +181,10 @@ run only pauses for what's left; a clean video goes straight to render) and late
 `pokepipe review export-testset --all` freezes finished reviews (JSON only) into
 `tests/fixtures/`, so every test run replays auto-review against real decisions.
 
+Each rendered post gets a `caption.txt` beside it, ready to paste into TikTok: the
+hook, the best pulls with prices, master-set progress, "Part 1 of 3" and hashtags.
+Add your own hashtags or a footer in `data/brand/caption.json` (not committed).
+
 Before a recording day, `pokepipe preflight --set <id> --videos 3` checks the GPU,
 ffmpeg, API keys, ElevenLabs characters left, card data and disk space. While
 `watch run` is going you get a Windows notification when a review is waiting or posts

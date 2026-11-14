@@ -391,6 +391,12 @@ writer use the series edit (`render/inputs.edit_inputs`):
   flame-orange spoken word, mint badge, yellow rarity labels. The master-set bar is a
   rounded navy pill whose orange fill is a flame trail; a Pillow-drawn rocket PNG rides
   its tip (ffmpeg overlay, x keyframed with the fill, gentle sin bob). Captions at ~79%.
+- **Captions to paste** (`narration/caption.py`): after rendering, the watcher writes
+  `posts/<n>/caption.txt`: the script's hook caption; "Pulled:" with the post's best
+  cards (Double Rare+ or $5+, priced from values.json, most valuable first, max 3);
+  master-set progress after the post's last pack (+N new); "Part i of n"; the
+  script's hashtags (or defaults + set tag). Private additions (channel hashtags,
+  footer) in gitignored `data/brand/caption.json`. No API calls; always rewritten.
 - **Private themes:** the channel's real look is NOT in this repo. If
   `data/brand/theme.py` exists (gitignored), `render/theme.py` runs it in its own
   namespace at import, replacing colours, `FONT`/`FONT_FILE`, `draw_rocket`, the bar's
@@ -608,6 +614,7 @@ pokepipe review replay <slug>|--all       # score auto-review vs finished human 
 pokepipe review fit [--save]              # calibrate confidence on human reviews
 pokepipe review export-testset --all      # freeze finished reviews into tests/fixtures
 pokepipe watch redo <slug>                # after fixing a finished review: redo changed posts
+pokepipe narrate captions <slug>          # (re)write posts/<n>/caption.txt for TikTok
 pokepipe preflight --set <id> --videos 3  # before a recording day
 pokepipe collection apply <slug>          # add a finished review → collection.json
 pokepipe collection status sv3pt5         # master-set progress by rarity

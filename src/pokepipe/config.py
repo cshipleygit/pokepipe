@@ -78,6 +78,11 @@ class Settings(BaseSettings):
         return self.data_dir / "prices"
 
     @property
+    def caption_extra_path(self) -> Path:
+        """Private caption additions (hashtags, footer); see narration/caption.py."""
+        return self.data_dir / "brand" / "caption.json"
+
+    @property
     def brand_fonts_dir(self) -> Path:
         """A private theme's font files (gitignored; see render/theme.py)."""
         return self.data_dir / "brand" / "fonts"
