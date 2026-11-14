@@ -223,13 +223,19 @@ class Sprite:
     bob: float = 4.0
 
 
-def _video_graph(ass_name: str, sprite: Sprite | None, sprite_input: int) -> str:
-    """Burn in the ASS overlay, then the sprite on top. Ends in [vout]."""
+def _video_graph(
+    ass_name: str, sprite: Sprite | None, sprite_input: int, fonts_dir: str | None = None
+) -> str:
+    """Burn in the ASS overlay, then the sprite on top. Ends in [vout].
+
+    `fonts_dir` (relative to ffmpeg's working directory, so no drive-letter escaping)
+    lets libass load the brand font without installing it."""
+    subs = f"subtitles={ass_name}" + (f":fontsdir={fonts_dir}" if fonts_dir else "")
     if sprite is None:
-        return f"[0:v]subtitles={ass_name}[vout]"
+        return f"[0:v]{subs}[vout]"
     x = _piecewise([t for t, _ in sprite.keys], [v for _, v in sprite.keys], "t")
     y = f"{sprite.y:.1f}+{sprite.bob:.1f}*sin(2*PI*t*0.9)"
-    return (f"[0:v]subtitles={ass_name}[sub];"
+    return (f"[0:v]{subs}[sub];"
             f"[sub][{sprite_input}:v]overlay=x='{x}':y='{y}':eval=frame:shortest=1[vout]")
 
 
@@ -247,12 +253,13 @@ def final_cmd(
     source_audio: bool = False,
     sprite: Sprite | None = None,
     sfx: Path | None = None,
+    fonts_dir: str | None = None,
 ) -> list[str]:
     """`source_audio`: the clips carry the (already levelled) source sound; mix the
     voice over it, plus the `sfx` track. Inputs: 0 clips, 1 voice, 2 sprite, then sfx."""
     sfx_input = 2 + bool(sprite)
     under = ("[0:a]" if source_audio else "") + (f"[{sfx_input}:a]" if sfx else "")
-    graph = (_video_graph(ass_name, sprite, 2) + ";"
+    graph = (_video_graph(ass_name, sprite, 2, fonts_dir) + ";"
              + voice_filter(lines, under=under, duration=duration))
     return [
         require_tool("ffmpeg"), "-v", "error", "-y",
@@ -267,12 +274,12 @@ def final_cmd(
 
 def final_cmd_source_audio(
     concat_list: Path, ass_name: str, duration: float, out: Path, audio: bool,
-    sprite: Sprite | None = None, sfx: Path | None = None,
+    sprite: Sprite | None = None, sfx: Path | None = None, fonts_dir: str | None = None,
 ) -> list[str]:
     """No narration: concat the clips, burn in the overlay, keep the clips' own audio
     (the source's, already speed-matched per shot) or none, plus the `sfx` track."""
     sfx_input = 1 + bool(sprite)
-    graph = _video_graph(ass_name, sprite, 1)
+    graph = _video_graph(ass_name, sprite, 1, fonts_dir)
     streams = ("[0:a]" if audio else "") + (f"[{sfx_input}:a]" if sfx else "")
     if streams:
         graph += (f";{streams}amix=inputs={streams.count('[')}:normalize=0"

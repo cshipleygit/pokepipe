@@ -78,6 +78,11 @@ class Settings(BaseSettings):
         return self.data_dir / "prices"
 
     @property
+    def brand_fonts_dir(self) -> Path:
+        """A private theme's font files (gitignored; see render/theme.py)."""
+        return self.data_dir / "brand" / "fonts"
+
+    @property
     def videos_dir(self) -> Path:
         return self.data_dir / "videos"
 

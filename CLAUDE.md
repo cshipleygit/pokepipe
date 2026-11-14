@@ -353,8 +353,8 @@ Known limitations:
   sped up per shot with pitch-preserving `atempo` and padded through freezes, so it stays
   in sync. There's no hook and no word captions; the counter and labels stay. Allen's Delta
   Reign posts (90 s each) rendered this way in about 5 min each.
-- To tune next: motion blur on fast slivers and quick commons; a rounder font (e.g.
-  Fredoka, OFL) if the user OKs downloading it; listen-test the synthesised effects.
+- To tune next: motion blur on fast slivers and quick commons; listen-test the
+  synthesised effects.
 
 ### Series edit (moments.json)
 
@@ -391,6 +391,17 @@ writer use the series edit (`render/inputs.edit_inputs`):
   flame-orange spoken word, mint badge, yellow rarity labels. The master-set bar is a
   rounded navy pill whose orange fill is a flame trail; a Pillow-drawn rocket PNG rides
   its tip (ffmpeg overlay, x keyframed with the fill, gentle sin bob). Captions at ~79%.
+- **Private themes:** the channel's real look is NOT in this repo. If
+  `data/brand/theme.py` exists (gitignored), `render/theme.py` runs it in its own
+  namespace at import, replacing colours, `FONT`/`FONT_FILE`, `draw_rocket`, the bar's
+  look (`BAR_TRACK_ALPHA`, `BAR_RIM*`, `COUNTER_OFFSET`) and the optional
+  `badge_icon`/`price_icon` drawings (built with `captions.shape`/`circle`). Font files
+  in `data/brand/fonts/` are copied into the render folder and passed to libass
+  (`subtitles=...:fontsdir=fonts`); `theme.text_width` measures prices with
+  `FONT_FILE` to centre an icon + price. `POKEPIPE_NO_BRAND=1` disables it; the test
+  suite sets it (tests/conftest.py), so tests always check the public default.
+  **Never copy brand names, colours, artwork or notes into tracked files**; the brand's
+  own notes and tests live in `data/brand/` (see `data/brand/NOTES.md`).
 - **On screen:** the progress bar (ASS vector drawing, its fill clip animated when a
   pack is done, the rocket overlaid on its tip), a "PACK 3 OF 9" title over each tear,
   price tags on hits, and spoken captions at about 79% of the height, above TikTok's own

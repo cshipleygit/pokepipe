@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import os
+
+# Test the public default look, never a private theme in data/brand/ (render/theme.py).
+os.environ["POKEPIPE_NO_BRAND"] = "1"
+
 import hashlib
 import io
 from collections.abc import Sequence
