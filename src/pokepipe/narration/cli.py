@@ -208,3 +208,14 @@ def critique(
                 console.print(f"  {escape(str(prob))}")  # "[p3-6]" is not Rich markup
             failed.update({prob.kind for prob in problems})
     console.print(f"{total} script(s); scripts failing each check: {dict(failed) or 'none'}")
+
+
+@app.command()
+def captions(slug: str):
+    """Write (or rewrite) posts/<n>/caption.txt for a video: the text to paste into
+    TikTok. The watcher does this after rendering."""
+    from pokepipe.narration.caption import write_captions
+
+    s = get_settings()
+    for path in write_captions(s.videos_dir / slug, s.caption_extra_path):
+        console.print(f"[bold]{path}[/]\n{path.read_text(encoding='utf-8')}")

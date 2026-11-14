@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     script_style_judge: bool = True  # a cheap model check of the draft against style.md
     script_judge_effort: str = "low"
     elevenlabs_api_key: str | None = None
+    # TikTok drafts (pokepipe tiktok ...): from your app's Sandbox page
+    tiktok_client_key: str | None = None
+    tiktok_client_secret: str | None = None
+    tiktok_redirect_uri: str = "http://127.0.0.1:3455/callback/"  # register it on the app
+    tiktok_auto_draft: bool = False  # watcher sends each rendered post to the inbox
     elevenlabs_voice_id: str | None = None
     elevenlabs_model_id: str = "eleven_multilingual_v2"
     # Used only for the budget check — set it from your ElevenLabs plan's per-character rate.
@@ -76,6 +81,15 @@ class Settings(BaseSettings):
     @property
     def prices_dir(self) -> Path:
         return self.data_dir / "prices"
+
+    @property
+    def tiktok_token_path(self) -> Path:
+        return self.data_dir / "tiktok" / "token.json"
+
+    @property
+    def caption_extra_path(self) -> Path:
+        """Private caption additions (hashtags, footer); see narration/caption.py."""
+        return self.data_dir / "brand" / "caption.json"
 
     @property
     def brand_fonts_dir(self) -> Path:

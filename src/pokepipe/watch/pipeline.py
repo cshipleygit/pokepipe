@@ -272,3 +272,21 @@ class PipelineOps:
                                  narration=self.s.narration, track=self.s.render_track,
                                  tracker=self._tracker(job) if self.s.render_track else None)
             self.log(f"{job.slug}: post {post.index} → {result.path} ({result.edit.duration:.0f}s)")
+        from pokepipe.narration.caption import write_captions
+
+        try:
+            for path in write_captions(files.root, self.s.caption_extra_path):
+                self.log(f"{job.slug}: caption → {path}")
+        except Exception as exc:  # noqa: BLE001 — a caption must never fail a render
+            self.log(f"{job.slug}: captions skipped ({type(exc).__name__}: {exc})")
+        if self.s.tiktok_auto_draft:
+            from pokepipe.tiktok.client import TikTokClient, TokenStore
+            from pokepipe.tiktok.service import send_drafts
+
+            try:
+                client = TikTokClient(self.s.tiktok_client_key, self.s.tiktok_client_secret,
+                                      TokenStore(self.s.tiktok_token_path))
+                send_drafts(files.root, client, log=lambda m: self.log(f"{job.slug}: {m}"))
+            except Exception as exc:  # noqa: BLE001 — the posts are rendered either way
+                self.log(f"{job.slug}: TikTok drafts not sent ({type(exc).__name__}: {exc}); "
+                         f"retry with `pokepipe tiktok draft {job.slug}`")
