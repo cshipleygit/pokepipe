@@ -178,6 +178,15 @@ replay stays at zero silent errors over several videos, switch to `exceptions` (
 run only pauses for what's left; a clean video goes straight to render) and later
 `off`. `pokepipe review fit --save` learns a confidence cut-off from your reviews.
 
+`pokepipe review export-testset --all` freezes finished reviews (JSON only) into
+`tests/fixtures/`, so every test run replays auto-review against real decisions.
+
+Before a recording day, `pokepipe preflight --set <id> --videos 3` checks the GPU,
+ffmpeg, API keys, ElevenLabs characters left, card data and disk space. While
+`watch run` is going you get a Windows notification when a review is waiting or posts
+are ready. Fixed a card after the posts rendered? Finish the review again, then
+`pokepipe watch redo <slug>` re-makes only the posts that changed.
+
 `pokepipe watch run --engine graph` runs the same pipeline as a LangGraph graph
 (checkpoints in `data/graph/`), with the missed-card agent before review.
 

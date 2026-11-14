@@ -48,6 +48,9 @@ class AutoPolicy:
     min_lead: float = 0.02  # peak score over the best different card
     accept_suggestions: bool = True  # high-confidence recovery suggestions
     require_layout: bool = True  # no slot layout → reverse holos unknown → escalate
+    # Two agent cards closer than this (seconds) came from one stretch of footage, so
+    # their order (and so which slot, which reverse holo) is a guess: escalate.
+    suggestion_gap: float = 2.0
     calibration: Calibration | None = None  # if fitted, replaces min_confidence
 
     def describe(self) -> dict:
@@ -133,6 +136,9 @@ def auto_review(
             if s not in accepted:
                 problems.append(f"agent suggestion {cards[s.card_id].name} is "
                                 f"{s.suggested.split(':')[0]}")
+        times = sorted(s.time for s in accepted)
+        if any(b - a < policy.suggestion_gap for a, b in zip(times, times[1:], strict=False)):
+            problems.append("the agent found cards shown together, so their order is a guess")
         members = detected + accepted
         want = expected.get(pack)
         if want is None:

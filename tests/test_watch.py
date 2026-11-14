@@ -253,3 +253,29 @@ def test_auto_review_that_settles_everything_runs_straight_through(tmp_path):
     ops.auto_completes = True
     job = Runner(ops, jobs).run(new_job(jobs))
     assert job.status == Status.DONE and ops.auto_runs == 1
+
+
+def test_watcher_notifies_once_per_waiting_and_finished_video(env):
+    root, jobs, inbox, clock = env
+    inbox.settle = 0
+    (root / "sv3pt5" / "a.mp4").write_bytes(b"x")
+    sent: list[tuple[str, str]] = []
+    ops = FakeOps()
+    watcher = Watcher(inbox, Runner(ops, jobs), jobs, log=lambda m: None,
+                      notify=lambda t, m: sent.append((t, m)))
+    watcher.tick()
+    watcher.tick()
+    watcher.tick()
+    assert sent == [("Pokepipe: review waiting", "a needs a look")]
+    ops.reviewed = True
+    watcher.tick()
+    watcher.tick()
+    assert sent[-1] == ("Pokepipe: posts ready", "a is rendered") and len(sent) == 2
+
+
+def test_toast_script_quotes_user_text():
+    from pokepipe.watch.notify import notify, toast_script
+
+    script = toast_script("Pokepipe", "Allen's video")
+    assert "'Allen''s video'" in script
+    assert notify("x", "y") in (True, False)  # never raises, on any platform

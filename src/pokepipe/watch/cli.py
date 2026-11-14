@@ -77,7 +77,10 @@ def run(
     runner = _runner(engine, PipelineOps(s, log=_log), jobs)
     if engine == "graph":
         _log(f"engine: LangGraph (checkpoints in {s.graph_checkpoints})")
-    watcher = Watcher(inbox, runner, jobs, log=_log)
+    from pokepipe.watch.notify import notify
+
+    watcher = Watcher(inbox, runner, jobs, log=_log,
+                      notify=notify if s.notify else (lambda title, message: None))
 
     if once:
         watcher.tick()
@@ -133,3 +136,49 @@ def retry(
         console.print(f"[red]{exc}[/]")
         raise typer.Exit(1) from exc
     _log(f"{slug} will resume at {job.status.value} on the next pass of `pokepipe watch run`")
+
+
+@app.command()
+def redo(
+    slug: str,
+    engine: str = typer.Option("runner", help="the engine the video ran on: runner | graph"),
+    all_posts: bool = typer.Option(False, "--all-posts", help="re-make every post"),
+):
+    """After fixing a finished video's review: re-apply the collection and re-make only
+    the posts the fix changed. Finish the review first, then run this; `watch run`
+    picks it up."""
+    from pokepipe.narration.service import VideoFiles
+    from pokepipe.review.store import ReviewStore
+    from pokepipe.watch import redo as redo_mod
+
+    s = get_settings()
+    jobs = _jobs()
+    job = jobs.load(slug)
+    if not job.status.terminal:
+        console.print(f"[red]{slug} is {job.status.value}; redo is for done or failed videos[/]")
+        raise typer.Exit(1)
+    state = ReviewStore(s.videos_dir, s.sets_dir).load(slug)
+    if not state.completed:
+        console.print("[red]finish the review first (the Finish step on the review page)[/]")
+        raise typer.Exit(1)
+    files = VideoFiles(s.videos_dir / slug)
+    plan = files.load_plan() if files.plan.exists() else None
+    if all_posts or plan is None:
+        posts_dir = files.root / "posts"
+        stale = sorted(int(d.name) for d in posts_dir.glob("*")
+                       if d.is_dir() and d.name.isdigit())
+    else:
+        stale = redo_mod.stale_posts(files, plan, state)
+    redo_mod.clear(files, stale)
+    if engine == "graph":
+        from pokepipe.graph.pipeline import GraphRunner, open_checkpointer
+        from pokepipe.watch.pipeline import PipelineOps
+
+        runner = GraphRunner(PipelineOps(s, log=_log), jobs, open_checkpointer(s.graph_checkpoints))
+        # pretend the review node just finished: the graph resumes at collect
+        runner.graph.update_state({"configurable": {"thread_id": slug}}, {}, as_node="review")
+    job.error, job.failed_at = None, None
+    job.move(Status.COLLECTING, f"redo: posts {stale or 'none'} cleared")
+    jobs.save(job)
+    _log(f"{slug}: cleared post(s) {stale or 'none'}; collection and those posts will be "
+         "redone on the next pass of `pokepipe watch run`")

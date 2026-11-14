@@ -211,6 +211,11 @@ class PipelineOps:
         files = self._files(job)
         if not files.plan.exists():  # not chosen in review: use the suggested grouping
             narration.plan_posts(files, job.slug, None, self.s.default_post_seconds)
+        from pokepipe.review.store import ReviewStore
+        from pokepipe.watch.redo import stamp
+
+        stamp(files, files.load_plan(),
+              ReviewStore(self.s.videos_dir, self.s.sets_dir).load(job.slug))
         if not self.s.narration:  # edit-only posts: no script, no voice, no API spend
             self.log(f"{job.slug}: narration off — skipping scripts and voice")
             return

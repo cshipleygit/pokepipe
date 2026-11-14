@@ -183,3 +183,16 @@ def test_auto_review_that_settles_everything_never_pauses(tmp_path):
     runner.run(job)
     assert job.status == Status.DONE
     assert ops.calls == ALL and ops.auto_runs == 1
+
+
+def test_redo_resumes_a_finished_video_at_collect(tmp_path):
+    """`watch redo` marks review as just finished: only collect → render run again."""
+    jobs, ops, runner, job = setup(tmp_path)
+    ops.reviewed = True
+    runner.run(job)
+    assert job.status == Status.DONE
+    runner.graph.update_state({"configurable": {"thread_id": "v"}}, {}, as_node="review")
+    job.move(Status.COLLECTING, "redo")
+    runner.run(job)
+    assert job.status == Status.DONE
+    assert ops.calls == ALL + ["collection", "narrate", "render"]

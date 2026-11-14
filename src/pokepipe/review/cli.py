@@ -178,3 +178,30 @@ def fit(
     if save:
         cal.save(s.calibration_path)
         console.print(f"Saved → {s.calibration_path} (used by auto-review from now on)")
+
+
+@app.command("export-testset")
+def export_testset(
+    slug: str = typer.Argument(None, help="a video with a finished human review"),
+    all_: bool = typer.Option(False, "--all", help="every finished human review"),
+    dest: str = typer.Option("tests/fixtures", help="where the test set lives"),
+):
+    """Freeze finished human reviews (JSON only, no footage) into the repo's test set,
+    so every test run replays the auto-reviewer against your real decisions."""
+    from pathlib import Path
+
+    from pokepipe.config import PROJECT_ROOT
+    from pokepipe.review.auto import AutoPolicy
+    from pokepipe.review.testset import export
+
+    if not all_ and not slug:
+        raise typer.BadParameter("give a video slug or --all")
+    store = _store()
+    root = Path(dest) if Path(dest).is_absolute() else PROJECT_ROOT / dest
+    for sl in store.slugs() if all_ else [slug]:
+        try:
+            n = export(store, sl, root, AutoPolicy())
+        except ValueError as exc:
+            console.print(f"[dim]skipped {exc}[/]")
+            continue
+        console.print(f"{sl} → {root / 'reviews' / sl} (baseline: {n} silent errors)")

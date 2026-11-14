@@ -125,6 +125,19 @@ def test_short_pack_completed_by_a_high_confidence_suggestion(env):
     assert next(p for p in res.state.pulls if p.card_id == "s-5").reverse_holo
 
 
+def test_two_agent_cards_shown_together_are_escalated(env):
+    """Delta Reign pack 10: Tornadus and Nidoran held up together; the agent got their
+    order wrong. Two suggestions from one stretch: order unknown, ask a person."""
+    store, write, _ = env
+    write([make_pack(1, 10, skip={7, 8})], suggestions=[
+        Suggestion(pack=1, card_id="s-5", time=24.6, reverse_holo=True, confidence="high",
+                   evidence="rescan"),
+        Suggestion(pack=1, card_id="s-10", time=25.4, reverse_holo=True, confidence="high",
+                   evidence="rescan")])
+    res = decide(store)
+    assert any("order is a guess" in e for e in res.exceptions)
+
+
 def test_medium_suggestion_and_short_pack_wait_for_a_person(env):
     store, write, _ = env
     write([make_pack(1, 10, skip={8})], suggestions=[Suggestion(

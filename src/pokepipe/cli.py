@@ -21,5 +21,31 @@ app.add_typer(narrate_app, name="narrate")
 app.add_typer(render_app, name="render")
 app.add_typer(watch_app, name="watch")
 
+
+
+@app.command()
+def preflight(
+    set_id: str = typer.Option(None, "--set", help="the set you're about to open"),
+    videos: int = typer.Option(3, help="how many videos you plan to record"),
+    online: bool = typer.Option(True, "--online/--offline", help="check the API keys too"),
+):
+    """Check the GPU, ffmpeg, API keys, voice credits, card data and disk before a
+    recording day."""
+    from rich.console import Console
+    from rich.table import Table
+
+    from pokepipe.config import get_settings
+    from pokepipe.preflight import Level, run_all
+
+    colour = {Level.OK: "green", Level.WARN: "yellow", Level.FAIL: "red"}
+    checks = run_all(get_settings(), set_id, videos, online)
+    table = Table("check", "", "detail")
+    for c in checks:
+        table.add_row(c.name, f"[{colour[c.level]}]{c.level.value}[/]", c.detail)
+    Console().print(table)
+    if any(c.level == Level.FAIL for c in checks):
+        raise typer.Exit(1)
+
+
 if __name__ == "__main__":
     app()

@@ -455,9 +455,15 @@ Signals, measured on the Delta Reign ETB video:
   (30 pulls), then after review: collection, script + voice ($0.19), render. Result:
   a 46.7 s post, 10/10 lines in sync, no freeze, about 1 min of machine time after
   review.
-- Not done yet: editing a finished review re-opens it, but already-rendered posts are
-  not invalidated (delete `posts/<n>/` to redo one). No desktop notification when a
-  review is waiting.
+- Editing a finished review re-opens it. Each post stores `review_key.txt` (kept pulls
+  in its packs and earlier ones, + its packs); after re-finishing the review,
+  `watch redo <slug> [--engine graph]` deletes only posts whose key changed and sends
+  the job back to collecting (graph: `update_state(as_node="review")`).
+- Windows toast (`watch/notify.py`, `NOTIFY=true`) when a review is waiting, posts are
+  ready, or a video failed.
+- `pokepipe preflight [--set ID] [--videos N]`: GPU, ffmpeg/NVENC, Anthropic key,
+  ElevenLabs voice + characters left (≈3,000 per video), set cached/indexed/layout
+  verified, disk space (≈8 GB per 4K video), review mode.
 
 ### LangGraph engine, recovery agent, script critic
 
@@ -558,8 +564,14 @@ real reviews**: run `review replay --all` on the existing finished reviews first
   log frames, lead; human decisions only; threshold = just above the highest-scoring
   known wrong pull. Needs ≥3 wrong labels. Also prints a cut-off table for the
   heuristic confidence.
-- Not handled yet: card order within a pack (the agent's Nidoran♀/Tornadus swap would
-  pass), duplicate-vs-reshow judgement beyond detection's merge, post-plan choice
+- Two accepted agent cards closer than `suggestion_gap` (2 s) came from one stretch,
+  so their order is a guess (the Nidoran♀/Tornadus swap): the pack is escalated.
+- **Test set:** `review export-testset <slug>|--all` freezes finished human reviews
+  (pulls/review/recovered JSON + set cards.json, no footage, local paths stripped)
+  into `tests/fixtures/`; `tests/test_review_testset.py` replays the default policy on
+  each and fails if silent errors exceed `reviews/baseline.json` (a ratchet: lower it
+  as the rules improve).
+- Not handled yet: duplicate-vs-reshow judgement beyond detection's merge, post-plan choice
   (uses `posts.suggest`), missing prices (logged only). No vision check on ambiguous
   crops yet — candidate next step for the exceptions that remain.
 
@@ -583,6 +595,9 @@ pokepipe review status                    # progress per video (+ auto-review su
 pokepipe review auto <slug> [--mode M]    # auto-review a video with no review yet
 pokepipe review replay <slug>|--all       # score auto-review vs finished human reviews
 pokepipe review fit [--save]              # calibrate confidence on human reviews
+pokepipe review export-testset --all      # freeze finished reviews into tests/fixtures
+pokepipe watch redo <slug>                # after fixing a finished review: redo changed posts
+pokepipe preflight --set <id> --videos 3  # before a recording day
 pokepipe collection apply <slug>          # add a finished review → collection.json
 pokepipe collection status sv3pt5         # master-set progress by rarity
 pokepipe collection missing sv3pt5 --variant reverse

@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     watch_poll_seconds: float = 5.0
     watch_settle_seconds: float = 10.0  # a file must stop changing this long before intake
     default_post_seconds: float = 45.0
+    notify: bool = True  # Windows toast: review waiting / posts ready / failed
 
     # Auto-review (review/auto.py): always | shadow | exceptions | off
     review_mode: Literal["always", "shadow", "exceptions", "off"] = "shadow"
