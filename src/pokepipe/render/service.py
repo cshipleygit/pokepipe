@@ -45,6 +45,18 @@ def _load(path: Path, model, hint: str):
     return model.model_validate_json(path.read_text(encoding="utf-8"))
 
 
+def _brand_fonts(src: Path, work: Path) -> str | None:
+    """Copy the brand font files into the render folder; return the folder's name
+    relative to `work` (ffmpeg runs there), or None when no font files are present."""
+    files = sorted(src.glob("*.[ot]tf")) if src.is_dir() else []
+    if not files:
+        return None
+    (work / "fonts").mkdir(exist_ok=True)
+    for f in files:
+        shutil.copy2(f, work / "fonts" / f.name)
+    return "fonts"
+
+
 def pack_titles(segments: list[Segment], numbers: dict[int, int]) -> tuple:
     """"PACK 3 OF 9" over each pack's tear: from its first clip until its cards start."""
     titles = []
@@ -197,8 +209,10 @@ def render_post(
     if work.exists():
         shutil.rmtree(work)
     work.mkdir(parents=True)
+    fonts = _brand_fonts(settings.brand_fonts_dir, work)
     (work / "captions.ass").write_text(
-        build_ass(edit.lines, voice.words if voice else [], overlay, edit.duration, intro_len),
+        build_ass(edit.lines, voice.words if voice else [], overlay, edit.duration, intro_len,
+                  fonts_dir=work / fonts if fonts else None),
         encoding="utf-8",
     )
     (work / "edit.json").write_text(
@@ -248,12 +262,12 @@ def render_post(
     if narration:
         cmd = ffmpeg.final_cmd(
             concat, pdir / "voice.mp3", edit.lines, "captions.ass", edit.duration, out,
-            source_audio=source_audio, sprite=sprite, sfx=sfx_wav,
+            source_audio=source_audio, sprite=sprite, sfx=sfx_wav, fonts_dir=fonts,
         )
     else:
         cmd = ffmpeg.final_cmd_source_audio(
             concat, "captions.ass", edit.duration, out, source_audio, sprite=sprite,
-            sfx=sfx_wav,
+            sfx=sfx_wav, fonts_dir=fonts,
         )
     ffmpeg.run(cmd, cwd=work)
     if not keep_temp:

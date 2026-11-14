@@ -18,7 +18,9 @@ just above TikTok's text.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
+from pathlib import Path
 
 from pokepipe.narration.models import TimedWord
 from pokepipe.render import theme
@@ -36,18 +38,24 @@ STYLES = [
     ("Caption", 92, WHITE, NAVY, SHADE, 1, 8, 3, 2, 90, 170, 400),
     ("Hook", 66, WHITE, SHADE, SHADE, 3, 20, 0, 8, 90, 170, 430),
     ("Counter", 46, WHITE, NAVY, SHADE, 1, 5, 2, 7, 60, 60, 270),
-    ("Badge", 48, theme.ass(theme.MINT), NAVY, SHADE, 1, 5, 2, 7, 60, 60, 330),
-    ("Label", 60, theme.ass(theme.YELLOW), NAVY, SHADE, 1, 6, 3, 8, 90, 170, 430),
+    ("Badge", 48, theme.ass(theme.BADGE_COLOUR), NAVY, SHADE, 1, 5, 2, 7, 60, 60, 330),
+    ("Label", 60, theme.ass(theme.LABEL_COLOUR), NAVY, SHADE, 1, 6, 3, 8, 90, 170, 430),
     ("Title", 80, WHITE, NAVY, SHADE, 1, 8, 3, 8, 90, 170, 430),
-    ("Price", 84, theme.ass(theme.MINT), NAVY, SHADE, 1, 8, 3, 8, 90, 170, 505),
+    ("Price", 84, theme.ass(theme.PRICE_COLOUR), NAVY, SHADE, 1, 8, 3, 8, 90, 170, 505),
     ("Bar", 10, WHITE, NAVY, NAVY, 1, 0, 0, 7, 0, 0, 0),
 ]
 
 # Master-set progress bar (PlayRes pixels): below the feed tabs, clear of the buttons.
 BAR_X, BAR_Y, BAR_W, BAR_H = 100, 232, 580, 36
-BAR_TRACK = theme.ass(theme.NAVY, alpha=0x40)  # translucent navy pill
+BAR_TRACK = theme.ass(theme.NAVY, alpha=theme.BAR_TRACK_ALPHA)  # translucent navy pill
 BAR_FILL = theme.ass(theme.ORANGE)  # the flame trail behind the rocket
 BAR_TICK = 0.7  # seconds for the fill (and the rocket) to move when a pack is done
+
+# "+N NEW" starts here (after the theme's badge icon, if it has one).
+BADGE_X = BAR_X + BAR_W + 34
+# Price tag: (icon +) price, centred where the Price style's margins centre text.
+PRICE_CX = (90 + OUT_W - 170) / 2
+PRICE_CY = 505 + 46
 
 def ts(seconds: float) -> str:
     cs = max(0, round(seconds * 100))
@@ -118,8 +126,9 @@ def _pill(w: int, h: int) -> str:
 
 def progress_track() -> str:
     """The empty bar: a translucent navy pill drawn with ASS vector commands."""
-    return (rf"{{\an7\pos({BAR_X},{BAR_Y})\bord3\shad0\1c&H{BAR_TRACK[4:]}&\1a&H{BAR_TRACK[2:4]}&"
-            rf"\3c{NAVY}\p1}}{_pill(BAR_W, BAR_H)}{{\p0}}")
+    return (rf"{{\an7\pos({BAR_X},{BAR_Y})\bord{theme.BAR_RIM_WIDTH}\shad0"
+            rf"\1c&H{BAR_TRACK[4:]}&\1a&H{BAR_TRACK[2:4]}&"
+            rf"\3c{theme.ass(theme.BAR_RIM)}\p1}}{_pill(BAR_W, BAR_H)}{{\p0}}")
 
 
 def progress_fill(owned_from: int, owned_to: int, total: int) -> str:
@@ -137,12 +146,32 @@ def progress_fill(owned_from: int, owned_to: int, total: int) -> str:
 
 def progress_label(owned: int, total: int) -> str:
     pct = round(100 * owned / total)
-    return (rf"{{\an1\pos({BAR_X},{BAR_Y - 10})}}MASTER SET  {{\c{HIGHLIGHT}}}{owned}"
+    dx, dy = theme.COUNTER_OFFSET
+    return (rf"{{\an1\pos({BAR_X + dx},{BAR_Y + dy})}}MASTER SET  {{\c{HIGHLIGHT}}}{owned}"
             rf"{{\c{WHITE}}}/{total}  {pct}%")
 
 
-def badge(new: int) -> str:
-    return rf"{{\an4\pos({BAR_X + BAR_W + 34},{BAR_Y + BAR_H // 2})}}+{new} NEW"
+def badge(new: int, advance: float = 0) -> str:
+    return rf"{{\an4\pos({BADGE_X + advance:g},{BAR_Y + BAR_H // 2})}}+{new} NEW"
+
+
+def shape(points: list[tuple[float, float]], colour: str, border: float = 0,
+          extra: str = "") -> str:
+    """A filled polygon as an ASS drawing at absolute PlayRes coordinates (for theme
+    icons). Written relative to its own top-left corner and placed there with an7/pos,
+    so it lands in the same spot whether libass aligns a drawing by its origin or by its
+    bounding box."""
+    x0 = min(x for x, _ in points)
+    y0 = min(y for _, y in points)
+    rel = [f"{x - x0:.1f} {y - y0:.1f}" for x, y in points]
+    path = f"m {rel[0]} l {' '.join(rel[1:])}"
+    return (rf"{{\an7\pos({x0:.1f},{y0:.1f})\bord{border:.1f}\shad0\1c{colour}\3c{NAVY}"
+            rf"{extra}\p1}}{path}{{\p0}}")
+
+
+def circle(cx: float, cy: float, r: float, n: int = 48) -> list[tuple[float, float]]:
+    return [(cx + r * math.cos(2 * math.pi * k / n), cy + r * math.sin(2 * math.pi * k / n))
+            for k in range(n)]
 
 
 def rocket_keys(
@@ -177,7 +206,10 @@ def build_ass(
     overlay: Overlay,
     duration: float,
     offset: float = 0.0,
+    fonts_dir: Path | None = None,
 ) -> str:
+    """The whole ASS script. `fonts_dir` (the theme's font files) only sharpens the
+    price-tag layout when the theme has a price icon: it needs the price's width."""
     events: list[str] = []
 
     def add(start: float, end: float, style: str, text: str, layer: int = 0) -> None:
@@ -222,7 +254,13 @@ def build_ass(
         add(t, end, "Counter", progress_label(value, total))
         new = overlay.new_per_pack.get(pack, 0)
         if new:
-            add(end, min(end + 1.6, duration), "Badge", badge(new))
+            gone = min(end + 1.6, duration)
+            advance = 0.0
+            if theme.badge_icon is not None:
+                drawings, advance = theme.badge_icon(BADGE_X, BAR_Y + BAR_H / 2)
+                for k, drawing in enumerate(drawings):
+                    add(end, gone, "Badge", drawing, layer=2 + k)
+            add(end, gone, "Badge", badge(new, advance), layer=2 if advance else 0)
         value_from, value, t = value, nxt, end
         grow = min(end + BAR_TICK, duration)
         add(end, grow, "Bar", progress_fill(value_from, value, total), layer=1)
@@ -243,7 +281,17 @@ def build_ass(
     # Price tags pop in (a little overshoot) under the rarity label while a hit is zoomed.
     pop = r"{\fscx40\fscy40\t(0,160,\fscx115\fscy115)\t(160,280,\fscx100\fscy100)}"
     for start, end, text in overlay.prices:
-        add(max(start, hook_end), end, "Price", pop + esc(text))
+        start = max(start, hook_end)
+        if theme.price_icon is None:
+            add(start, end, "Price", pop + esc(text))
+            continue
+        # icon then price, the pair centred on the tag's column
+        icon_w, gap = theme.PRICE_ICON_W, theme.PRICE_ICON_GAP
+        left = PRICE_CX - (icon_w + gap + theme.text_width(text, 84, fonts_dir)) / 2
+        for k, drawing in enumerate(theme.price_icon(left, PRICE_CY, r"\fad(120,0)")):
+            add(start, end, "Price", drawing, layer=2 + k)
+        at = rf"{{\an4\pos({left + icon_w + gap:.0f},{PRICE_CY:.0f})}}"
+        add(start, end, "Price", at + pop + esc(text), layer=2)
 
     style_lines = [
         f"Style: {n},{FONT},{size},{prim},{prim},{outl},{back},-1,0,0,0,100,100,0,0,"
