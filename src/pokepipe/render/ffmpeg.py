@@ -116,11 +116,12 @@ def segment_cmd(
     """One shot as its own clip. With `audio`, the source's first audio track comes
     along: sped up with pitch-preserving atempo, set to `volume`, padded through any
     freeze-frame, and cut to exactly the shot's length so clips concatenate in sync."""
-    # With audio, both streams are cut to the shot's length inside the filter graph
-    # (trim / apad + atrim), so each ends on its own. Leaning on the output -t alone to
-    # stop a padded audio stream hung ffmpeg 6.1 (Ubuntu 24.04's) forever; -t stays as a
-    # backstop.
+    # Audio is padded *before* the speed change (in source time: out_len x speed), then
+    # sped up and trimmed to the shot's length. atempo feeding apad loops forever on
+    # ffmpeg 8.0 (Ubuntu 26's): measured on CI, every sped-up shot hung and removing
+    # either filter fixed it. Video is trimmed too, so both streams end on their own.
     length = f"{seg.out_len:.3f}"
+    padded = f"{seg.out_len * seg.speed:.3f}"
     vf = segment_filter(seg) + (f",trim=duration={length}" if audio else "")
     cmd = [
         require_tool("ffmpeg"), "-v", "error", "-y", *hwaccel(),
@@ -129,8 +130,8 @@ def segment_cmd(
     ]
     if audio:
         cmd += ["-map", "0:v:0", "-map", "0:a:0",
-                "-af", f"atempo={seg.speed:.4f},volume={volume:.3f},"
-                       f"apad=whole_dur={length},atrim=duration={length}", *AUDIO_OUT,
+                "-af", f"apad=whole_dur={padded},atempo={seg.speed:.4f},"
+                       f"volume={volume:.3f},atrim=duration={length}", *AUDIO_OUT,
                 "-t", length]
     else:
         cmd += ["-an"]

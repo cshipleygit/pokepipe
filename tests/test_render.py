@@ -409,9 +409,11 @@ def test_build_ass_without_narration_has_no_hook_or_captions():
 def test_segment_cmd_with_audio_speed_matches_and_cuts_to_length():
     seg = Segment(1.0, 3.0, "reveal", 1, speed=2.0, crop=(606, 1080, 657, 0))
     with_audio = ffmpeg.segment_cmd(SRC_PATH, seg, SRC_PATH, audio=True)
-    # both streams end on their own at the shot's length; -t alone hung ffmpeg 6.1
+    # pad (in source time) before the speed change: atempo -> apad hangs ffmpeg 8.0
     out = f"{seg.out_len:.3f}"
-    assert f"atempo=2.0000,volume=1.000,apad=whole_dur={out},atrim=duration={out}" in with_audio
+    padded = f"{seg.out_len * 2.0:.3f}"
+    assert (f"apad=whole_dur={padded},atempo=2.0000,volume=1.000,atrim=duration={out}"
+            in with_audio)
     assert with_audio[with_audio.index("-vf") + 1].endswith(f",trim=duration={out}")
     assert "0:a:0" in with_audio
     final = ffmpeg.final_cmd_source_audio(SRC_PATH, "c.ass", 12.5, SRC_PATH, True)
