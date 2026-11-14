@@ -1,0 +1,4038 @@
+{
+ "video": "source.mov",
+ "set_id": "me6",
+ "model_tag": "ViT-B-32__laion2b_s34b_b79k__full",
+ "duration": 983.385,
+ "params": {
+  "fps": 4.0,
+  "frame_min_score": 0.68,
+  "frame_min_margin": 0.03,
+  "max_gap": 1.0,
+  "min_frames": 3,
+  "min_peak": 0.72
+ },
+ "pack_layout": "modern",
+ "packs": [
+  {
+   "index": 1,
+   "start": 90.25,
+   "end": 92.0,
+   "clip_start": 75.25,
+   "clip_end": 94.0,
+   "cards": 1,
+   "expected_cards": 10,
+   "layout": null,
+   "layout_note": "1 cards; expected 10"
+  },
+  {
+   "index": 2,
+   "start": 295.0,
+   "end": 335.0,
+   "clip_start": 280.0,
+   "clip_end": 337.0,
+   "cards": 10,
+   "expected_cards": 10,
+   "layout": "full",
+   "layout_note": ""
+  },
+  {
+   "index": 3,
+   "start": 394.5,
+   "end": 437.0,
+   "clip_start": 379.5,
+   "clip_end": 439.0,
+   "cards": 10,
+   "expected_cards": 10,
+   "layout": "full",
+   "layout_note": ""
+  },
+  {
+   "index": 4,
+   "start": 494.5,
+   "end": 525.0,
+   "clip_start": 479.5,
+   "clip_end": 527.0,
+   "cards": 10,
+   "expected_cards": 10,
+   "layout": "full",
+   "layout_note": ""
+  },
+  {
+   "index": 5,
+   "start": 551.5,
+   "end": 580.0,
+   "clip_start": 536.5,
+   "clip_end": 582.0,
+   "cards": 10,
+   "expected_cards": 10,
+   "layout": "full",
+   "layout_note": ""
+  },
+  {
+   "index": 6,
+   "start": 636.5,
+   "end": 663.75,
+   "clip_start": 621.5,
+   "clip_end": 665.75,
+   "cards": 10,
+   "expected_cards": 10,
+   "layout": "full",
+   "layout_note": ""
+  },
+  {
+   "index": 7,
+   "start": 690.75,
+   "end": 719.0,
+   "clip_start": 675.75,
+   "clip_end": 721.0,
+   "cards": 10,
+   "expected_cards": 10,
+   "layout": "full",
+   "layout_note": ""
+  },
+  {
+   "index": 8,
+   "start": 749.75,
+   "end": 784.5,
+   "clip_start": 734.75,
+   "clip_end": 786.5,
+   "cards": 10,
+   "expected_cards": 10,
+   "layout": "full",
+   "layout_note": ""
+  },
+  {
+   "index": 9,
+   "start": 813.5,
+   "end": 840.5,
+   "clip_start": 798.5,
+   "clip_end": 842.5,
+   "cards": 9,
+   "expected_cards": 10,
+   "layout": "partial",
+   "layout_note": "1 card(s) missing; only unambiguous slots inferred"
+  },
+  {
+   "index": 10,
+   "start": 903.5,
+   "end": 936.75,
+   "clip_start": 888.5,
+   "clip_end": 938.75,
+   "cards": 8,
+   "expected_cards": 10,
+   "layout": "partial",
+   "layout_note": "2 card(s) missing; only unambiguous slots inferred"
+  }
+ ],
+ "pulls": [
+  {
+   "card_id": "me6-123",
+   "name": "Mega Malamar ex",
+   "number": "123",
+   "rarity": "Ultra Rare",
+   "start": 90.25,
+   "end": 92.0,
+   "peak_time": 90.25,
+   "peak_score": 0.7476,
+   "mean_margin": 0.0475,
+   "frames": 8,
+   "confidence": 0.467,
+   "box": [
+    0.36101851286711517,
+    0.459375,
+    0.7189814814814814,
+    0.740625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-117",
+     "score": 0.6974
+    },
+    {
+     "card_id": "me6-122",
+     "score": 0.6946
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6759
+    },
+    {
+     "card_id": "me6-111",
+     "score": 0.6736
+    }
+   ],
+   "thumbnail": "thumbs/p01_001_me6-123.jpg",
+   "pack": 1,
+   "slot": null,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 93.5,
+     "end": 94.0,
+     "peak_time": 93.5,
+     "peak_score": 0.7406,
+     "box": [
+      0.2410185072157118,
+      0.459375,
+      0.5989815040870949,
+      0.740625
+     ],
+     "frames": 3
+    }
+   ]
+  },
+  {
+   "card_id": "me6-1",
+   "name": "Heracross",
+   "number": "1",
+   "rarity": "Common",
+   "start": 295.0,
+   "end": 297.0,
+   "peak_time": 295.75,
+   "peak_score": 0.8577,
+   "mean_margin": 0.1833,
+   "frames": 9,
+   "confidence": 0.975,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-61",
+     "score": 0.6554
+    },
+    {
+     "card_id": "me6-66",
+     "score": 0.6471
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6464
+    },
+    {
+     "card_id": "me6-3",
+     "score": 0.6464
+    }
+   ],
+   "thumbnail": "thumbs/p03_004_me6-1.jpg",
+   "pack": 2,
+   "slot": 1,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 279.75,
+     "end": 280.25,
+     "peak_time": 280.25,
+     "peak_score": 0.765,
+     "box": [
+      0.36101851286711517,
+      0.359375,
+      0.7189814814814814,
+      0.640625
+     ],
+     "frames": 3
+    }
+   ]
+  },
+  {
+   "card_id": "me6-78",
+   "name": "Eevee",
+   "number": "78",
+   "rarity": "Common",
+   "start": 297.5,
+   "end": 299.75,
+   "peak_time": 299.5,
+   "peak_score": 0.8754,
+   "mean_margin": 0.089,
+   "frames": 10,
+   "confidence": 0.922,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-114",
+     "score": 0.7785
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6915
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.6798
+    },
+    {
+     "card_id": "me6-105",
+     "score": 0.6779
+    }
+   ],
+   "thumbnail": "thumbs/p03_005_me6-78.jpg",
+   "pack": 2,
+   "slot": 2,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-36",
+   "name": "Pincurchin",
+   "number": "36",
+   "rarity": "Common",
+   "start": 300.25,
+   "end": 302.5,
+   "peak_time": 301.5,
+   "peak_score": 0.8868,
+   "mean_margin": 0.1755,
+   "frames": 10,
+   "confidence": 1.0,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6913
+    },
+    {
+     "card_id": "me6-86",
+     "score": 0.6802
+    },
+    {
+     "card_id": "me6-31",
+     "score": 0.6723
+    },
+    {
+     "card_id": "me6-39",
+     "score": 0.6721
+    }
+   ],
+   "thumbnail": "thumbs/p03_006_me6-36.jpg",
+   "pack": 2,
+   "slot": 3,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-27",
+   "name": "Frillish",
+   "number": "27",
+   "rarity": "Common",
+   "start": 303.0,
+   "end": 305.25,
+   "peak_time": 305.0,
+   "peak_score": 0.8822,
+   "mean_margin": 0.1735,
+   "frames": 10,
+   "confidence": 1.0,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.7017
+    },
+    {
+     "card_id": "me6-66",
+     "score": 0.6837
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6743
+    },
+    {
+     "card_id": "me6-15",
+     "score": 0.6649
+    }
+   ],
+   "thumbnail": "thumbs/p03_007_me6-27.jpg",
+   "pack": 2,
+   "slot": 4,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-72",
+   "name": "Druddigon",
+   "number": "72",
+   "rarity": "Uncommon",
+   "start": 305.5,
+   "end": 308.25,
+   "peak_time": 307.5,
+   "peak_score": 0.8784,
+   "mean_margin": 0.1415,
+   "frames": 12,
+   "confidence": 1.0,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-42",
+     "score": 0.7218
+    },
+    {
+     "card_id": "me6-50",
+     "score": 0.6999
+    },
+    {
+     "card_id": "me6-53",
+     "score": 0.6944
+    },
+    {
+     "card_id": "me6-9",
+     "score": 0.687
+    }
+   ],
+   "thumbnail": "thumbs/p03_008_me6-72.jpg",
+   "pack": 2,
+   "slot": 5,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-41",
+   "name": "Kilowattrel",
+   "number": "41",
+   "rarity": "Uncommon",
+   "start": 308.75,
+   "end": 311.0,
+   "peak_time": 310.25,
+   "peak_score": 0.886,
+   "mean_margin": 0.1825,
+   "frames": 10,
+   "confidence": 1.0,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-40",
+     "score": 0.7155
+    },
+    {
+     "card_id": "me6-32",
+     "score": 0.6766
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6687
+    },
+    {
+     "card_id": "me6-88",
+     "score": 0.6659
+    }
+   ],
+   "thumbnail": "thumbs/p03_009_me6-41.jpg",
+   "pack": 2,
+   "slot": 6,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-90",
+   "name": "Adventure Lantern",
+   "number": "90",
+   "rarity": "Uncommon",
+   "start": 311.75,
+   "end": 312.5,
+   "peak_time": 312.5,
+   "peak_score": 0.8705,
+   "mean_margin": 0.0534,
+   "frames": 4,
+   "confidence": 0.683,
+   "box": [
+    0.15153704042787905,
+    0.3890625,
+    0.6884629426179109,
+    0.8109375
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-126",
+     "score": 0.822
+    },
+    {
+     "card_id": "me6-7",
+     "score": 0.6568
+    }
+   ],
+   "thumbnail": "thumbs/p03_010_me6-90.jpg",
+   "pack": 2,
+   "slot": 7,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 314.25,
+     "end": 315.75,
+     "peak_time": 315.75,
+     "peak_score": 0.779,
+     "box": [
+      0.2410185072157118,
+      0.359375,
+      0.5989815040870949,
+      0.640625
+     ],
+     "frames": 5
+    }
+   ]
+  },
+  {
+   "card_id": "me6-7",
+   "name": "Vespiquen",
+   "number": "7",
+   "rarity": "Common",
+   "start": 316.25,
+   "end": 319.5,
+   "peak_time": 319.25,
+   "peak_score": 0.7568,
+   "mean_margin": 0.103,
+   "frames": 14,
+   "confidence": 0.683,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-6",
+     "score": 0.6534
+    },
+    {
+     "card_id": "me6-108",
+     "score": 0.6386
+    },
+    {
+     "card_id": "me6-10",
+     "score": 0.6368
+    },
+    {
+     "card_id": "me6-3",
+     "score": 0.634
+    }
+   ],
+   "thumbnail": "thumbs/p03_012_me6-7.jpg",
+   "pack": 2,
+   "slot": 8,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-70",
+   "name": "Morpeko",
+   "number": "70",
+   "rarity": "Uncommon",
+   "start": 319.75,
+   "end": 322.5,
+   "peak_time": 322.25,
+   "peak_score": 0.8507,
+   "mean_margin": 0.131,
+   "frames": 11,
+   "confidence": 1.0,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-1",
+     "score": 0.6801
+    },
+    {
+     "card_id": "me6-66",
+     "score": 0.677
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6687
+    },
+    {
+     "card_id": "me6-56",
+     "score": 0.6652
+    }
+   ],
+   "thumbnail": "thumbs/p03_013_me6-70.jpg",
+   "pack": 2,
+   "slot": 9,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-124",
+   "name": "Talonflame ex",
+   "number": "124",
+   "rarity": "Ultra Rare",
+   "start": 323.0,
+   "end": 335.0,
+   "peak_time": 328.75,
+   "peak_score": 0.8288,
+   "mean_margin": 0.0821,
+   "frames": 49,
+   "confidence": 0.843,
+   "box": [
+    0.43807406955295136,
+    0.32562500635782876,
+    0.8819259078414352,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-88",
+     "score": 0.7604
+    },
+    {
+     "card_id": "me6-121",
+     "score": 0.6766
+    },
+    {
+     "card_id": "me6-47",
+     "score": 0.6637
+    },
+    {
+     "card_id": "me6-114",
+     "score": 0.6626
+    }
+   ],
+   "thumbnail": "thumbs/p03_014_me6-124.jpg",
+   "pack": 2,
+   "slot": 10,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 345.0,
+     "end": 352.25,
+     "peak_time": 351.0,
+     "peak_score": 0.8401,
+     "box": [
+      0.2715370460792824,
+      0.1890625,
+      0.808462976526331,
+      0.6109375
+     ],
+     "frames": 30
+    }
+   ]
+  },
+  {
+   "card_id": "me6-87",
+   "name": "Fletchinder",
+   "number": "87",
+   "rarity": "Common",
+   "start": 394.5,
+   "end": 396.75,
+   "peak_time": 396.0,
+   "peak_score": 0.8257,
+   "mean_margin": 0.1204,
+   "frames": 10,
+   "confidence": 0.928,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-86",
+     "score": 0.706
+    },
+    {
+     "card_id": "me6-36",
+     "score": 0.6552
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6247
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6233
+    }
+   ],
+   "thumbnail": "thumbs/p05_016_me6-87.jpg",
+   "pack": 3,
+   "slot": 1,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-64",
+   "name": "Purrloin",
+   "number": "64",
+   "rarity": "Common",
+   "start": 397.25,
+   "end": 400.0,
+   "peak_time": 397.75,
+   "peak_score": 0.8395,
+   "mean_margin": 0.1302,
+   "frames": 12,
+   "confidence": 0.969,
+   "box": [
+    0.2410185072157118,
+    0.259375,
+    0.5989815040870949,
+    0.540625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6688
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6613
+    },
+    {
+     "card_id": "me6-66",
+     "score": 0.6492
+    },
+    {
+     "card_id": "me6-9",
+     "score": 0.6484
+    }
+   ],
+   "thumbnail": "thumbs/p05_017_me6-64.jpg",
+   "pack": 3,
+   "slot": 2,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-40",
+   "name": "Wattrel",
+   "number": "40",
+   "rarity": "Common",
+   "start": 400.5,
+   "end": 403.25,
+   "peak_time": 403.25,
+   "peak_score": 0.8363,
+   "mean_margin": 0.1538,
+   "frames": 11,
+   "confidence": 0.96,
+   "box": [
+    0.318074063901548,
+    0.22562500635782878,
+    0.7619259304470486,
+    0.5743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-41",
+     "score": 0.6597
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6571
+    },
+    {
+     "card_id": "me6-10",
+     "score": 0.6536
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6397
+    }
+   ],
+   "thumbnail": "thumbs/p05_018_me6-40.jpg",
+   "pack": 3,
+   "slot": 3,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-10",
+   "name": "Wimpod",
+   "number": "10",
+   "rarity": "Common",
+   "start": 403.5,
+   "end": 406.5,
+   "peak_time": 405.25,
+   "peak_score": 0.8152,
+   "mean_margin": 0.1423,
+   "frames": 13,
+   "confidence": 0.898,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.6819
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.6679
+    },
+    {
+     "card_id": "me6-120",
+     "score": 0.6451
+    },
+    {
+     "card_id": "me6-51",
+     "score": 0.6441
+    }
+   ],
+   "thumbnail": "thumbs/p05_019_me6-10.jpg",
+   "pack": 3,
+   "slot": 4,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-20",
+   "name": "Magmar",
+   "number": "20",
+   "rarity": "Uncommon",
+   "start": 407.0,
+   "end": 409.75,
+   "peak_time": 407.0,
+   "peak_score": 0.8497,
+   "mean_margin": 0.1113,
+   "frames": 12,
+   "confidence": 0.977,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-21",
+     "score": 0.7567
+    },
+    {
+     "card_id": "me6-24",
+     "score": 0.6886
+    },
+    {
+     "card_id": "me6-73",
+     "score": 0.6661
+    },
+    {
+     "card_id": "me6-31",
+     "score": 0.665
+    }
+   ],
+   "thumbnail": "thumbs/p05_020_me6-20.jpg",
+   "pack": 3,
+   "slot": 5,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-95",
+   "name": "Legendary Pyroduct",
+   "number": "95",
+   "rarity": "Uncommon",
+   "start": 410.5,
+   "end": 411.5,
+   "peak_time": 410.75,
+   "peak_score": 0.731,
+   "mean_margin": 0.0747,
+   "frames": 5,
+   "confidence": 0.412,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-99",
+     "score": 0.6646
+    },
+    {
+     "card_id": "me6-97",
+     "score": 0.652
+    },
+    {
+     "card_id": "me6-94",
+     "score": 0.6213
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.61
+    }
+   ],
+   "thumbnail": "thumbs/p05_021_me6-95.jpg",
+   "pack": 3,
+   "slot": 6,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 414.5,
+     "end": 415.75,
+     "peak_time": 415.75,
+     "peak_score": 0.7563,
+     "box": [
+      0.4810185185185185,
+      0.259375,
+      0.8389814588758681,
+      0.540625
+     ],
+     "frames": 4
+    }
+   ]
+  },
+  {
+   "card_id": "me6-94",
+   "name": "Legendary Pyroduct",
+   "number": "94",
+   "rarity": "Uncommon",
+   "start": 412.0,
+   "end": 412.75,
+   "peak_time": 412.0,
+   "peak_score": 0.7617,
+   "mean_margin": 0.1151,
+   "frames": 4,
+   "confidence": 0.578,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-96",
+     "score": 0.6325
+    },
+    {
+     "card_id": "me6-98",
+     "score": 0.6014
+    },
+    {
+     "card_id": "me6-95",
+     "score": 0.6003
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.5578
+    }
+   ],
+   "thumbnail": "thumbs/p05_022_me6-94.jpg",
+   "pack": 3,
+   "slot": 7,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 416.0,
+     "end": 418.5,
+     "peak_time": 417.5,
+     "peak_score": 0.7543,
+     "box": [
+      0.07807407379150391,
+      0.32562500635782876,
+      0.5219259191442419,
+      0.6743750254313151
+     ],
+     "frames": 4
+    }
+   ]
+  },
+  {
+   "card_id": "me6-83",
+   "name": "Kecleon",
+   "number": "83",
+   "rarity": "Common",
+   "start": 423.5,
+   "end": 425.75,
+   "peak_time": 425.25,
+   "peak_score": 0.8398,
+   "mean_margin": 0.1293,
+   "frames": 10,
+   "confidence": 0.97,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.6541
+    },
+    {
+     "card_id": "me6-9",
+     "score": 0.652
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.649
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6487
+    }
+   ],
+   "thumbnail": "thumbs/p05_025_me6-83.jpg",
+   "pack": 3,
+   "slot": 8,
+   "reverse_guess": true,
+   "showings": [
+    {
+     "start": 428.0,
+     "end": 429.25,
+     "peak_time": 428.0,
+     "peak_score": 0.8291,
+     "box": [
+      0.2410185072157118,
+      0.459375,
+      0.5989815040870949,
+      0.740625
+     ],
+     "frames": 3
+    }
+   ]
+  },
+  {
+   "card_id": "me6-17",
+   "name": "Arboliva",
+   "number": "17",
+   "rarity": "Uncommon",
+   "start": 426.0,
+   "end": 427.5,
+   "peak_time": 426.25,
+   "peak_score": 0.7669,
+   "mean_margin": 0.1068,
+   "frames": 5,
+   "confidence": 0.598,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-19",
+     "score": 0.65
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6474
+    },
+    {
+     "card_id": "me6-47",
+     "score": 0.6406
+    },
+    {
+     "card_id": "me6-82",
+     "score": 0.6321
+    }
+   ],
+   "thumbnail": "thumbs/p05_026_me6-17.jpg",
+   "pack": 3,
+   "slot": 9,
+   "reverse_guess": true,
+   "showings": [
+    {
+     "start": 429.75,
+     "end": 432.75,
+     "peak_time": 432.0,
+     "peak_score": 0.7818,
+     "box": [
+      0.19807407237865307,
+      0.32562500635782876,
+      0.6419259530526621,
+      0.6743750254313151
+     ],
+     "frames": 13
+    }
+   ]
+  },
+  {
+   "card_id": "me6-26",
+   "name": "Kyogre",
+   "number": "26",
+   "rarity": "Rare",
+   "start": 433.0,
+   "end": 437.0,
+   "peak_time": 434.25,
+   "peak_score": 0.8336,
+   "mean_margin": 0.1587,
+   "frames": 17,
+   "confidence": 0.952,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-83",
+     "score": 0.6566
+    },
+    {
+     "card_id": "me6-41",
+     "score": 0.6536
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6529
+    },
+    {
+     "card_id": "me6-113",
+     "score": 0.6445
+    }
+   ],
+   "thumbnail": "thumbs/p05_029_me6-26.jpg",
+   "pack": 3,
+   "slot": 10,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 440.0,
+     "end": 441.25,
+     "peak_time": 441.0,
+     "peak_score": 0.7857,
+     "box": [
+      0.12101851569281684,
+      0.459375,
+      0.47898147017867476,
+      0.740625
+     ],
+     "frames": 4
+    }
+   ]
+  },
+  {
+   "card_id": "me6-73",
+   "name": "Jangmo-o",
+   "number": "73",
+   "rarity": "Common",
+   "start": 494.5,
+   "end": 497.0,
+   "peak_time": 494.75,
+   "peak_score": 0.8353,
+   "mean_margin": 0.1482,
+   "frames": 11,
+   "confidence": 0.957,
+   "box": [
+    0.2410185072157118,
+    0.459375,
+    0.5989815040870949,
+    0.740625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6572
+    },
+    {
+     "card_id": "me6-1",
+     "score": 0.6558
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.649
+    },
+    {
+     "card_id": "me6-32",
+     "score": 0.6432
+    }
+   ],
+   "thumbnail": "thumbs/p06_031_me6-73.jpg",
+   "pack": 4,
+   "slot": 1,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-7",
+   "name": "Vespiquen",
+   "number": "7",
+   "rarity": "Common",
+   "start": 497.5,
+   "end": 499.25,
+   "peak_time": 497.5,
+   "peak_score": 0.752,
+   "mean_margin": 0.1185,
+   "frames": 8,
+   "confidence": 0.658,
+   "box": [
+    0.318074063901548,
+    0.4256250063578288,
+    0.7619259304470486,
+    0.7743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6264
+    },
+    {
+     "card_id": "me6-3",
+     "score": 0.6238
+    },
+    {
+     "card_id": "me6-117",
+     "score": 0.6215
+    },
+    {
+     "card_id": "me6-9",
+     "score": 0.619
+    }
+   ],
+   "thumbnail": "thumbs/p06_032_me6-7.jpg",
+   "pack": 4,
+   "slot": 2,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-86",
+   "name": "Fletchling",
+   "number": "86",
+   "rarity": "Common",
+   "start": 499.75,
+   "end": 501.75,
+   "peak_time": 500.75,
+   "peak_score": 0.8296,
+   "mean_margin": 0.099,
+   "frames": 9,
+   "confidence": 0.863,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-87",
+     "score": 0.7385
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6591
+    },
+    {
+     "card_id": "me6-27",
+     "score": 0.658
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6556
+    }
+   ],
+   "thumbnail": "thumbs/p06_033_me6-86.jpg",
+   "pack": 4,
+   "slot": 3,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-30",
+   "name": "Electabuzz",
+   "number": "30",
+   "rarity": "Common",
+   "start": 502.25,
+   "end": 504.25,
+   "peak_time": 503.75,
+   "peak_score": 0.8438,
+   "mean_margin": 0.124,
+   "frames": 9,
+   "confidence": 0.957,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-31",
+     "score": 0.6962
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6885
+    },
+    {
+     "card_id": "me6-86",
+     "score": 0.6856
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6794
+    }
+   ],
+   "thumbnail": "thumbs/p06_034_me6-30.jpg",
+   "pack": 4,
+   "slot": 4,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-79",
+   "name": "Delibird",
+   "number": "79",
+   "rarity": "Uncommon",
+   "start": 504.5,
+   "end": 506.5,
+   "peak_time": 506.0,
+   "peak_score": 0.7904,
+   "mean_margin": 0.1168,
+   "frames": 9,
+   "confidence": 0.792,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-6",
+     "score": 0.6685
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.661
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6564
+    },
+    {
+     "card_id": "me6-51",
+     "score": 0.6486
+    }
+   ],
+   "thumbnail": "thumbs/p06_035_me6-79.jpg",
+   "pack": 4,
+   "slot": 5,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-13",
+   "name": "Floragato",
+   "number": "13",
+   "rarity": "Uncommon",
+   "start": 507.0,
+   "end": 509.5,
+   "peak_time": 508.25,
+   "peak_score": 0.8375,
+   "mean_margin": 0.1429,
+   "frames": 11,
+   "confidence": 0.963,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-12",
+     "score": 0.6949
+    },
+    {
+     "card_id": "me6-64",
+     "score": 0.6923
+    },
+    {
+     "card_id": "me6-86",
+     "score": 0.6727
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6665
+    }
+   ],
+   "thumbnail": "thumbs/p06_036_me6-13.jpg",
+   "pack": 4,
+   "slot": 6,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-71",
+   "name": "Zarude",
+   "number": "71",
+   "rarity": "Uncommon",
+   "start": 510.0,
+   "end": 512.0,
+   "peak_time": 511.75,
+   "peak_score": 0.8067,
+   "mean_margin": 0.0975,
+   "frames": 9,
+   "confidence": 0.791,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-66",
+     "score": 0.6874
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6733
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6695
+    },
+    {
+     "card_id": "me6-61",
+     "score": 0.6587
+    }
+   ],
+   "thumbnail": "thumbs/p06_037_me6-71.jpg",
+   "pack": 4,
+   "slot": 7,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-27",
+   "name": "Frillish",
+   "number": "27",
+   "rarity": "Common",
+   "start": 512.25,
+   "end": 515.5,
+   "peak_time": 513.25,
+   "peak_score": 0.8513,
+   "mean_margin": 0.1241,
+   "frames": 14,
+   "confidence": 1.0,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.6789
+    },
+    {
+     "card_id": "me6-66",
+     "score": 0.6665
+    },
+    {
+     "card_id": "me6-86",
+     "score": 0.6557
+    },
+    {
+     "card_id": "me6-120",
+     "score": 0.6533
+    }
+   ],
+   "thumbnail": "thumbs/p06_038_me6-27.jpg",
+   "pack": 4,
+   "slot": 8,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-56",
+   "name": "Nidorina",
+   "number": "56",
+   "rarity": "Common",
+   "start": 516.0,
+   "end": 520.75,
+   "peak_time": 516.75,
+   "peak_score": 0.8163,
+   "mean_margin": 0.1009,
+   "frames": 18,
+   "confidence": 0.853,
+   "box": [
+    0.2410185072157118,
+    0.259375,
+    0.5989815040870949,
+    0.540625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-55",
+     "score": 0.7019
+    },
+    {
+     "card_id": "me6-66",
+     "score": 0.6675
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6599
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6509
+    }
+   ],
+   "thumbnail": "thumbs/p06_039_me6-56.jpg",
+   "pack": 4,
+   "slot": 9,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-52",
+   "name": "Steelix",
+   "number": "52",
+   "rarity": "Rare",
+   "start": 521.0,
+   "end": 525.0,
+   "peak_time": 523.0,
+   "peak_score": 0.8123,
+   "mean_margin": 0.116,
+   "frames": 17,
+   "confidence": 0.879,
+   "box": [
+    0.318074063901548,
+    0.22562500635782878,
+    0.7619259304470486,
+    0.5743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-17",
+     "score": 0.6799
+    },
+    {
+     "card_id": "me6-108",
+     "score": 0.6741
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6713
+    },
+    {
+     "card_id": "me6-122",
+     "score": 0.6566
+    }
+   ],
+   "thumbnail": "thumbs/p06_040_me6-52.jpg",
+   "pack": 4,
+   "slot": 10,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-60",
+   "name": "Sableye",
+   "number": "60",
+   "rarity": "Common",
+   "start": 551.5,
+   "end": 552.75,
+   "peak_time": 552.25,
+   "peak_score": 0.7853,
+   "mean_margin": 0.1157,
+   "frames": 6,
+   "confidence": 0.699,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6604
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6572
+    },
+    {
+     "card_id": "me6-108",
+     "score": 0.6438
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6384
+    }
+   ],
+   "thumbnail": "thumbs/p07_041_me6-60.jpg",
+   "pack": 5,
+   "slot": 1,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-77",
+   "name": "Tauros",
+   "number": "77",
+   "rarity": "Common",
+   "start": 553.25,
+   "end": 555.0,
+   "peak_time": 554.0,
+   "peak_score": 0.8338,
+   "mean_margin": 0.1739,
+   "frames": 8,
+   "confidence": 0.902,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-73",
+     "score": 0.6557
+    },
+    {
+     "card_id": "me6-1",
+     "score": 0.642
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6388
+    },
+    {
+     "card_id": "me6-86",
+     "score": 0.6365
+    }
+   ],
+   "thumbnail": "thumbs/p07_042_me6-77.jpg",
+   "pack": 5,
+   "slot": 2,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-44",
+   "name": "Hypno",
+   "number": "44",
+   "rarity": "Common",
+   "start": 555.5,
+   "end": 557.5,
+   "peak_time": 555.5,
+   "peak_score": 0.8137,
+   "mean_margin": 0.1609,
+   "frames": 9,
+   "confidence": 0.868,
+   "box": [
+    0.19807407237865307,
+    0.4256250063578288,
+    0.6419259530526621,
+    0.7743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-1",
+     "score": 0.6493
+    },
+    {
+     "card_id": "me6-26",
+     "score": 0.6431
+    },
+    {
+     "card_id": "me6-84",
+     "score": 0.6356
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6314
+    }
+   ],
+   "thumbnail": "thumbs/p07_043_me6-44.jpg",
+   "pack": 5,
+   "slot": 3,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-66",
+   "name": "Zorua",
+   "number": "66",
+   "rarity": "Common",
+   "start": 557.75,
+   "end": 559.75,
+   "peak_time": 558.0,
+   "peak_score": 0.8455,
+   "mean_margin": 0.14,
+   "frames": 9,
+   "confidence": 0.962,
+   "box": [
+    0.19807407237865307,
+    0.4256250063578288,
+    0.6419259530526621,
+    0.7743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-61",
+     "score": 0.6986
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6659
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6559
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6547
+    }
+   ],
+   "thumbnail": "thumbs/p07_044_me6-66.jpg",
+   "pack": 5,
+   "slot": 4,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-71",
+   "name": "Zarude",
+   "number": "71",
+   "rarity": "Uncommon",
+   "start": 560.0,
+   "end": 561.75,
+   "peak_time": 561.25,
+   "peak_score": 0.8299,
+   "mean_margin": 0.106,
+   "frames": 8,
+   "confidence": 0.856,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-66",
+     "score": 0.6781
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.667
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.652
+    },
+    {
+     "card_id": "me6-61",
+     "score": 0.6372
+    }
+   ],
+   "thumbnail": "thumbs/p07_045_me6-71.jpg",
+   "pack": 5,
+   "slot": 5,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-39",
+   "name": "Pawmot",
+   "number": "39",
+   "rarity": "Uncommon",
+   "start": 562.5,
+   "end": 564.25,
+   "peak_time": 563.75,
+   "peak_score": 0.8721,
+   "mean_margin": 0.1056,
+   "frames": 8,
+   "confidence": 0.914,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-38",
+     "score": 0.7448
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.7402
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6773
+    },
+    {
+     "card_id": "me6-36",
+     "score": 0.6685
+    }
+   ],
+   "thumbnail": "thumbs/p07_046_me6-39.jpg",
+   "pack": 5,
+   "slot": 6,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-85",
+   "name": "Tornadus",
+   "number": "85",
+   "rarity": "Uncommon",
+   "start": 564.75,
+   "end": 566.75,
+   "peak_time": 565.75,
+   "peak_score": 0.8267,
+   "mean_margin": 0.1424,
+   "frames": 9,
+   "confidence": 0.906,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-59",
+     "score": 0.6707
+    },
+    {
+     "card_id": "me6-35",
+     "score": 0.6617
+    },
+    {
+     "card_id": "me6-54",
+     "score": 0.6601
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6378
+    }
+   ],
+   "thumbnail": "thumbs/p07_047_me6-85.jpg",
+   "pack": 5,
+   "slot": 7,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-62",
+   "name": "Sharpedo",
+   "number": "62",
+   "rarity": "Common",
+   "start": 567.5,
+   "end": 569.5,
+   "peak_time": 568.5,
+   "peak_score": 0.8174,
+   "mean_margin": 0.1342,
+   "frames": 8,
+   "confidence": 0.854,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.6662
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.658
+    },
+    {
+     "card_id": "me6-65",
+     "score": 0.645
+    },
+    {
+     "card_id": "me6-36",
+     "score": 0.6442
+    }
+   ],
+   "thumbnail": "thumbs/p07_048_me6-62.jpg",
+   "pack": 5,
+   "slot": 8,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-75",
+   "name": "Kommo-o",
+   "number": "75",
+   "rarity": "Rare",
+   "start": 570.0,
+   "end": 572.5,
+   "peak_time": 572.25,
+   "peak_score": 0.7823,
+   "mean_margin": 0.0991,
+   "frames": 11,
+   "confidence": 0.749,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-73",
+     "score": 0.6671
+    },
+    {
+     "card_id": "me6-122",
+     "score": 0.6644
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6607
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6598
+    }
+   ],
+   "thumbnail": "thumbs/p07_049_me6-75.jpg",
+   "pack": 5,
+   "slot": 9,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-33",
+   "name": "Raikou ex",
+   "number": "33",
+   "rarity": "Double Rare",
+   "start": 573.0,
+   "end": 580.0,
+   "peak_time": 577.75,
+   "peak_score": 0.8543,
+   "mean_margin": 0.0621,
+   "frames": 25,
+   "confidence": 0.855,
+   "box": [
+    0.2715370460792824,
+    0.1890625,
+    0.808462976526331,
+    0.6109375
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-121",
+     "score": 0.7877
+    },
+    {
+     "card_id": "me6-136",
+     "score": 0.7099
+    },
+    {
+     "card_id": "me6-88",
+     "score": 0.707
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.7059
+    }
+   ],
+   "thumbnail": "thumbs/p07_050_me6-33.jpg",
+   "pack": 5,
+   "slot": 10,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 593.5,
+     "end": 596.0,
+     "peak_time": 593.75,
+     "peak_score": 0.8427,
+     "box": [
+      0.36101851286711517,
+      0.359375,
+      0.7189814814814814,
+      0.640625
+     ],
+     "frames": 7
+    }
+   ]
+  },
+  {
+   "card_id": "me6-18",
+   "name": "Growlithe",
+   "number": "18",
+   "rarity": "Common",
+   "start": 636.5,
+   "end": 638.25,
+   "peak_time": 637.25,
+   "peak_score": 0.8304,
+   "mean_margin": 0.0701,
+   "frames": 7,
+   "confidence": 0.743,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-106",
+     "score": 0.7447
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6898
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6896
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.6856
+    }
+   ],
+   "thumbnail": "thumbs/p09_052_me6-18.jpg",
+   "pack": 6,
+   "slot": 1,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-38",
+   "name": "Pawmo",
+   "number": "38",
+   "rarity": "Common",
+   "start": 638.75,
+   "end": 640.25,
+   "peak_time": 639.75,
+   "peak_score": 0.8683,
+   "mean_margin": 0.109,
+   "frames": 7,
+   "confidence": 0.897,
+   "box": [
+    0.15153704042787905,
+    0.2890625,
+    0.6884629426179109,
+    0.7109375
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-37",
+     "score": 0.7683
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.7253
+    },
+    {
+     "card_id": "me6-39",
+     "score": 0.7112
+    },
+    {
+     "card_id": "me6-114",
+     "score": 0.6935
+    }
+   ],
+   "thumbnail": "thumbs/p09_053_me6-38.jpg",
+   "pack": 6,
+   "slot": 2,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-2",
+   "name": "Surskit",
+   "number": "2",
+   "rarity": "Common",
+   "start": 640.75,
+   "end": 643.0,
+   "peak_time": 642.0,
+   "peak_score": 0.8414,
+   "mean_margin": 0.0996,
+   "frames": 10,
+   "confidence": 0.924,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.718
+    },
+    {
+     "card_id": "me6-27",
+     "score": 0.6749
+    },
+    {
+     "card_id": "me6-1",
+     "score": 0.6718
+    },
+    {
+     "card_id": "me6-58",
+     "score": 0.6675
+    }
+   ],
+   "thumbnail": "thumbs/p09_054_me6-2.jpg",
+   "pack": 6,
+   "slot": 3,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-81",
+   "name": "Swablu",
+   "number": "81",
+   "rarity": "Common",
+   "start": 643.75,
+   "end": 645.5,
+   "peak_time": 644.5,
+   "peak_score": 0.8274,
+   "mean_margin": 0.1611,
+   "frames": 8,
+   "confidence": 0.884,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-2",
+     "score": 0.6573
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6566
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.6478
+    },
+    {
+     "card_id": "me6-61",
+     "score": 0.6404
+    }
+   ],
+   "thumbnail": "thumbs/p09_055_me6-81.jpg",
+   "pack": 6,
+   "slot": 4,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-31",
+   "name": "Electivire",
+   "number": "31",
+   "rarity": "Uncommon",
+   "start": 646.0,
+   "end": 648.75,
+   "peak_time": 647.0,
+   "peak_score": 0.8534,
+   "mean_margin": 0.1537,
+   "frames": 12,
+   "confidence": 1.0,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-108",
+     "score": 0.6735
+    },
+    {
+     "card_id": "me6-30",
+     "score": 0.6652
+    },
+    {
+     "card_id": "me6-24",
+     "score": 0.6629
+    },
+    {
+     "card_id": "me6-7",
+     "score": 0.6519
+    }
+   ],
+   "thumbnail": "thumbs/p09_056_me6-31.jpg",
+   "pack": 6,
+   "slot": 5,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-102",
+   "name": "Tate & Liza's Training",
+   "number": "102",
+   "rarity": "Uncommon",
+   "start": 650.0,
+   "end": 651.5,
+   "peak_time": 650.75,
+   "peak_score": 0.779,
+   "mean_margin": 0.0538,
+   "frames": 6,
+   "confidence": 0.526,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-130",
+     "score": 0.7363
+    },
+    {
+     "card_id": "me6-89",
+     "score": 0.6381
+    },
+    {
+     "card_id": "me6-131",
+     "score": 0.6322
+    },
+    {
+     "card_id": "me6-103",
+     "score": 0.6251
+    }
+   ],
+   "thumbnail": "thumbs/p09_057_me6-102.jpg",
+   "pack": 6,
+   "slot": 6,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-54",
+   "name": "Landorus",
+   "number": "54",
+   "rarity": "Uncommon",
+   "start": 652.0,
+   "end": 654.0,
+   "peak_time": 653.0,
+   "peak_score": 0.8186,
+   "mean_margin": 0.1041,
+   "frames": 9,
+   "confidence": 0.843,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-85",
+     "score": 0.6778
+    },
+    {
+     "card_id": "me6-50",
+     "score": 0.663
+    },
+    {
+     "card_id": "me6-35",
+     "score": 0.6574
+    },
+    {
+     "card_id": "me6-122",
+     "score": 0.6549
+    }
+   ],
+   "thumbnail": "thumbs/p09_058_me6-54.jpg",
+   "pack": 6,
+   "slot": 7,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-5",
+   "name": "Cacturne",
+   "number": "5",
+   "rarity": "Rare",
+   "start": 654.5,
+   "end": 656.75,
+   "peak_time": 654.5,
+   "peak_score": 0.7705,
+   "mean_margin": 0.1059,
+   "frames": 10,
+   "confidence": 0.731,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-2",
+     "score": 0.6618
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6566
+    },
+    {
+     "card_id": "me6-61",
+     "score": 0.6528
+    },
+    {
+     "card_id": "me6-19",
+     "score": 0.6517
+    }
+   ],
+   "thumbnail": "thumbs/p09_059_me6-5.jpg",
+   "pack": 6,
+   "slot": 8,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-51",
+   "name": "Onix",
+   "number": "51",
+   "rarity": "Common",
+   "start": 657.25,
+   "end": 660.0,
+   "peak_time": 657.25,
+   "peak_score": 0.8308,
+   "mean_margin": 0.1501,
+   "frames": 12,
+   "confidence": 0.944,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-49",
+     "score": 0.6778
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6702
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.6657
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6648
+    }
+   ],
+   "thumbnail": "thumbs/p09_060_me6-51.jpg",
+   "pack": 6,
+   "slot": 9,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-21",
+   "name": "Magmortar",
+   "number": "21",
+   "rarity": "Rare",
+   "start": 660.5,
+   "end": 663.75,
+   "peak_time": 661.5,
+   "peak_score": 0.8407,
+   "mean_margin": 0.1224,
+   "frames": 14,
+   "confidence": 0.973,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-20",
+     "score": 0.6995
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6916
+    },
+    {
+     "card_id": "me6-3",
+     "score": 0.686
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6722
+    }
+   ],
+   "thumbnail": "thumbs/p09_061_me6-21.jpg",
+   "pack": 6,
+   "slot": 10,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-78",
+   "name": "Eevee",
+   "number": "78",
+   "rarity": "Common",
+   "start": 690.75,
+   "end": 693.25,
+   "peak_time": 692.25,
+   "peak_score": 0.8612,
+   "mean_margin": 0.0675,
+   "frames": 11,
+   "confidence": 0.869,
+   "box": [
+    0.2410185072157118,
+    0.459375,
+    0.5989815040870949,
+    0.740625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-114",
+     "score": 0.7654
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6895
+    },
+    {
+     "card_id": "me6-6",
+     "score": 0.6619
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.6588
+    }
+   ],
+   "thumbnail": "thumbs/p10_062_me6-78.jpg",
+   "pack": 7,
+   "slot": 1,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-18",
+   "name": "Growlithe",
+   "number": "18",
+   "rarity": "Common",
+   "start": 693.5,
+   "end": 695.5,
+   "peak_time": 693.5,
+   "peak_score": 0.8203,
+   "mean_margin": 0.066,
+   "frames": 8,
+   "confidence": 0.727,
+   "box": [
+    0.2410185072157118,
+    0.459375,
+    0.5989815040870949,
+    0.740625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-106",
+     "score": 0.7624
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6892
+    },
+    {
+     "card_id": "me6-111",
+     "score": 0.6783
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6773
+    }
+   ],
+   "thumbnail": "thumbs/p10_063_me6-18.jpg",
+   "pack": 7,
+   "slot": 2,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-61",
+   "name": "Carvanha",
+   "number": "61",
+   "rarity": "Common",
+   "start": 696.0,
+   "end": 698.0,
+   "peak_time": 696.0,
+   "peak_score": 0.8172,
+   "mean_margin": 0.1241,
+   "frames": 9,
+   "confidence": 0.878,
+   "box": [
+    0.318074063901548,
+    0.4256250063578288,
+    0.7619259304470486,
+    0.7743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.6935
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6797
+    },
+    {
+     "card_id": "me6-66",
+     "score": 0.6467
+    },
+    {
+     "card_id": "me6-19",
+     "score": 0.6462
+    }
+   ],
+   "thumbnail": "thumbs/p10_064_me6-61.jpg",
+   "pack": 7,
+   "slot": 3,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-73",
+   "name": "Jangmo-o",
+   "number": "73",
+   "rarity": "Common",
+   "start": 698.5,
+   "end": 700.5,
+   "peak_time": 700.0,
+   "peak_score": 0.8308,
+   "mean_margin": 0.153,
+   "frames": 9,
+   "confidence": 0.918,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6595
+    },
+    {
+     "card_id": "me6-1",
+     "score": 0.6516
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6488
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6473
+    }
+   ],
+   "thumbnail": "thumbs/p10_065_me6-73.jpg",
+   "pack": 7,
+   "slot": 4,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-102",
+   "name": "Tate & Liza's Training",
+   "number": "102",
+   "rarity": "Uncommon",
+   "start": 701.75,
+   "end": 702.75,
+   "peak_time": 702.0,
+   "peak_score": 0.7269,
+   "mean_margin": 0.0406,
+   "frames": 3,
+   "confidence": 0.264,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-130",
+     "score": 0.6943
+    },
+    {
+     "card_id": "me6-89",
+     "score": 0.6018
+    },
+    {
+     "card_id": "me6-93",
+     "score": 0.5895
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.5884
+    }
+   ],
+   "thumbnail": "thumbs/p10_066_me6-102.jpg",
+   "pack": 7,
+   "slot": 5,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-28",
+   "name": "Jellicent",
+   "number": "28",
+   "rarity": "Uncommon",
+   "start": 703.25,
+   "end": 705.5,
+   "peak_time": 705.25,
+   "peak_score": 0.8023,
+   "mean_margin": 0.1513,
+   "frames": 10,
+   "confidence": 0.86,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-32",
+     "score": 0.6536
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6261
+    },
+    {
+     "card_id": "me6-52",
+     "score": 0.6249
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6141
+    }
+   ],
+   "thumbnail": "thumbs/p10_067_me6-28.jpg",
+   "pack": 7,
+   "slot": 6,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-63",
+   "name": "Darkrai",
+   "number": "63",
+   "rarity": "Uncommon",
+   "start": 706.0,
+   "end": 708.5,
+   "peak_time": 707.5,
+   "peak_score": 0.8049,
+   "mean_margin": 0.1423,
+   "frames": 11,
+   "confidence": 0.867,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.6634
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6522
+    },
+    {
+     "card_id": "me6-51",
+     "score": 0.6402
+    },
+    {
+     "card_id": "me6-62",
+     "score": 0.6394
+    }
+   ],
+   "thumbnail": "thumbs/p10_068_me6-63.jpg",
+   "pack": 7,
+   "slot": 7,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-41",
+   "name": "Kilowattrel",
+   "number": "41",
+   "rarity": "Uncommon",
+   "start": 709.0,
+   "end": 711.5,
+   "peak_time": 709.5,
+   "peak_score": 0.8555,
+   "mean_margin": 0.1743,
+   "frames": 11,
+   "confidence": 1.0,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-40",
+     "score": 0.6964
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6756
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6707
+    },
+    {
+     "card_id": "me6-88",
+     "score": 0.6566
+    }
+   ],
+   "thumbnail": "thumbs/p10_069_me6-41.jpg",
+   "pack": 7,
+   "slot": 8,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-81",
+   "name": "Swablu",
+   "number": "81",
+   "rarity": "Common",
+   "start": 712.0,
+   "end": 714.5,
+   "peak_time": 712.75,
+   "peak_score": 0.8063,
+   "mean_margin": 0.1463,
+   "frames": 11,
+   "confidence": 0.872,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-2",
+     "score": 0.6446
+    },
+    {
+     "card_id": "me6-61",
+     "score": 0.6326
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6322
+    },
+    {
+     "card_id": "me6-8",
+     "score": 0.6317
+    }
+   ],
+   "thumbnail": "thumbs/p10_070_me6-81.jpg",
+   "pack": 7,
+   "slot": 9,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-82",
+   "name": "Altaria",
+   "number": "82",
+   "rarity": "Rare",
+   "start": 715.0,
+   "end": 719.0,
+   "peak_time": 717.25,
+   "peak_score": 0.8156,
+   "mean_margin": 0.0774,
+   "frames": 14,
+   "confidence": 0.792,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-116",
+     "score": 0.7458
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6982
+    },
+    {
+     "card_id": "me6-61",
+     "score": 0.6471
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6285
+    }
+   ],
+   "thumbnail": "thumbs/p10_071_me6-82.jpg",
+   "pack": 7,
+   "slot": 10,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-92",
+   "name": "Emcee's Hype",
+   "number": "92",
+   "rarity": "Common",
+   "start": 749.75,
+   "end": 752.0,
+   "peak_time": 750.0,
+   "peak_score": 0.8618,
+   "mean_margin": 0.0425,
+   "frames": 9,
+   "confidence": 0.781,
+   "box": [
+    0.19807407237865307,
+    0.4256250063578288,
+    0.6419259530526621,
+    0.7743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-128",
+     "score": 0.8173
+    },
+    {
+     "card_id": "me6-131",
+     "score": 0.6421
+    },
+    {
+     "card_id": "me6-102",
+     "score": 0.63
+    },
+    {
+     "card_id": "me6-103",
+     "score": 0.6265
+    }
+   ],
+   "thumbnail": "thumbs/p11_072_me6-92.jpg",
+   "pack": 8,
+   "slot": 1,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-80",
+   "name": "Azurill",
+   "number": "80",
+   "rarity": "Common",
+   "start": 752.5,
+   "end": 755.0,
+   "peak_time": 753.5,
+   "peak_score": 0.8842,
+   "mean_margin": 0.1074,
+   "frames": 11,
+   "confidence": 0.969,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-115",
+     "score": 0.7799
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6681
+    },
+    {
+     "card_id": "me6-66",
+     "score": 0.6672
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.6589
+    }
+   ],
+   "thumbnail": "thumbs/p11_073_me6-80.jpg",
+   "pack": 8,
+   "slot": 2,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-101",
+   "name": "Tasty Rice Ball",
+   "number": "101",
+   "rarity": "Common",
+   "start": 755.5,
+   "end": 758.0,
+   "peak_time": 756.75,
+   "peak_score": 0.8428,
+   "mean_margin": 0.1903,
+   "frames": 11,
+   "confidence": 0.979,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-2",
+     "score": 0.6321
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.628
+    },
+    {
+     "card_id": "me6-6",
+     "score": 0.6278
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6236
+    }
+   ],
+   "thumbnail": "thumbs/p11_074_me6-101.jpg",
+   "pack": 8,
+   "slot": 3,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-25",
+   "name": "Mantine",
+   "number": "25",
+   "rarity": "Common",
+   "start": 758.5,
+   "end": 761.0,
+   "peak_time": 759.5,
+   "peak_score": 0.7848,
+   "mean_margin": 0.1139,
+   "frames": 11,
+   "confidence": 0.793,
+   "box": [
+    0.36101851286711517,
+    0.259375,
+    0.7189814814814814,
+    0.540625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.6536
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.618
+    },
+    {
+     "card_id": "me6-3",
+     "score": 0.6159
+    },
+    {
+     "card_id": "me6-19",
+     "score": 0.6045
+    }
+   ],
+   "thumbnail": "thumbs/p11_075_me6-25.jpg",
+   "pack": 8,
+   "slot": 4,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-39",
+   "name": "Pawmot",
+   "number": "39",
+   "rarity": "Uncommon",
+   "start": 761.5,
+   "end": 763.75,
+   "peak_time": 763.75,
+   "peak_score": 0.8217,
+   "mean_margin": 0.0894,
+   "frames": 10,
+   "confidence": 0.84,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-38",
+     "score": 0.7375
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.7343
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6978
+    },
+    {
+     "card_id": "me6-43",
+     "score": 0.6813
+    }
+   ],
+   "thumbnail": "thumbs/p11_076_me6-39.jpg",
+   "pack": 8,
+   "slot": 5,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-20",
+   "name": "Magmar",
+   "number": "20",
+   "rarity": "Uncommon",
+   "start": 764.5,
+   "end": 766.75,
+   "peak_time": 764.5,
+   "peak_score": 0.7958,
+   "mean_margin": 0.0932,
+   "frames": 10,
+   "confidence": 0.774,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-21",
+     "score": 0.704
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6631
+    },
+    {
+     "card_id": "me6-122",
+     "score": 0.6625
+    },
+    {
+     "card_id": "me6-111",
+     "score": 0.6511
+    }
+   ],
+   "thumbnail": "thumbs/p11_077_me6-20.jpg",
+   "pack": 8,
+   "slot": 6,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-93",
+   "name": "Grisham",
+   "number": "93",
+   "rarity": "Uncommon",
+   "start": 767.25,
+   "end": 770.0,
+   "peak_time": 767.25,
+   "peak_score": 0.7669,
+   "mean_margin": 0.1171,
+   "frames": 12,
+   "confidence": 0.748,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-49",
+     "score": 0.6431
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6363
+    },
+    {
+     "card_id": "me6-35",
+     "score": 0.6262
+    },
+    {
+     "card_id": "me6-89",
+     "score": 0.6225
+    }
+   ],
+   "thumbnail": "thumbs/p11_078_me6-93.jpg",
+   "pack": 8,
+   "slot": 7,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-1",
+   "name": "Heracross",
+   "number": "1",
+   "rarity": "Common",
+   "start": 770.5,
+   "end": 773.25,
+   "peak_time": 772.0,
+   "peak_score": 0.7856,
+   "mean_margin": 0.1041,
+   "frames": 12,
+   "confidence": 0.771,
+   "box": [
+    0.318074063901548,
+    0.32562500635782876,
+    0.7619259304470486,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6799
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6478
+    },
+    {
+     "card_id": "me6-104",
+     "score": 0.642
+    },
+    {
+     "card_id": "me6-3",
+     "score": 0.6404
+    }
+   ],
+   "thumbnail": "thumbs/p11_079_me6-1.jpg",
+   "pack": 8,
+   "slot": 8,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-18",
+   "name": "Growlithe",
+   "number": "18",
+   "rarity": "Common",
+   "start": 773.75,
+   "end": 776.0,
+   "peak_time": 774.5,
+   "peak_score": 0.8028,
+   "mean_margin": 0.0683,
+   "frames": 8,
+   "confidence": 0.682,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-106",
+     "score": 0.7197
+    },
+    {
+     "card_id": "me6-19",
+     "score": 0.684
+    },
+    {
+     "card_id": "me6-111",
+     "score": 0.6807
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6748
+    }
+   ],
+   "thumbnail": "thumbs/p11_080_me6-18.jpg",
+   "pack": 8,
+   "slot": 9,
+   "reverse_guess": true,
+   "showings": []
+  },
+  {
+   "card_id": "me6-5",
+   "name": "Cacturne",
+   "number": "5",
+   "rarity": "Rare",
+   "start": 776.75,
+   "end": 784.5,
+   "peak_time": 781.75,
+   "peak_score": 0.7775,
+   "mean_margin": 0.1109,
+   "frames": 27,
+   "confidence": 0.764,
+   "box": [
+    0.2715370460792824,
+    0.1890625,
+    0.808462976526331,
+    0.6109375
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6619
+    },
+    {
+     "card_id": "me6-122",
+     "score": 0.6436
+    },
+    {
+     "card_id": "me6-89",
+     "score": 0.6424
+    },
+    {
+     "card_id": "me6-2",
+     "score": 0.6404
+    }
+   ],
+   "thumbnail": "thumbs/p11_081_me6-5.jpg",
+   "pack": 8,
+   "slot": 10,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-65",
+   "name": "Liepard",
+   "number": "65",
+   "rarity": "Common",
+   "start": 813.5,
+   "end": 816.25,
+   "peak_time": 815.0,
+   "peak_score": 0.8168,
+   "mean_margin": 0.1013,
+   "frames": 12,
+   "confidence": 0.856,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6841
+    },
+    {
+     "card_id": "me6-108",
+     "score": 0.6731
+    },
+    {
+     "card_id": "me6-81",
+     "score": 0.6682
+    },
+    {
+     "card_id": "me6-135",
+     "score": 0.668
+    }
+   ],
+   "thumbnail": "thumbs/p12_082_me6-65.jpg",
+   "pack": 9,
+   "slot": 1,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-27",
+   "name": "Frillish",
+   "number": "27",
+   "rarity": "Common",
+   "start": 816.75,
+   "end": 818.5,
+   "peak_time": 818.25,
+   "peak_score": 0.8456,
+   "mean_margin": 0.1265,
+   "frames": 8,
+   "confidence": 0.937,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.7179
+    },
+    {
+     "card_id": "me6-66",
+     "score": 0.6818
+    },
+    {
+     "card_id": "me6-2",
+     "score": 0.6648
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6571
+    }
+   ],
+   "thumbnail": "thumbs/p12_083_me6-27.jpg",
+   "pack": 9,
+   "slot": 2,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-30",
+   "name": "Electabuzz",
+   "number": "30",
+   "rarity": "Common",
+   "start": 819.0,
+   "end": 821.0,
+   "peak_time": 821.0,
+   "peak_score": 0.7877,
+   "mean_margin": 0.0948,
+   "frames": 9,
+   "confidence": 0.729,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-31",
+     "score": 0.6988
+    },
+    {
+     "card_id": "me6-86",
+     "score": 0.6694
+    },
+    {
+     "card_id": "me6-87",
+     "score": 0.6675
+    },
+    {
+     "card_id": "me6-108",
+     "score": 0.6657
+    }
+   ],
+   "thumbnail": "thumbs/p12_084_me6-30.jpg",
+   "pack": 9,
+   "slot": 3,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-51",
+   "name": "Onix",
+   "number": "51",
+   "rarity": "Common",
+   "start": 821.25,
+   "end": 823.5,
+   "peak_time": 822.0,
+   "peak_score": 0.8333,
+   "mean_margin": 0.1261,
+   "frames": 10,
+   "confidence": 0.951,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6805
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6662
+    },
+    {
+     "card_id": "me6-108",
+     "score": 0.6611
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.6524
+    }
+   ],
+   "thumbnail": "thumbs/p12_085_me6-51.jpg",
+   "pack": 9,
+   "slot": 4,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-103",
+   "name": "Zinnia's Trust",
+   "number": "103",
+   "rarity": "Uncommon",
+   "start": 826.25,
+   "end": 828.0,
+   "peak_time": 827.75,
+   "peak_score": 0.8416,
+   "mean_margin": 0.0469,
+   "frames": 5,
+   "confidence": 0.668,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-131",
+     "score": 0.794
+    },
+    {
+     "card_id": "me6-140",
+     "score": 0.7838
+    },
+    {
+     "card_id": "me6-89",
+     "score": 0.6337
+    },
+    {
+     "card_id": "me6-125",
+     "score": 0.6286
+    }
+   ],
+   "thumbnail": "thumbs/p12_086_me6-103.jpg",
+   "pack": 9,
+   "slot": null,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-70",
+   "name": "Morpeko",
+   "number": "70",
+   "rarity": "Uncommon",
+   "start": 828.75,
+   "end": 832.0,
+   "peak_time": 831.25,
+   "peak_score": 0.8582,
+   "mean_margin": 0.1184,
+   "frames": 14,
+   "confidence": 0.996,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6886
+    },
+    {
+     "card_id": "me6-66",
+     "score": 0.6853
+    },
+    {
+     "card_id": "me6-56",
+     "score": 0.6839
+    },
+    {
+     "card_id": "me6-62",
+     "score": 0.6734
+    }
+   ],
+   "thumbnail": "thumbs/p12_087_me6-70.jpg",
+   "pack": 9,
+   "slot": null,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-100",
+   "name": "Mega Rayquaza Cap",
+   "number": "100",
+   "rarity": "Uncommon",
+   "start": 832.5,
+   "end": 835.25,
+   "peak_time": 835.0,
+   "peak_score": 0.7832,
+   "mean_margin": 0.1396,
+   "frames": 11,
+   "confidence": 0.803,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-84",
+     "score": 0.6416
+    },
+    {
+     "card_id": "me6-122",
+     "score": 0.6247
+    },
+    {
+     "card_id": "me6-3",
+     "score": 0.6224
+    },
+    {
+     "card_id": "me6-69",
+     "score": 0.6164
+    }
+   ],
+   "thumbnail": "thumbs/p12_088_me6-100.jpg",
+   "pack": 9,
+   "slot": null,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-117",
+   "name": "Kecleon",
+   "number": "117",
+   "rarity": "Illustration Rare",
+   "start": 835.75,
+   "end": 839.75,
+   "peak_time": 837.25,
+   "peak_score": 0.7551,
+   "mean_margin": 0.0947,
+   "frames": 17,
+   "confidence": 0.658,
+   "box": [
+    0.318074063901548,
+    0.22562500635782878,
+    0.7619259304470486,
+    0.5743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-109",
+     "score": 0.6744
+    },
+    {
+     "card_id": "me6-123",
+     "score": 0.6476
+    },
+    {
+     "card_id": "me6-111",
+     "score": 0.6304
+    },
+    {
+     "card_id": "me6-122",
+     "score": 0.6272
+    }
+   ],
+   "thumbnail": "thumbs/p12_089_me6-117.jpg",
+   "pack": 9,
+   "slot": null,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 846.25,
+     "end": 854.0,
+     "peak_time": 849.25,
+     "peak_score": 0.755,
+     "box": [
+      0.19807407237865307,
+      0.32562500635782876,
+      0.6419259530526621,
+      0.6743750254313151
+     ],
+     "frames": 24
+    },
+    {
+     "start": 859.25,
+     "end": 864.0,
+     "peak_time": 860.0,
+     "peak_score": 0.7462,
+     "box": [
+      0.19807407237865307,
+      0.32562500635782876,
+      0.6419259530526621,
+      0.6743750254313151
+     ],
+     "frames": 20
+    },
+    {
+     "start": 867.0,
+     "end": 870.25,
+     "peak_time": 868.0,
+     "peak_score": 0.7383,
+     "box": [
+      0.19807407237865307,
+      0.32562500635782876,
+      0.6419259530526621,
+      0.6743750254313151
+     ],
+     "frames": 12
+    },
+    {
+     "start": 974.25,
+     "end": 978.25,
+     "peak_time": 974.5,
+     "peak_score": 0.7335,
+     "box": [
+      0.4810185185185185,
+      0.359375,
+      0.8389814588758681,
+      0.640625
+     ],
+     "frames": 9
+    }
+   ]
+  },
+  {
+   "card_id": "me6-19",
+   "name": "Arcanine",
+   "number": "19",
+   "rarity": "Rare",
+   "start": 840.0,
+   "end": 840.5,
+   "peak_time": 840.5,
+   "peak_score": 0.7989,
+   "mean_margin": 0.1114,
+   "frames": 3,
+   "confidence": 0.653,
+   "box": [
+    0.2410185072157118,
+    0.259375,
+    0.5989815040870949,
+    0.540625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-117",
+     "score": 0.6834
+    },
+    {
+     "card_id": "me6-49",
+     "score": 0.6464
+    },
+    {
+     "card_id": "me6-31",
+     "score": 0.6372
+    },
+    {
+     "card_id": "me6-139",
+     "score": 0.6346
+    }
+   ],
+   "thumbnail": "thumbs/p12_090_me6-19.jpg",
+   "pack": 9,
+   "slot": null,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 844.5,
+     "end": 845.0,
+     "peak_time": 844.75,
+     "peak_score": 0.8423,
+     "box": [
+      0.2715370460792824,
+      0.2890625,
+      0.808462976526331,
+      0.7109375
+     ],
+     "frames": 3
+    }
+   ]
+  },
+  {
+   "card_id": "me6-3",
+   "name": "Masquerain",
+   "number": "3",
+   "rarity": "Common",
+   "start": 903.5,
+   "end": 906.25,
+   "peak_time": 904.75,
+   "peak_score": 0.8257,
+   "mean_margin": 0.0654,
+   "frames": 12,
+   "confidence": 0.792,
+   "box": [
+    0.2410185072157118,
+    0.459375,
+    0.5989815040870949,
+    0.740625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-104",
+     "score": 0.7787
+    },
+    {
+     "card_id": "me6-78",
+     "score": 0.6767
+    },
+    {
+     "card_id": "me6-1",
+     "score": 0.6751
+    },
+    {
+     "card_id": "me6-21",
+     "score": 0.6742
+    }
+   ],
+   "thumbnail": "thumbs/p13_095_me6-3.jpg",
+   "pack": 10,
+   "slot": 1,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-34",
+   "name": "Rotom",
+   "number": "34",
+   "rarity": "Common",
+   "start": 906.75,
+   "end": 910.0,
+   "peak_time": 908.0,
+   "peak_score": 0.8716,
+   "mean_margin": 0.1441,
+   "frames": 14,
+   "confidence": 1.0,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-23",
+     "score": 0.6973
+    },
+    {
+     "card_id": "me6-121",
+     "score": 0.6885
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.6866
+    },
+    {
+     "card_id": "me6-32",
+     "score": 0.6788
+    }
+   ],
+   "thumbnail": "thumbs/p13_096_me6-34.jpg",
+   "pack": 10,
+   "slot": 2,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-74",
+   "name": "Hakamo-o",
+   "number": "74",
+   "rarity": "Common",
+   "start": 910.5,
+   "end": 912.5,
+   "peak_time": 912.25,
+   "peak_score": 0.8472,
+   "mean_margin": 0.1195,
+   "frames": 9,
+   "confidence": 0.966,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-81",
+     "score": 0.6879
+    },
+    {
+     "card_id": "me6-73",
+     "score": 0.6673
+    },
+    {
+     "card_id": "me6-33",
+     "score": 0.6651
+    },
+    {
+     "card_id": "me6-1",
+     "score": 0.6609
+    }
+   ],
+   "thumbnail": "thumbs/p13_097_me6-74.jpg",
+   "pack": 10,
+   "slot": 3,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-6",
+   "name": "Combee",
+   "number": "6",
+   "rarity": "Common",
+   "start": 913.0,
+   "end": 916.5,
+   "peak_time": 914.75,
+   "peak_score": 0.8156,
+   "mean_margin": 0.1047,
+   "frames": 14,
+   "confidence": 0.861,
+   "box": [
+    0.19807407237865307,
+    0.32562500635782876,
+    0.6419259530526621,
+    0.6743750254313151
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-78",
+     "score": 0.6909
+    },
+    {
+     "card_id": "me6-2",
+     "score": 0.6767
+    },
+    {
+     "card_id": "me6-37",
+     "score": 0.6721
+    },
+    {
+     "card_id": "me6-61",
+     "score": 0.6669
+    }
+   ],
+   "thumbnail": "thumbs/p13_098_me6-6.jpg",
+   "pack": 10,
+   "slot": 4,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-85",
+   "name": "Tornadus",
+   "number": "85",
+   "rarity": "Uncommon",
+   "start": 917.25,
+   "end": 919.5,
+   "peak_time": 918.75,
+   "peak_score": 0.8005,
+   "mean_margin": 0.1223,
+   "frames": 10,
+   "confidence": 0.854,
+   "box": [
+    0.36101851286711517,
+    0.259375,
+    0.7189814814814814,
+    0.540625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-35",
+     "score": 0.6774
+    },
+    {
+     "card_id": "me6-54",
+     "score": 0.6661
+    },
+    {
+     "card_id": "me6-22",
+     "score": 0.6588
+    },
+    {
+     "card_id": "me6-59",
+     "score": 0.6543
+    }
+   ],
+   "thumbnail": "thumbs/p13_099_me6-85.jpg",
+   "pack": 10,
+   "slot": null,
+   "reverse_guess": false,
+   "showings": [
+    {
+     "start": 930.5,
+     "end": 931.25,
+     "peak_time": 931.25,
+     "peak_score": 0.7686,
+     "box": [
+      0.36101851286711517,
+      0.359375,
+      0.7189814814814814,
+      0.640625
+     ],
+     "frames": 4
+    }
+   ]
+  },
+  {
+   "card_id": "me6-99",
+   "name": "Legendary Trench",
+   "number": "99",
+   "rarity": "Uncommon",
+   "start": 920.0,
+   "end": 921.0,
+   "peak_time": 921.0,
+   "peak_score": 0.7204,
+   "mean_margin": 0.0473,
+   "frames": 3,
+   "confidence": 0.262,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-97",
+     "score": 0.689
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6512
+    },
+    {
+     "card_id": "me6-98",
+     "score": 0.6481
+    },
+    {
+     "card_id": "me6-95",
+     "score": 0.6431
+    }
+   ],
+   "thumbnail": "thumbs/p13_100_me6-99.jpg",
+   "pack": 10,
+   "slot": null,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-98",
+   "name": "Legendary Trench",
+   "number": "98",
+   "rarity": "Uncommon",
+   "start": 922.25,
+   "end": 926.25,
+   "peak_time": 925.25,
+   "peak_score": 0.74,
+   "mean_margin": 0.0664,
+   "frames": 15,
+   "confidence": 0.543,
+   "box": [
+    0.2410185072157118,
+    0.359375,
+    0.5989815040870949,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-97",
+     "score": 0.6684
+    },
+    {
+     "card_id": "me6-109",
+     "score": 0.6682
+    },
+    {
+     "card_id": "me6-117",
+     "score": 0.6584
+    },
+    {
+     "card_id": "me6-99",
+     "score": 0.6439
+    }
+   ],
+   "thumbnail": "thumbs/p13_101_me6-98.jpg",
+   "pack": 10,
+   "slot": null,
+   "reverse_guess": false,
+   "showings": []
+  },
+  {
+   "card_id": "me6-75",
+   "name": "Kommo-o",
+   "number": "75",
+   "rarity": "Rare",
+   "start": 933.75,
+   "end": 936.75,
+   "peak_time": 936.75,
+   "peak_score": 0.7873,
+   "mean_margin": 0.0813,
+   "frames": 12,
+   "confidence": 0.719,
+   "box": [
+    0.36101851286711517,
+    0.359375,
+    0.7189814814814814,
+    0.640625
+   ],
+   "alternatives": [
+    {
+     "card_id": "me6-73",
+     "score": 0.6871
+    },
+    {
+     "card_id": "me6-122",
+     "score": 0.6802
+    },
+    {
+     "card_id": "me6-74",
+     "score": 0.6792
+    },
+    {
+     "card_id": "me6-136",
+     "score": 0.6787
+    }
+   ],
+   "thumbnail": "thumbs/p13_103_me6-75.jpg",
+   "pack": 10,
+   "slot": null,
+   "reverse_guess": false,
+   "showings": []
+  }
+ ]
+}

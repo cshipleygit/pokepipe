@@ -1,0 +1,139 @@
+{
+  "video_slug": "img-6054",
+  "model": "claude-opus-5-5",
+  "suggestions": [
+    {
+      "pack": 9,
+      "card_id": "me6-48",
+      "time": 825.0,
+      "reverse_holo": false,
+      "confidence": "high",
+      "evidence": "Rescan 823.9-826.1 (the 2.8s gap between Onix and Zinnia's Trust): Enamorus 48 Uncommon top in 68% of frames, peak 0.814, near-tie with Enamorus 110 IR (0.805, same art). Position is slot 5, which only allows an Uncommon, so it's 48. check_fit passes (slot 5)."
+    },
+    {
+      "pack": 10,
+      "card_id": "me6-55",
+      "time": 931.0,
+      "reverse_holo": true,
+      "confidence": "high",
+      "evidence": "Rescan 930.1-933.4 (in the 7.5s gap before Kommo-o): two cards held together. Nidoran♀ 55 peak 0.825, top in 33% of frames. Fits slot 8 as a reverse holo."
+    },
+    {
+      "pack": 10,
+      "card_id": "me6-85",
+      "time": 932.0,
+      "reverse_holo": true,
+      "confidence": "medium",
+      "evidence": "Same stretch 930.1-933.4: Tornadus 85 peak 0.806, top in 33% of frames. Detection had merged this as a repeat showing at 931.2 of the slot-5 Tornadus. The layout needs a second card in slots 8-9, so this is a second copy as a reverse holo in slot 9. check_fit passes together with Nidoran♀."
+    }
+  ],
+  "notes": "Pack 1 is marked probably_not_a_pack, so I skipped it. Pack 9 is complete with Enamorus 48 (slot 5); Mega Rayquaza Cap, Kecleon IR and Arcanine take slots 8-10. Pack 10 is complete with Nidoran♀ and a second Tornadus as reverse holos in slots 8-9. Side note: pack 10's existing Legendary Trench 99 at 920s barely leads Legendary Summit 97 (lead 0.005). It may be worth checking during review.",
+  "turns": 5,
+  "usd": 0.1304,
+  "tool_calls": [
+    {
+      "name": "short_packs",
+      "input": {},
+      "ok": true
+    },
+    {
+      "name": "pack_overview",
+      "input": {
+        "pack": 9
+      },
+      "ok": true
+    },
+    {
+      "name": "pack_overview",
+      "input": {
+        "pack": 10
+      },
+      "ok": true
+    },
+    {
+      "name": "scan_window",
+      "input": {
+        "pack": 9,
+        "start": null,
+        "end": null,
+        "fps": 8
+      },
+      "ok": true
+    },
+    {
+      "name": "scan_window",
+      "input": {
+        "pack": 10,
+        "start": null,
+        "end": null,
+        "fps": 8
+      },
+      "ok": true
+    },
+    {
+      "name": "check_fit",
+      "input": {
+        "pack": 9,
+        "add": [
+          {
+            "card_id": "me6-48",
+            "time": 825.0
+          }
+        ]
+      },
+      "ok": true
+    },
+    {
+      "name": "check_fit",
+      "input": {
+        "pack": 10,
+        "add": [
+          {
+            "card_id": "me6-55",
+            "time": 931.0
+          },
+          {
+            "card_id": "me6-85",
+            "time": 932.0
+          }
+        ]
+      },
+      "ok": true
+    },
+    {
+      "name": "submit_findings",
+      "input": {
+        "suggestions": [
+          {
+            "pack": 9,
+            "card_id": "me6-48",
+            "time": 825.0,
+            "reverse_holo": false,
+            "confidence": "high",
+            "evidence": "Rescan 823.9-826.1 (the 2.8s gap between Onix and Zinnia's Trust): Enamorus 48 Uncommon top in 68% of frames, peak 0.814, near-tie with Enamorus 110 IR (0.805, same art). Position is slot 5, which only allows an Uncommon, so it's 48. check_fit passes (slot 5)."
+          },
+          {
+            "pack": 10,
+            "card_id": "me6-55",
+            "time": 931.0,
+            "reverse_holo": true,
+            "confidence": "high",
+            "evidence": "Rescan 930.1-933.4 (in the 7.5s gap before Kommo-o): two cards held together. Nidoran♀ 55 peak 0.825, top in 33% of frames. Fits slot 8 as a reverse holo."
+          },
+          {
+            "pack": 10,
+            "card_id": "me6-85",
+            "time": 932.0,
+            "reverse_holo": true,
+            "confidence": "medium",
+            "evidence": "Same stretch 930.1-933.4: Tornadus 85 peak 0.806, top in 33% of frames. Detection had merged this as a repeat showing at 931.2 of the slot-5 Tornadus. The layout needs a second card in slots 8-9, so this is a second copy as a reverse holo in slot 9. check_fit passes together with Nidoran♀."
+          }
+        ],
+        "notes": "Pack 1 is marked probably_not_a_pack, so I skipped it. Pack 9 is complete with Enamorus 48 (slot 5); Mega Rayquaza Cap, Kecleon IR and Arcanine take slots 8-10. Pack 10 is complete with Nidoran♀ and a second Tornadus as reverse holos in slots 8-9. Side note: pack 10's existing Legendary Trench 99 at 920s barely leads Legendary Summit 97 (lead 0.005). It may be worth checking during review."
+      },
+      "ok": true
+    }
+  ],
+  "error": null,
+  "created_at": "2026-11-13T16:27:51+00:00"
+}
