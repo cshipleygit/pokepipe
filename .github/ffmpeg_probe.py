@@ -54,8 +54,14 @@ pulls = [rp("p1-1", 1, 2.0), rp("p1-2", 1, 4.0, rarity="Rare")]
 edit = plan_edit([PackWindow(1, 0.0, 8.0)], pulls, [], (1920, 1080), EditParams(target=5.0))
 hung = None
 for i, seg in enumerate(edit.segments):
-    cmd = ffmpeg.segment_cmd(src, seg, tmp / f"s{i}.mp4", audio=True)
+    # the three runs render_segment makes for a shot with audio
+    cmd = ffmpeg.segment_audio_cmd(src, seg, tmp / f"s{i}.a.m4a")
     res, secs, _ = attempt(cmd)
+    for step in (ffmpeg.segment_cmd(src, seg, tmp / f"s{i}.v.mp4"),
+                 ffmpeg.mux_cmd(tmp / f"s{i}.v.mp4", tmp / f"s{i}.a.m4a", tmp / f"s{i}.mp4")):
+        if res.startswith("exit"):
+            res, more, _ = attempt(step)
+            secs += more
     note(f"shot {i} {seg.kind}", f"{res} in {secs:.1f}s speed={seg.speed:.3f} "
                                   f"src={seg.src_start:.2f}+{seg.src_len:.2f} out={seg.out_len:.3f}")
     if res == "HUNG" and hung is None:

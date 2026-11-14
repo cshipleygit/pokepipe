@@ -233,8 +233,7 @@ def render_post(
         clips.append(clip)
     for i, seg in enumerate(edit.segments, 1):
         clip = work / f"seg_{i:03d}.mp4"
-        ffmpeg.run(ffmpeg.segment_cmd(source, seg, clip, audio=source_audio,
-                                      volume=volume(seg)))
+        ffmpeg.render_segment(source, seg, clip, audio=source_audio, volume=volume(seg))
         clips.append(clip)
         if on_progress:
             on_progress(len(clips), total)

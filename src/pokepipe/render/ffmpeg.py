@@ -110,32 +110,51 @@ def segment_filter(seg: Segment) -> str:
 AUDIO_OUT = ["-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2"]
 
 
-def segment_cmd(
-    source: Path, seg: Segment, out: Path, audio: bool = False, volume: float = 1.0
-) -> list[str]:
-    """One shot as its own clip. With `audio`, the source's first audio track comes
-    along: sped up with pitch-preserving atempo, set to `volume`, padded through any
-    freeze-frame, and cut to exactly the shot's length so clips concatenate in sync."""
-    # Audio is padded *before* the speed change (in source time: out_len x speed), then
-    # sped up and trimmed to the shot's length. atempo feeding apad loops forever on
-    # ffmpeg 8.0 (Ubuntu 26's): measured on CI, every sped-up shot hung and removing
-    # either filter fixed it. Video is trimmed too, so both streams end on their own.
-    length = f"{seg.out_len:.3f}"
-    padded = f"{seg.out_len * seg.speed:.3f}"
-    vf = segment_filter(seg) + (f",trim=duration={length}" if audio else "")
-    cmd = [
+def segment_cmd(source: Path, seg: Segment, out: Path) -> list[str]:
+    """One shot's picture as its own clip (no audio; see render_segment)."""
+    return [
         require_tool("ffmpeg"), "-v", "error", "-y", *hwaccel(),
         "-ss", f"{seg.src_start:.3f}", "-t", f"{seg.src_len:.3f}", "-i", str(source),
-        "-vf", vf, *_encoder(18), "-pix_fmt", "yuv420p",
+        "-an", "-vf", segment_filter(seg), *_encoder(18), "-pix_fmt", "yuv420p", str(out),
     ]
-    if audio:
-        cmd += ["-map", "0:v:0", "-map", "0:a:0",
-                "-af", f"apad=whole_dur={padded},atempo={seg.speed:.4f},"
-                       f"volume={volume:.3f},atrim=duration={length}", *AUDIO_OUT,
-                "-t", length]
-    else:
-        cmd += ["-an"]
-    return cmd + [str(out)]
+
+
+def segment_audio_cmd(source: Path, seg: Segment, out: Path, volume: float = 1.0) -> list[str]:
+    """One shot's sound, audio only: sped up with pitch-preserving atempo, set to
+    `volume`, padded through any freeze-frame (in source time, before the speed change)
+    and cut to exactly the shot's length, so clips concatenate in sync."""
+    length = f"{seg.out_len:.3f}"
+    return [
+        require_tool("ffmpeg"), "-v", "error", "-y",
+        "-ss", f"{seg.src_start:.3f}", "-t", f"{seg.src_len:.3f}", "-i", str(source),
+        "-vn", "-af", f"apad=whole_dur={seg.out_len * seg.speed:.3f},atempo={seg.speed:.4f},"
+                      f"volume={volume:.3f},atrim=duration={length}",
+        *AUDIO_OUT, "-t", length, str(out),
+    ]
+
+
+def mux_cmd(video: Path, audio: Path, out: Path) -> list[str]:
+    """Put a shot's picture and sound in one clip: a stream copy, no filters."""
+    return [require_tool("ffmpeg"), "-v", "error", "-y", "-i", str(video), "-i", str(audio),
+            "-map", "0:v:0", "-map", "1:a:0", "-c", "copy", str(out)]
+
+
+def render_segment(source: Path, seg: Segment, out: Path, audio: bool = False,
+                   volume: float = 1.0, timeout: float = 1800) -> None:
+    """Render one shot. With `audio`, picture and sound are made by separate ffmpeg
+    runs and then muxed. In one run, ffmpeg 8.0 (Ubuntu 26's) deadlocks whenever a
+    sped-up shot's audio goes through atempo plus apad/atrim next to the video: a CI
+    probe hung every sped-up shot, whatever the filter order, while the same audio
+    filters alone and the video alone each finish in under a second."""
+    if not audio:
+        run(segment_cmd(source, seg, out), timeout=timeout)
+        return
+    video, sound = out.with_suffix(".v.mp4"), out.with_suffix(".a.m4a")
+    run(segment_cmd(source, seg, video), timeout=timeout)
+    run(segment_audio_cmd(source, seg, sound, volume), timeout=timeout)
+    run(mux_cmd(video, sound, out), timeout=timeout)
+    video.unlink(missing_ok=True)
+    sound.unlink(missing_ok=True)
 
 
 def intro_cmd(intro: Path, out: Path, audio: bool = False) -> list[str]:
@@ -163,7 +182,7 @@ def has_audio(video: Path) -> bool:
 
 def pad_to(duration: float | None) -> str:
     """Pad audio with silence to `duration` and cut it there, so the stream ends on its
-    own (see segment_cmd). Without a duration: an open-ended pad, stopped by -t."""
+    own. Without a duration: an open-ended pad, stopped by -t."""
     if duration is None:
         return "apad"
     return f"apad=whole_dur={duration:.3f},atrim=duration={duration:.3f}"

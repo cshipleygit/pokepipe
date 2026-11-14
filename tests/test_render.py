@@ -406,20 +406,21 @@ def test_build_ass_without_narration_has_no_hook_or_captions():
     assert "Dialogue: 0,0:00:01.00,0:00:02.00,Label" in ass
 
 
-def test_segment_cmd_with_audio_speed_matches_and_cuts_to_length():
+def test_shot_audio_is_its_own_ffmpeg_run_speed_matched_and_cut_to_length():
+    """Picture and sound are separate runs (one run deadlocks ffmpeg 8.0), then a
+    filterless stream-copy mux."""
     seg = Segment(1.0, 3.0, "reveal", 1, speed=2.0, crop=(606, 1080, 657, 0))
-    with_audio = ffmpeg.segment_cmd(SRC_PATH, seg, SRC_PATH, audio=True)
-    # pad (in source time) before the speed change: atempo -> apad hangs ffmpeg 8.0
-    out = f"{seg.out_len:.3f}"
-    padded = f"{seg.out_len * 2.0:.3f}"
-    assert (f"apad=whole_dur={padded},atempo=2.0000,volume=1.000,atrim=duration={out}"
-            in with_audio)
-    assert with_audio[with_audio.index("-vf") + 1].endswith(f",trim=duration={out}")
-    assert "0:a:0" in with_audio
+    video = ffmpeg.segment_cmd(SRC_PATH, seg, SRC_PATH)
+    assert "-an" in video and "-af" not in video
+    sound = ffmpeg.segment_audio_cmd(SRC_PATH, seg, SRC_PATH, volume=0.5)
+    out, padded = f"{seg.out_len:.3f}", f"{seg.out_len * 2.0:.3f}"
+    assert "-vn" in sound and "-vf" not in sound
+    assert f"apad=whole_dur={padded},atempo=2.0000,volume=0.500,atrim=duration={out}" in sound
+    assert sound[sound.index("-t", 10) + 1] == out
+    mux = ffmpeg.mux_cmd(SRC_PATH, SRC_PATH, SRC_PATH)
+    assert "copy" in mux and "-vf" not in mux and "-af" not in mux
     final = ffmpeg.final_cmd_source_audio(SRC_PATH, "c.ass", 12.5, SRC_PATH, True)
     assert "apad=whole_dur=12.500,atrim=duration=12.500[aout]" in " ".join(final)
-    assert with_audio[with_audio.index("-t", 10) + 1] == f"{seg.out_len:.3f}"
-    assert "-an" in ffmpeg.segment_cmd(SRC_PATH, seg, SRC_PATH)
 
 
 def test_hwaccel_only_with_an_nvidia_driver(monkeypatch):
@@ -447,7 +448,7 @@ def test_source_audio_render_keeps_audio_in_sync(tmp_path):
     for i, seg in enumerate(edit.segments):
         clip = tmp_path / f"seg_{i}.mp4"
         # A shot this short takes seconds; a hang should fail fast with ffmpeg's output.
-        ffmpeg.run(ffmpeg.segment_cmd(src, seg, clip, audio=True), timeout=120)
+        ffmpeg.render_segment(src, seg, clip, audio=True, timeout=120)
         clips.append(clip)
     concat = tmp_path / "list.txt"
     concat.write_text("".join(f"file '{c.as_posix()}'\n" for c in clips))
