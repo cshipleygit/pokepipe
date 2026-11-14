@@ -128,6 +128,11 @@ class ReviewStore:
 
         return self._edit(slug, apply)
 
+    def initial_state(self, slug: str) -> ReviewState:
+        """A fresh review built from detection + recovery, ignoring any review.json
+        (what the auto-reviewer and `review replay` start from)."""
+        return self._initial_state(slug)
+
     def save(self, state: ReviewState) -> None:
         state.updated_at = _now()
         path = self.video_dir(state.video_slug) / "review.json"
@@ -179,6 +184,7 @@ class ReviewStore:
                 if change.pack < 1:
                     raise ReviewError("pack must be >= 1")
                 pull.pack = change.pack
+            pull.decided_by = None  # a person has looked at it now
             return pull
 
         return self._edit(slug, apply)
@@ -217,6 +223,7 @@ class ReviewStore:
             todo = [p for p in state.pulls if p.pack == pack and p.status == Status.PENDING]
             for p in todo:
                 p.status = Status.CONFIRMED
+                p.decided_by = None
             return len(todo)
 
         return self._edit(slug, apply)

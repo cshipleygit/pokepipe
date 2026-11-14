@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -52,6 +53,15 @@ class Settings(BaseSettings):
     watch_poll_seconds: float = 5.0
     watch_settle_seconds: float = 10.0  # a file must stop changing this long before intake
     default_post_seconds: float = 45.0
+    notify: bool = True  # Windows toast: review waiting / posts ready / failed
+
+    # Auto-review (review/auto.py): always | shadow | exceptions | off
+    review_mode: Literal["always", "shadow", "exceptions", "off"] = "shadow"
+    auto_min_confidence: float = 0.6
+    auto_min_lead: float = 0.02
+    auto_accept_suggestions: bool = True  # the recovery agent's high-confidence ones
+    auto_require_layout: bool = True
+    auto_use_calibration: bool = True  # use data/review_calibration.json once fitted
 
     # Missed-card recovery agent (runs in the graph engine, before review)
     recover: bool = True
@@ -74,6 +84,19 @@ class Settings(BaseSettings):
     @property
     def inbox_dir(self) -> Path:
         return self.watch_inbox or self.data_dir / "inbox"
+
+    @property
+    def calibration_path(self) -> Path:
+        return self.data_dir / "review_calibration.json"
+
+    def auto_policy(self):
+        from pokepipe.review.auto import AutoPolicy
+        from pokepipe.review.calibrate import Calibration
+
+        cal = Calibration.load(self.calibration_path) if self.auto_use_calibration else None
+        return AutoPolicy(min_confidence=self.auto_min_confidence, min_lead=self.auto_min_lead,
+                          accept_suggestions=self.auto_accept_suggestions,
+                          require_layout=self.auto_require_layout, calibration=cal)
 
     @property
     def graph_checkpoints(self) -> Path:

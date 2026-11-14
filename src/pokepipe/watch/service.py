@@ -17,14 +17,17 @@ from pokepipe.watch.runner import Runner
 
 class Watcher:
     def __init__(
-        self, inbox: Inbox, runner: Runner, jobs: JobStore, log: Callable[[str], None] = print
+        self, inbox: Inbox, runner: Runner, jobs: JobStore, log: Callable[[str], None] = print,
+        notify: Callable[[str, str], object] = lambda title, message: None,
     ) -> None:
         self.inbox = inbox
         self.runner = runner
         self.jobs = jobs
         self.log = log
+        self.notify = notify
         self._warned: set[str] = set()
         self._waiting_announced: set[str] = set()
+        self._finished_announced: set[str] = set()
 
     def intake(self) -> list[Job]:
         taken = []
@@ -50,6 +53,14 @@ class Watcher:
             if job.status == Status.AWAITING_REVIEW and job.slug not in self._waiting_announced:
                 self._waiting_announced.add(job.slug)
                 self.log(f"{job.slug} is ready for review")
+                self.notify("Pokepipe: review waiting", f"{job.slug} needs a look")
+            if job.status.terminal and job.slug not in self._finished_announced:
+                self._finished_announced.add(job.slug)
+                if job.status == Status.DONE:
+                    self.notify("Pokepipe: posts ready", f"{job.slug} is rendered")
+                else:
+                    self.notify("Pokepipe: video failed",
+                                f"{job.slug}: {(job.error or '')[:120]}")
         return active
 
     def loop(self, poll_seconds: float, stop: Callable[[], bool] = lambda: False) -> None:

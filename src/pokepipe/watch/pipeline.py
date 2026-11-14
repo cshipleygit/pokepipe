@@ -138,6 +138,31 @@ class PipelineOps:
         self.log(f"{job.slug}: recovery suggested {len(out.suggestions)} missed card(s) "
                  f"(${out.usd:.2f}{'; ' + out.error if out.error else ''})")
 
+    def auto_review(self, job: Job) -> None:
+        """Confirm what the evidence settles (REVIEW_MODE); see review/auto.py."""
+        from pokepipe.review import auto
+        from pokepipe.review.store import ReviewStore
+
+        try:
+            result = auto.run(ReviewStore(self.s.videos_dir, self.s.sets_dir), job.slug,
+                              self.s.review_mode, self.s.auto_policy())
+        except Exception as exc:  # noqa: BLE001 — auto-review must never block a video
+            self.log(f"{job.slug}: auto-review failed ({type(exc).__name__}: {exc}); "
+                     "falling back to a normal review")
+            return
+        if result is None:
+            return
+        mode = self.s.review_mode
+        verdict = ("nothing to review" if result.clean else
+                   f"{len(result.exceptions)} thing(s) for you")
+        if mode == "shadow":
+            verdict = f"shadow: would have had {verdict} (review as normal)"
+        elif mode == "off" and not result.clean:
+            verdict = f"{len(result.exceptions)} unchecked decision(s), not pausing"
+        self.log(f"{job.slug}: auto-review confirmed {result.confirmed} pulls; {verdict}")
+        for e in result.exceptions:
+            self.log(f"{job.slug}:   {e}")
+
     def review_done(self, job: Job) -> bool:
         from pokepipe.review.store import ReviewStore
 
@@ -186,6 +211,11 @@ class PipelineOps:
         files = self._files(job)
         if not files.plan.exists():  # not chosen in review: use the suggested grouping
             narration.plan_posts(files, job.slug, None, self.s.default_post_seconds)
+        from pokepipe.review.store import ReviewStore
+        from pokepipe.watch.redo import stamp
+
+        stamp(files, files.load_plan(),
+              ReviewStore(self.s.videos_dir, self.s.sets_dir).load(job.slug))
         if not self.s.narration:  # edit-only posts: no script, no voice, no API spend
             self.log(f"{job.slug}: narration off — skipping scripts and voice")
             return

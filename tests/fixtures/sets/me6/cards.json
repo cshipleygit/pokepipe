@@ -1,0 +1,2004 @@
+[
+  {
+    "id": "me6-1",
+    "name": "Heracross",
+    "number": "1",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-1/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-1/large",
+    "variants": []
+  },
+  {
+    "id": "me6-2",
+    "name": "Surskit",
+    "number": "2",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-2/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-2/large",
+    "variants": []
+  },
+  {
+    "id": "me6-3",
+    "name": "Masquerain",
+    "number": "3",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-3/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-3/large",
+    "variants": []
+  },
+  {
+    "id": "me6-4",
+    "name": "Cacnea",
+    "number": "4",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-4/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-4/large",
+    "variants": []
+  },
+  {
+    "id": "me6-5",
+    "name": "Cacturne",
+    "number": "5",
+    "set_id": "me6",
+    "rarity": "Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-5/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-5/large",
+    "variants": []
+  },
+  {
+    "id": "me6-6",
+    "name": "Combee",
+    "number": "6",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-6/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-6/large",
+    "variants": []
+  },
+  {
+    "id": "me6-7",
+    "name": "Vespiquen",
+    "number": "7",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-7/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-7/large",
+    "variants": []
+  },
+  {
+    "id": "me6-8",
+    "name": "Shaymin",
+    "number": "8",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-8/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-8/large",
+    "variants": []
+  },
+  {
+    "id": "me6-9",
+    "name": "Virizion",
+    "number": "9",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-9/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-9/large",
+    "variants": []
+  },
+  {
+    "id": "me6-10",
+    "name": "Wimpod",
+    "number": "10",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-10/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-10/large",
+    "variants": []
+  },
+  {
+    "id": "me6-11",
+    "name": "Mega Golisopod ex",
+    "number": "11",
+    "set_id": "me6",
+    "rarity": "Double Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-11/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-11/large",
+    "variants": []
+  },
+  {
+    "id": "me6-12",
+    "name": "Sprigatito",
+    "number": "12",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-12/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-12/large",
+    "variants": []
+  },
+  {
+    "id": "me6-13",
+    "name": "Floragato",
+    "number": "13",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-13/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-13/large",
+    "variants": []
+  },
+  {
+    "id": "me6-14",
+    "name": "Meowscarada ex",
+    "number": "14",
+    "set_id": "me6",
+    "rarity": "Double Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 2",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-14/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-14/large",
+    "variants": []
+  },
+  {
+    "id": "me6-15",
+    "name": "Smoliv",
+    "number": "15",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-15/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-15/large",
+    "variants": []
+  },
+  {
+    "id": "me6-16",
+    "name": "Dolliv",
+    "number": "16",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-16/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-16/large",
+    "variants": []
+  },
+  {
+    "id": "me6-17",
+    "name": "Arboliva",
+    "number": "17",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-17/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-17/large",
+    "variants": []
+  },
+  {
+    "id": "me6-18",
+    "name": "Growlithe",
+    "number": "18",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-18/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-18/large",
+    "variants": []
+  },
+  {
+    "id": "me6-19",
+    "name": "Arcanine",
+    "number": "19",
+    "set_id": "me6",
+    "rarity": "Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-19/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-19/large",
+    "variants": []
+  },
+  {
+    "id": "me6-20",
+    "name": "Magmar",
+    "number": "20",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-20/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-20/large",
+    "variants": []
+  },
+  {
+    "id": "me6-21",
+    "name": "Magmortar",
+    "number": "21",
+    "set_id": "me6",
+    "rarity": "Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-21/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-21/large",
+    "variants": []
+  },
+  {
+    "id": "me6-22",
+    "name": "Torkoal",
+    "number": "22",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-22/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-22/large",
+    "variants": []
+  },
+  {
+    "id": "me6-23",
+    "name": "Heat Rotom ex",
+    "number": "23",
+    "set_id": "me6",
+    "rarity": "Double Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-23/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-23/large",
+    "variants": []
+  },
+  {
+    "id": "me6-24",
+    "name": "Heatmor",
+    "number": "24",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-24/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-24/large",
+    "variants": []
+  },
+  {
+    "id": "me6-25",
+    "name": "Mantine",
+    "number": "25",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-25/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-25/large",
+    "variants": []
+  },
+  {
+    "id": "me6-26",
+    "name": "Kyogre",
+    "number": "26",
+    "set_id": "me6",
+    "rarity": "Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-26/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-26/large",
+    "variants": []
+  },
+  {
+    "id": "me6-27",
+    "name": "Frillish",
+    "number": "27",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-27/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-27/large",
+    "variants": []
+  },
+  {
+    "id": "me6-28",
+    "name": "Jellicent",
+    "number": "28",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-28/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-28/large",
+    "variants": []
+  },
+  {
+    "id": "me6-29",
+    "name": "Wishiwashi ex",
+    "number": "29",
+    "set_id": "me6",
+    "rarity": "Double Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-29/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-29/large",
+    "variants": []
+  },
+  {
+    "id": "me6-30",
+    "name": "Electabuzz",
+    "number": "30",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-30/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-30/large",
+    "variants": []
+  },
+  {
+    "id": "me6-31",
+    "name": "Electivire",
+    "number": "31",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-31/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-31/large",
+    "variants": []
+  },
+  {
+    "id": "me6-32",
+    "name": "Jolteon",
+    "number": "32",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-32/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-32/large",
+    "variants": []
+  },
+  {
+    "id": "me6-33",
+    "name": "Raikou ex",
+    "number": "33",
+    "set_id": "me6",
+    "rarity": "Double Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-33/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-33/large",
+    "variants": []
+  },
+  {
+    "id": "me6-34",
+    "name": "Rotom",
+    "number": "34",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-34/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-34/large",
+    "variants": []
+  },
+  {
+    "id": "me6-35",
+    "name": "Thundurus",
+    "number": "35",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-35/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-35/large",
+    "variants": []
+  },
+  {
+    "id": "me6-36",
+    "name": "Pincurchin",
+    "number": "36",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-36/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-36/large",
+    "variants": []
+  },
+  {
+    "id": "me6-37",
+    "name": "Pawmi",
+    "number": "37",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-37/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-37/large",
+    "variants": []
+  },
+  {
+    "id": "me6-38",
+    "name": "Pawmo",
+    "number": "38",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-38/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-38/large",
+    "variants": []
+  },
+  {
+    "id": "me6-39",
+    "name": "Pawmot",
+    "number": "39",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-39/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-39/large",
+    "variants": []
+  },
+  {
+    "id": "me6-40",
+    "name": "Wattrel",
+    "number": "40",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-40/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-40/large",
+    "variants": []
+  },
+  {
+    "id": "me6-41",
+    "name": "Kilowattrel",
+    "number": "41",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-41/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-41/large",
+    "variants": []
+  },
+  {
+    "id": "me6-42",
+    "name": "Miraidon",
+    "number": "42",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-42/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-42/large",
+    "variants": []
+  },
+  {
+    "id": "me6-43",
+    "name": "Drowzee",
+    "number": "43",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-43/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-43/large",
+    "variants": []
+  },
+  {
+    "id": "me6-44",
+    "name": "Hypno",
+    "number": "44",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-44/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-44/large",
+    "variants": []
+  },
+  {
+    "id": "me6-45",
+    "name": "Giratina",
+    "number": "45",
+    "set_id": "me6",
+    "rarity": "Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-45/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-45/large",
+    "variants": []
+  },
+  {
+    "id": "me6-46",
+    "name": "Golett",
+    "number": "46",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-46/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-46/large",
+    "variants": []
+  },
+  {
+    "id": "me6-47",
+    "name": "Mega Golurk ex",
+    "number": "47",
+    "set_id": "me6",
+    "rarity": "Double Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-47/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-47/large",
+    "variants": []
+  },
+  {
+    "id": "me6-48",
+    "name": "Enamorus",
+    "number": "48",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-48/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-48/large",
+    "variants": []
+  },
+  {
+    "id": "me6-49",
+    "name": "Sandshrew",
+    "number": "49",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-49/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-49/large",
+    "variants": []
+  },
+  {
+    "id": "me6-50",
+    "name": "Sandslash",
+    "number": "50",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-50/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-50/large",
+    "variants": []
+  },
+  {
+    "id": "me6-51",
+    "name": "Onix",
+    "number": "51",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-51/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-51/large",
+    "variants": []
+  },
+  {
+    "id": "me6-52",
+    "name": "Steelix",
+    "number": "52",
+    "set_id": "me6",
+    "rarity": "Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-52/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-52/large",
+    "variants": []
+  },
+  {
+    "id": "me6-53",
+    "name": "Groudon",
+    "number": "53",
+    "set_id": "me6",
+    "rarity": "Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-53/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-53/large",
+    "variants": []
+  },
+  {
+    "id": "me6-54",
+    "name": "Landorus",
+    "number": "54",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-54/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-54/large",
+    "variants": []
+  },
+  {
+    "id": "me6-55",
+    "name": "Nidoran\u2640",
+    "number": "55",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-55/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-55/large",
+    "variants": []
+  },
+  {
+    "id": "me6-56",
+    "name": "Nidorina",
+    "number": "56",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-56/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-56/large",
+    "variants": []
+  },
+  {
+    "id": "me6-57",
+    "name": "Nidoqueen",
+    "number": "57",
+    "set_id": "me6",
+    "rarity": "Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-57/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-57/large",
+    "variants": []
+  },
+  {
+    "id": "me6-58",
+    "name": "Spinarak",
+    "number": "58",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-58/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-58/large",
+    "variants": []
+  },
+  {
+    "id": "me6-59",
+    "name": "Ariados",
+    "number": "59",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-59/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-59/large",
+    "variants": []
+  },
+  {
+    "id": "me6-60",
+    "name": "Sableye",
+    "number": "60",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-60/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-60/large",
+    "variants": []
+  },
+  {
+    "id": "me6-61",
+    "name": "Carvanha",
+    "number": "61",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-61/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-61/large",
+    "variants": []
+  },
+  {
+    "id": "me6-62",
+    "name": "Sharpedo",
+    "number": "62",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-62/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-62/large",
+    "variants": []
+  },
+  {
+    "id": "me6-63",
+    "name": "Darkrai",
+    "number": "63",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-63/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-63/large",
+    "variants": []
+  },
+  {
+    "id": "me6-64",
+    "name": "Purrloin",
+    "number": "64",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-64/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-64/large",
+    "variants": []
+  },
+  {
+    "id": "me6-65",
+    "name": "Liepard",
+    "number": "65",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-65/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-65/large",
+    "variants": []
+  },
+  {
+    "id": "me6-66",
+    "name": "Zorua",
+    "number": "66",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-66/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-66/large",
+    "variants": []
+  },
+  {
+    "id": "me6-67",
+    "name": "Zoroark ex",
+    "number": "67",
+    "set_id": "me6",
+    "rarity": "Double Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-67/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-67/large",
+    "variants": []
+  },
+  {
+    "id": "me6-68",
+    "name": "Inkay",
+    "number": "68",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-68/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-68/large",
+    "variants": []
+  },
+  {
+    "id": "me6-69",
+    "name": "Mega Malamar ex",
+    "number": "69",
+    "set_id": "me6",
+    "rarity": "Double Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-69/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-69/large",
+    "variants": []
+  },
+  {
+    "id": "me6-70",
+    "name": "Morpeko",
+    "number": "70",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-70/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-70/large",
+    "variants": []
+  },
+  {
+    "id": "me6-71",
+    "name": "Zarude",
+    "number": "71",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-71/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-71/large",
+    "variants": []
+  },
+  {
+    "id": "me6-72",
+    "name": "Druddigon",
+    "number": "72",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-72/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-72/large",
+    "variants": []
+  },
+  {
+    "id": "me6-73",
+    "name": "Jangmo-o",
+    "number": "73",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-73/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-73/large",
+    "variants": []
+  },
+  {
+    "id": "me6-74",
+    "name": "Hakamo-o",
+    "number": "74",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-74/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-74/large",
+    "variants": []
+  },
+  {
+    "id": "me6-75",
+    "name": "Kommo-o",
+    "number": "75",
+    "set_id": "me6",
+    "rarity": "Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-75/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-75/large",
+    "variants": []
+  },
+  {
+    "id": "me6-76",
+    "name": "Cyclizar",
+    "number": "76",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-76/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-76/large",
+    "variants": []
+  },
+  {
+    "id": "me6-77",
+    "name": "Tauros",
+    "number": "77",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-77/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-77/large",
+    "variants": []
+  },
+  {
+    "id": "me6-78",
+    "name": "Eevee",
+    "number": "78",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-78/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-78/large",
+    "variants": []
+  },
+  {
+    "id": "me6-79",
+    "name": "Delibird",
+    "number": "79",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-79/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-79/large",
+    "variants": []
+  },
+  {
+    "id": "me6-80",
+    "name": "Azurill",
+    "number": "80",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-80/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-80/large",
+    "variants": []
+  },
+  {
+    "id": "me6-81",
+    "name": "Swablu",
+    "number": "81",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-81/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-81/large",
+    "variants": []
+  },
+  {
+    "id": "me6-82",
+    "name": "Altaria",
+    "number": "82",
+    "set_id": "me6",
+    "rarity": "Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-82/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-82/large",
+    "variants": []
+  },
+  {
+    "id": "me6-83",
+    "name": "Kecleon",
+    "number": "83",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-83/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-83/large",
+    "variants": []
+  },
+  {
+    "id": "me6-84",
+    "name": "Mega Rayquaza ex",
+    "number": "84",
+    "set_id": "me6",
+    "rarity": "Double Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-84/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-84/large",
+    "variants": []
+  },
+  {
+    "id": "me6-85",
+    "name": "Tornadus",
+    "number": "85",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-85/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-85/large",
+    "variants": []
+  },
+  {
+    "id": "me6-86",
+    "name": "Fletchling",
+    "number": "86",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-86/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-86/large",
+    "variants": []
+  },
+  {
+    "id": "me6-87",
+    "name": "Fletchinder",
+    "number": "87",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-87/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-87/large",
+    "variants": []
+  },
+  {
+    "id": "me6-88",
+    "name": "Talonflame ex",
+    "number": "88",
+    "set_id": "me6",
+    "rarity": "Double Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 2",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-88/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-88/large",
+    "variants": []
+  },
+  {
+    "id": "me6-89",
+    "name": "Aarune",
+    "number": "89",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-89/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-89/large",
+    "variants": []
+  },
+  {
+    "id": "me6-90",
+    "name": "Adventure Lantern",
+    "number": "90",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Pok\u00e9mon Tool"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-90/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-90/large",
+    "variants": []
+  },
+  {
+    "id": "me6-91",
+    "name": "Custom Vest",
+    "number": "91",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Pok\u00e9mon Tool"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-91/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-91/large",
+    "variants": []
+  },
+  {
+    "id": "me6-92",
+    "name": "Emcee's Hype",
+    "number": "92",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-92/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-92/large",
+    "variants": []
+  },
+  {
+    "id": "me6-93",
+    "name": "Grisham",
+    "number": "93",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-93/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-93/large",
+    "variants": []
+  },
+  {
+    "id": "me6-94",
+    "name": "Legendary Pyroduct",
+    "number": "94",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Stadium"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-94/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-94/large",
+    "variants": []
+  },
+  {
+    "id": "me6-95",
+    "name": "Legendary Pyroduct",
+    "number": "95",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Stadium"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-95/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-95/large",
+    "variants": []
+  },
+  {
+    "id": "me6-96",
+    "name": "Legendary Summit",
+    "number": "96",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Stadium"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-96/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-96/large",
+    "variants": []
+  },
+  {
+    "id": "me6-97",
+    "name": "Legendary Summit",
+    "number": "97",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Stadium"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-97/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-97/large",
+    "variants": []
+  },
+  {
+    "id": "me6-98",
+    "name": "Legendary Trench",
+    "number": "98",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Stadium"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-98/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-98/large",
+    "variants": []
+  },
+  {
+    "id": "me6-99",
+    "name": "Legendary Trench",
+    "number": "99",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Stadium"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-99/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-99/large",
+    "variants": []
+  },
+  {
+    "id": "me6-100",
+    "name": "Mega Rayquaza Cap",
+    "number": "100",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "MEGA",
+      "Pok\u00e9mon Tool"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-100/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-100/large",
+    "variants": []
+  },
+  {
+    "id": "me6-101",
+    "name": "Tasty Rice Ball",
+    "number": "101",
+    "set_id": "me6",
+    "rarity": "Common",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Item"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-101/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-101/large",
+    "variants": []
+  },
+  {
+    "id": "me6-102",
+    "name": "Tate & Liza's Training",
+    "number": "102",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-102/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-102/large",
+    "variants": []
+  },
+  {
+    "id": "me6-103",
+    "name": "Zinnia's Trust",
+    "number": "103",
+    "set_id": "me6",
+    "rarity": "Uncommon",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-103/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-103/large",
+    "variants": []
+  },
+  {
+    "id": "me6-104",
+    "name": "Masquerain",
+    "number": "104",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-104/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-104/large",
+    "variants": []
+  },
+  {
+    "id": "me6-105",
+    "name": "Sprigatito",
+    "number": "105",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-105/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-105/large",
+    "variants": []
+  },
+  {
+    "id": "me6-106",
+    "name": "Growlithe",
+    "number": "106",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-106/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-106/large",
+    "variants": []
+  },
+  {
+    "id": "me6-107",
+    "name": "Magmortar",
+    "number": "107",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-107/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-107/large",
+    "variants": []
+  },
+  {
+    "id": "me6-108",
+    "name": "Electivire",
+    "number": "108",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-108/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-108/large",
+    "variants": []
+  },
+  {
+    "id": "me6-109",
+    "name": "Pincurchin",
+    "number": "109",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-109/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-109/large",
+    "variants": []
+  },
+  {
+    "id": "me6-110",
+    "name": "Enamorus",
+    "number": "110",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-110/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-110/large",
+    "variants": []
+  },
+  {
+    "id": "me6-111",
+    "name": "Groudon",
+    "number": "111",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-111/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-111/large",
+    "variants": []
+  },
+  {
+    "id": "me6-112",
+    "name": "Zorua",
+    "number": "112",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-112/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-112/large",
+    "variants": []
+  },
+  {
+    "id": "me6-113",
+    "name": "Inkay",
+    "number": "113",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-113/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-113/large",
+    "variants": []
+  },
+  {
+    "id": "me6-114",
+    "name": "Eevee",
+    "number": "114",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-114/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-114/large",
+    "variants": []
+  },
+  {
+    "id": "me6-115",
+    "name": "Azurill",
+    "number": "115",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-115/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-115/large",
+    "variants": []
+  },
+  {
+    "id": "me6-116",
+    "name": "Altaria",
+    "number": "116",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-116/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-116/large",
+    "variants": []
+  },
+  {
+    "id": "me6-117",
+    "name": "Kecleon",
+    "number": "117",
+    "set_id": "me6",
+    "rarity": "Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-117/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-117/large",
+    "variants": []
+  },
+  {
+    "id": "me6-118",
+    "name": "Mega Golisopod ex",
+    "number": "118",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-118/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-118/large",
+    "variants": []
+  },
+  {
+    "id": "me6-119",
+    "name": "Heat Rotom ex",
+    "number": "119",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-119/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-119/large",
+    "variants": []
+  },
+  {
+    "id": "me6-120",
+    "name": "Wishiwashi ex",
+    "number": "120",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-120/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-120/large",
+    "variants": []
+  },
+  {
+    "id": "me6-121",
+    "name": "Raikou ex",
+    "number": "121",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-121/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-121/large",
+    "variants": []
+  },
+  {
+    "id": "me6-122",
+    "name": "Mega Golurk ex",
+    "number": "122",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-122/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-122/large",
+    "variants": []
+  },
+  {
+    "id": "me6-123",
+    "name": "Mega Malamar ex",
+    "number": "123",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-123/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-123/large",
+    "variants": []
+  },
+  {
+    "id": "me6-124",
+    "name": "Talonflame ex",
+    "number": "124",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 2",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-124/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-124/large",
+    "variants": []
+  },
+  {
+    "id": "me6-125",
+    "name": "Aarune",
+    "number": "125",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-125/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-125/large",
+    "variants": []
+  },
+  {
+    "id": "me6-126",
+    "name": "Adventure Lantern",
+    "number": "126",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Pok\u00e9mon Tool"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-126/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-126/large",
+    "variants": []
+  },
+  {
+    "id": "me6-127",
+    "name": "Custom Vest",
+    "number": "127",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Pok\u00e9mon Tool"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-127/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-127/large",
+    "variants": []
+  },
+  {
+    "id": "me6-128",
+    "name": "Emcee's Hype",
+    "number": "128",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-128/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-128/large",
+    "variants": []
+  },
+  {
+    "id": "me6-129",
+    "name": "Pok\u00e9mon Catcher",
+    "number": "129",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Item"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-129/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-129/large",
+    "variants": []
+  },
+  {
+    "id": "me6-130",
+    "name": "Tate & Liza's Training",
+    "number": "130",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-130/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-130/large",
+    "variants": []
+  },
+  {
+    "id": "me6-131",
+    "name": "Zinnia's Trust",
+    "number": "131",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-131/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-131/large",
+    "variants": []
+  },
+  {
+    "id": "me6-132",
+    "name": "Bubbly Water Energy",
+    "number": "132",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Energy",
+    "subtypes": [],
+    "image_small": "https://images.scrydex.com/pokemon/me6-132/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-132/large",
+    "variants": []
+  },
+  {
+    "id": "me6-133",
+    "name": "Growing Grass Energy",
+    "number": "133",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Energy",
+    "subtypes": [],
+    "image_small": "https://images.scrydex.com/pokemon/me6-133/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-133/large",
+    "variants": []
+  },
+  {
+    "id": "me6-134",
+    "name": "Nitro Fire Energy",
+    "number": "134",
+    "set_id": "me6",
+    "rarity": "Ultra Rare",
+    "supertype": "Energy",
+    "subtypes": [],
+    "image_small": "https://images.scrydex.com/pokemon/me6-134/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-134/large",
+    "variants": []
+  },
+  {
+    "id": "me6-135",
+    "name": "Mega Golisopod ex",
+    "number": "135",
+    "set_id": "me6",
+    "rarity": "Special Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-135/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-135/large",
+    "variants": []
+  },
+  {
+    "id": "me6-136",
+    "name": "Raikou ex",
+    "number": "136",
+    "set_id": "me6",
+    "rarity": "Special Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-136/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-136/large",
+    "variants": []
+  },
+  {
+    "id": "me6-137",
+    "name": "Mega Golurk ex",
+    "number": "137",
+    "set_id": "me6",
+    "rarity": "Special Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Stage 1",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-137/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-137/large",
+    "variants": []
+  },
+  {
+    "id": "me6-138",
+    "name": "Mega Rayquaza ex",
+    "number": "138",
+    "set_id": "me6",
+    "rarity": "Special Illustration Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-138/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-138/large",
+    "variants": []
+  },
+  {
+    "id": "me6-139",
+    "name": "Aarune",
+    "number": "139",
+    "set_id": "me6",
+    "rarity": "Special Illustration Rare",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-139/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-139/large",
+    "variants": []
+  },
+  {
+    "id": "me6-140",
+    "name": "Zinnia's Trust",
+    "number": "140",
+    "set_id": "me6",
+    "rarity": "Special Illustration Rare",
+    "supertype": "Trainer",
+    "subtypes": [
+      "Supporter"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-140/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-140/large",
+    "variants": []
+  },
+  {
+    "id": "me6-141",
+    "name": "Mega Rayquaza ex",
+    "number": "141",
+    "set_id": "me6",
+    "rarity": "Mega Hyper Rare",
+    "supertype": "Pok\u00e9mon",
+    "subtypes": [
+      "Basic",
+      "MEGA",
+      "ex"
+    ],
+    "image_small": "https://images.scrydex.com/pokemon/me6-141/small",
+    "image_large": "https://images.scrydex.com/pokemon/me6-141/large",
+    "variants": []
+  }
+]

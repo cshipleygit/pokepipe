@@ -74,6 +74,17 @@ class ElevenLabsClient:
         self._check(resp)
         return resp.json().get("voices", [])
 
+    def subscription(self) -> dict:
+        """Plan usage: character_count / character_limit for this billing period."""
+        resp = self.session.get(f"{self.base_url}/user/subscription", timeout=self.timeout)
+        self._check(resp)
+        return resp.json()
+
+    def voice(self, voice_id: str) -> dict:
+        resp = self.session.get(f"{self.base_url}/voices/{voice_id}", timeout=self.timeout)
+        self._check(resp)
+        return resp.json()
+
     def synthesize(self, text: str, settings: VoiceSettings) -> tuple[bytes, dict]:
         resp = self.session.post(
             f"{self.base_url}/text-to-speech/{settings.voice_id}/with-timestamps",
