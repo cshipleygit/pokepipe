@@ -34,3 +34,7 @@ jobs:
 
       - name: Tests (no network, no GPU; API calls are mocked)
         run: pytest -q
+
+      - name: ffmpeg diagnostic (only when tests fail; temporary)
+        if: failure()
+        run: python .github/ffmpeg_probe.py
