@@ -77,6 +77,11 @@ def test_facts_pack_numbers_count_opened_packs_only():
     assert critic.check_facts(ok, REPORT, POST, NAMES) == []
     bad = draft(("p2-1", "Pack two starts with Pidgey."))
     assert "pack 1" in critic.check_facts(bad, REPORT, POST, NAMES)[0].message
+    # looking back at another pack is fine; a pack that was never opened is not
+    back = draft(("p3-1", "Pack two. Better than pack one, I hope."))
+    assert critic.check_facts(back, REPORT, POST, NAMES) == []
+    never = draft(("p3-1", "Pack two, same luck as pack nine."))
+    assert "wasn't opened" in critic.check_facts(never, REPORT, POST, NAMES)[0].message
 
 
 def test_facts_cards_outside_the_post_and_wrong_rarity():

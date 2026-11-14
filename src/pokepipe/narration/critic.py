@@ -54,7 +54,10 @@ MONEY = re.compile(r"\$|\bdollars?\b|\bbucks\b|\bworth\b|\bprice[sd]?\b|\bshop\b
 SAYS_NEW = re.compile(r"\b(?:brand[- ]new|new (?:card|one|pull|to (?:me|the binder))|"
                       r"first (?:copy|one)|never (?:had|pulled))\b")
 SAYS_DUPE = re.compile(r"\b(?:dupe|duplicate|another copy|already (?:have|had|got|own))\b")
-PACK_NO = re.compile(r"\bpack (\d+|" + "|".join(NUMBER_WORDS) + r")\b")
+PACK_NO = re.compile(r"\b(?:(\w+) )?pack (\d+|" + "|".join(NUMBER_WORDS) + r")\b")
+# "same Vespiquen as pack one", "better than pack two": a look back at another pack,
+# not a label for the card the line is about.
+REFERS_BACK = {"as", "than", "from", "like", "since", "after", "before", "last"}
 
 
 @dataclass(frozen=True)
@@ -127,12 +130,18 @@ def check_facts(
         pull = in_post.get(b.anchor)
         # pack numbers
         for m in PACK_NO.finditer(low):
-            said = int(m.group(1)) if m.group(1).isdigit() else NUMBER_WORDS[m.group(1)]
-            if pull is not None and numbers.get(pull.pack) != said:
-                out.append(Problem("fact", f"says 'pack {m.group(1)}' but this card is in "
+            word = m.group(2)
+            said = int(word) if word.isdigit() else NUMBER_WORDS[word]
+            post_packs = {numbers.get(i) for i in post.packs}
+            if pull is not None and m.group(1) in REFERS_BACK:
+                if said not in numbers.values():
+                    out.append(Problem("fact", f"refers to 'pack {word}', which wasn't "
+                                               "opened", b.anchor))
+            elif pull is not None and numbers.get(pull.pack) != said:
+                out.append(Problem("fact", f"says 'pack {word}' but this card is in "
                                            f"pack {numbers.get(pull.pack)}", b.anchor))
-            elif pull is None and said not in {numbers.get(i) for i in post.packs}:
-                out.append(Problem("fact", f"says 'pack {m.group(1)}', not a pack in this "
+            elif pull is None and said not in post_packs:
+                out.append(Problem("fact", f"says 'pack {word}', not a pack in this "
                                            "post", b.anchor))
         # cards from outside the post
         for name in foreign:

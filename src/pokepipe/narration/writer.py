@@ -109,6 +109,8 @@ def best(attempts: list[Attempt]) -> Attempt:
 
 
 class AttemptRecord(BaseModel):
+    hook_caption: str = ""
+    lines: list[str] = Field(default_factory=list, description="'[anchor] text', as drafted")
     problems: list[str]
     kinds: list[str]
     style_notes: list[str] = Field(default_factory=list)
@@ -132,6 +134,8 @@ def record(post: int, attempts: list[Attempt], chosen: Attempt,
     return CritiqueRecord(
         post=post,
         attempts=[AttemptRecord(
+            hook_caption=a.draft.hook_caption,
+            lines=[f"[{b.anchor}] {b.text}" for b in a.draft.beats],
             problems=[str(p) for p in a.problems], kinds=sorted({p.kind for p in a.problems}),
             style_notes=a.notes, words=sum(len(b.text.split()) for b in a.draft.beats),
             usd=round(a.cost, 5)) for a in attempts],

@@ -125,7 +125,9 @@ The decisions that mattered, each backed by a measurement:
   "new" vs "duplicate" claims) plus an optional style-guide judge. A failing draft goes
   back with every problem listed, up to two rewrites, and the best attempt is kept. Run
   over the scripts already on disk (`narrate critique`), the checks found 7 of 8 earlier
-  drafts broke at least one rule.
+  drafts broke at least one rule. Live on *Delta Reign* (2 posts, run twice): 3 of 4
+  first drafts had a problem, mostly overrunning the final shot's footage; all 4 kept
+  scripts passed, after at most one rewrite, at $0.09–0.18 per post.
 - **LangGraph where it earns its place.** The watch pipeline can run as a state graph:
   a SQLite checkpointer (one thread per video) resumes a crash or failed stage at the
   node that didn't finish, and review is a real `interrupt()` resumed with

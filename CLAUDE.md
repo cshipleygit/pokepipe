@@ -508,7 +508,15 @@ not used.
 - `narrate critique <slug> --all` runs the checks over scripts on disk for free. On
   Delta Reign's 8 existing drafts: 7 broke a rule (timing 6, spoiler 3, fact 3).
 - Settings: `SCRIPT_CRITIC`, `SCRIPT_REWRITES`, `SCRIPT_STYLE_JUDGE`,
-  `SCRIPT_JUDGE_EFFORT`. Not yet measured: a live before/after of the loop itself.
+  `SCRIPT_JUDGE_EFFORT`.
+- **Live (2026-11-13), Delta Reign's 2 posts, run twice = 4 scripts:** first drafts
+  had a problem in 3 of 4 (two overran the last stretch of footage by 5 and 10 words,
+  which would freeze the final shot; one pack-number flag that couldn't be re-checked,
+  see below). Kept scripts: 0 of 4 with a problem, each after at most one rewrite.
+  The style judge raised only minor notes (no rewrites). Cost $0.09–0.18 per post,
+  $0.60 for all four. `critique.json` now stores each attempt's lines so flags can
+  be audited; the pack-number check now lets a line refer back to another pack
+  ("same Vespiquen as pack one") and only flags a wrong label for the card's own pack.
 
 ## Commands
 
