@@ -397,6 +397,17 @@ writer use the series edit (`render/inputs.edit_inputs`):
   master-set progress after the post's last pack (+N new); "Part i of n"; the
   script's hashtags (or defaults + set tag). Private additions (channel hashtags,
   footer) in gitignored `data/brand/caption.json`. No API calls; always rewritten.
+- **TikTok drafts** (`tiktok/`): Content Posting API *inbox upload* (scope
+  `video.upload`), so posts land in the account's TikTok inbox and a person adds the
+  caption and posts (no audit needed for that; Direct Post would need app review + the
+  audit, and unaudited direct posts are private-only). Works from a developer app in
+  **Sandbox** mode with the channel's account as a target user. Login Kit for desktop:
+  PKCE with a *hex* SHA-256 challenge, redirect to `http://127.0.0.1:3455/callback/`
+  (must be registered exactly); access token 24 h, refresh 365 days, auto-refreshed.
+  FILE_UPLOAD: whole file up to 64 MB, else 10 MB chunks (remainder in the last).
+  `posts/<n>/tiktok.json` records each send so a post is never sent twice (TikTok caps
+  pending shares at 5 per 24 h). `TIKTOK_AUTO_DRAFT=true` makes the watcher send after
+  rendering; failures are logged, never fatal. Drafts carry no caption.
 - **Private themes:** the channel's real look is NOT in this repo. If
   `data/brand/theme.py` exists (gitignored), `render/theme.py` runs it in its own
   namespace at import, replacing colours, `FONT`/`FONT_FILE`, `draw_rocket`, the bar's
@@ -615,6 +626,9 @@ pokepipe review fit [--save]              # calibrate confidence on human review
 pokepipe review export-testset --all      # freeze finished reviews into tests/fixtures
 pokepipe watch redo <slug>                # after fixing a finished review: redo changed posts
 pokepipe narrate captions <slug>          # (re)write posts/<n>/caption.txt for TikTok
+pokepipe tiktok login                     # once: sign in (token in data/tiktok/, gitignored)
+pokepipe tiktok draft <slug> [-p N]       # send rendered posts to the TikTok inbox as drafts
+pokepipe tiktok status <slug>             # TikTok's status for each sent draft
 pokepipe preflight --set <id> --videos 3  # before a recording day
 pokepipe collection apply <slug>          # add a finished review → collection.json
 pokepipe collection status sv3pt5         # master-set progress by rarity

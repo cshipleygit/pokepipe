@@ -185,6 +185,11 @@ Each rendered post gets a `caption.txt` beside it, ready to paste into TikTok: t
 hook, the best pulls with prices, master-set progress, "Part 1 of 3" and hashtags.
 Add your own hashtags or a footer in `data/brand/caption.json` (not committed).
 
+`pokepipe tiktok login` (once) and `pokepipe tiktok draft <slug>` send finished posts
+straight to your TikTok inbox as drafts: open the notification in the app, paste the
+caption, post. Needs a TikTok developer app (Sandbox mode is enough) with Login Kit and
+the Content Posting API; set `TIKTOK_AUTO_DRAFT=true` to send drafts after every render.
+
 Before a recording day, `pokepipe preflight --set <id> --videos 3` checks the GPU,
 ffmpeg, API keys, ElevenLabs characters left, card data and disk space. While
 `watch run` is going you get a Windows notification when a review is waiting or posts
