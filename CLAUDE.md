@@ -323,6 +323,14 @@ Known limitations:
   else x264). Then concat, burn in the ASS file, and mix the voice lines
   (atrim + adelay + amix). An optional `config/intro.mp4` is prepended.
   `edit.json` records every decision.
+- **A shot with source audio is three ffmpeg runs** (`render_segment`): picture, sound,
+  then a filterless stream-copy mux. In one run, ffmpeg 8.0 (Ubuntu 26, the CI runner)
+  deadlocks on every sped-up shot whose audio goes through atempo + apad/atrim next to
+  the video, whatever the filter order; each part alone finishes in under a second.
+  This hung CI for 13 pushes (each cancelled at 20 min) before a probe on the runner
+  isolated it. Audio pads are always bounded (`apad=whole_dur` + `atrim`), ffmpeg runs
+  with stdin closed and a timeout, `-hwaccel auto` only where `nvidia-smi` exists, and
+  `pytest-timeout` (300 s) makes any future hang fail by name.
 - Result on packs 1–3 of the test video: 45.2 s, 41 shots, rendered in 39 s on the
   RTX 3060. A clean run of one 45 s post costs about $0.20 (script + voice).
 - **Zooms follow the card and never cut it off** (`render/track.py`, `render/zoom.py`).
