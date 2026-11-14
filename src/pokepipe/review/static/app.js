@@ -124,6 +124,8 @@ function pullTile(p, i) {
   const c = card(p.card_id);
   const badges = [];
   if (isHit(c.rarity)) badges.push(`<span class="badge hit">${c.rarity}</span>`);
+  if (p.decided_by === "auto") badges.push(`<span class="badge auto" title="${esc(p.auto_note || "")}">auto</span>`);
+  else if (p.status === "pending" && p.auto_note) badges.push(`<span class="badge low" title="${esc(p.auto_note)}">why: ${esc(p.auto_note.split(";")[0])}</span>`);
   if (det && det.confidence < LOW_CONFIDENCE && p.status === "pending") badges.push(`<span class="badge low">check</span>`);
   if (det && p.card_id !== p.detected_card_id) badges.push(`<span class="badge fixed">was ${card(p.detected_card_id).name}</span>`);
   if (!det && p.suggested) badges.push(`<span class="badge low" title="${esc(p.suggested)}">agent: missed card?</span>`);

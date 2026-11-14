@@ -36,7 +36,7 @@ flowchart LR
 | **1 · Card data** | Fetches any set's checklist and hi-res scans, and builds a CLIP embedding index on the GPU. |
 | **2 · Detect** | Samples frames, scores a grid of card-shaped crops per frame in one batched GPU pass, groups confident votes into reveals and reveals into packs, and infers reverse holos from pack slot order. Then finds the moments worth editing around: the box opening, each pack's tear (by sound), where its cards start (the basic Energy) and hits being sleeved. |
 | **2b · Recover** | A Claude agent (LangGraph tool loop) works through every pack that came up short. It rescans the gaps on the GPU and uses the pack's slot order to settle near-ties, then suggests the missing cards for review. Only scores and names reach the model, never frames. |
-| **3 · Review** | Local page (FastAPI, vanilla JS) to keep, reject or correct each pull, with the video jumping to every card. The only manual step. |
+| **3 · Review** | An auto-reviewer confirms every pack the evidence settles (complete, fits the slot layout, every card clear of its runner-up) and leaves only exceptions, each with a reason. A local page (FastAPI, vanilla JS) handles those: keep, reject or correct each pull, with the video jumping to every card. `review replay` scores the auto-reviewer against finished human reviews and `review fit` calibrates detection confidence on them. |
 | **4 · Collection** | Master-set tracking (every printing), marking which pulls are new and the progress after each pack, plus what each pull is worth (TCGplayer market price per printing) as the input for profit/loss. |
 | **5 · Script + voice** | You choose which packs form each post. Claude writes a script from computed facts only, with a hook and viewer prompts. A critic checks every draft for timing against the footage, spoilers, wrong facts and style, and sends failing drafts back for a rewrite. ElevenLabs voices it with per-word timings. |
 | **6 · Render** | Vertical cuts paced by the narration: quick clips of the box and every tear with their own sound, packs card to card with fumbles cut, zooms that track the card, sleeving clips and an end recap. Word-by-word captions, price tags, synthesised sound effects and a progress bar, with each spoken line on its card. |
@@ -168,6 +168,15 @@ cards and, on **Finish**, choose which packs go into each post. Collection, valu
 scripts, voice and render then run on their own; any hit without a price is logged so
 you can add it to `data/prices/<set_id>.csv` (see below). `pokepipe watch status` shows where every video is;
 `pokepipe watch retry <slug>` resumes a failed one.
+
+**Auto-review.** `REVIEW_MODE` decides how much of review is yours. The default,
+`shadow`, changes nothing you see: you review as normal while the auto-reviewer's
+decisions are recorded in `auto_review.json`. `pokepipe review replay --all` then
+shows, per finished review, what it would have confirmed, what it would have asked
+you, and every **silent error** (something it confirmed that you changed). Once
+replay stays at zero silent errors over several videos, switch to `exceptions` (the
+run only pauses for what's left; a clean video goes straight to render) and later
+`off`. `pokepipe review fit --save` learns a confidence cut-off from your reviews.
 
 `pokepipe watch run --engine graph` runs the same pipeline as a LangGraph graph
 (checkpoints in `data/graph/`), with the missed-card agent before review.

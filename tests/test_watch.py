@@ -109,6 +109,11 @@ class FakeOps:
     def detect(self, job):
         self._do("detect")
 
+    def auto_review(self, job):  # the real one may finish the review on its own
+        self.auto_runs = getattr(self, "auto_runs", 0) + 1
+        if getattr(self, "auto_completes", False):
+            self.reviewed = True
+
     def review_done(self, job):
         return self.reviewed
 
@@ -240,3 +245,11 @@ def test_moments_run_once_and_can_be_switched_off(tmp_path):
 
 def new_job_obj() -> Job:
     return Job(slug="v", source="x.mp4", set_id="s")
+
+
+def test_auto_review_that_settles_everything_runs_straight_through(tmp_path):
+    jobs = JobStore(tmp_path / "videos")
+    ops = FakeOps()
+    ops.auto_completes = True
+    job = Runner(ops, jobs).run(new_job(jobs))
+    assert job.status == Status.DONE and ops.auto_runs == 1

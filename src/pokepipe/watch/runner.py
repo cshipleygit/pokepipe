@@ -21,6 +21,7 @@ from pokepipe.watch.models import Job, Status
 class Ops(Protocol):
     def ensure_set(self, job: Job) -> None: ...  # card data + index for the set
     def detect(self, job: Job) -> None: ...
+    def auto_review(self, job: Job) -> None: ...  # decide what's clear (REVIEW_MODE)
     def review_done(self, job: Job) -> bool: ...
     def apply_collection(self, job: Job) -> None: ...
     def narrate(self, job: Job) -> None: ...  # posts (if not chosen in review), scripts, voice
@@ -50,6 +51,7 @@ class Runner:
                 self._advance(job, Status.DETECTING)
             elif status == Status.DETECTING:
                 self.ops.detect(job)
+                self.ops.auto_review(job)
                 self._advance(job, Status.AWAITING_REVIEW, "detected — waiting for your review")
             elif status == Status.AWAITING_REVIEW:
                 if not self.ops.review_done(job):

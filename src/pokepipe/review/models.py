@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -33,10 +34,26 @@ class ReviewedPull(BaseModel):
     suggested: str | None = Field(
         None, description="evidence, when the recovery agent suggested this missed card"
     )
+    decided_by: Literal["auto"] | None = Field(
+        None, description="'auto' while the decision is the auto-reviewer's; any human "
+        "edit clears it, so these never count as human labels"
+    )
+    auto_note: str = Field("", description="why the auto-reviewer decided, or escalated")
 
     @property
     def corrected(self) -> bool:
         return self.detected_card_id is not None and self.card_id != self.detected_card_id
+
+
+class AutoReviewInfo(BaseModel):
+    """What the auto-reviewer did to this review (`review/auto.py`)."""
+
+    mode: str
+    policy: dict
+    confirmed: int = 0
+    exceptions: list[str] = Field(default_factory=list)
+    completed_by_auto: bool = False
+    at: str = Field(default_factory=lambda: _now())
 
 
 class ReviewState(BaseModel):
@@ -44,6 +61,7 @@ class ReviewState(BaseModel):
     set_id: str
     pulls: list[ReviewedPull]
     completed: bool = False
+    auto: AutoReviewInfo | None = None
     updated_at: str = Field(default_factory=lambda: _now())
 
     def kept(self) -> list[ReviewedPull]:

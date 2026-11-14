@@ -136,6 +136,7 @@ main { padding: 16px; min-width: 0; }
 .badge.fixed { background: var(--bg); color: var(--accent); border-color: var(--accent); }
 .badge.rev { background: var(--bg); color: var(--ink); border-color: var(--line); }
 .badge.added { background: var(--ok-soft); color: var(--ok); }
+.badge.auto { background: var(--bg); color: var(--ok); border-color: var(--ok); }
 .conf { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; }
 .conf > i { display: block; height: 100%; background: var(--accent); }
 .pull .row { display: flex; gap: 4px; flex-wrap: wrap; }

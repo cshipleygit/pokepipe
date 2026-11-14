@@ -26,6 +26,11 @@ class FakeOps:
     def detect(self, job):
         self._do("detect")
 
+    def auto_review(self, job):  # the real one may finish the review on its own
+        self.auto_runs = getattr(self, "auto_runs", 0) + 1
+        if getattr(self, "auto_completes", False):
+            self.reviewed = True
+
     def recover(self, job):
         self._do("recover")
 
@@ -169,3 +174,12 @@ def test_jobs_already_done_are_left_alone(tmp_path):
     job.move(Status.DONE)
     runner.run(job)
     assert ops.calls == []
+
+
+def test_auto_review_that_settles_everything_never_pauses(tmp_path):
+    ops = FakeOps()
+    ops.auto_completes = True
+    jobs, ops, runner, job = setup(tmp_path, ops)
+    runner.run(job)
+    assert job.status == Status.DONE
+    assert ops.calls == ALL and ops.auto_runs == 1

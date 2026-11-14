@@ -1,6 +1,6 @@
 """The watch-folder pipeline as a LangGraph state graph.
 
-    ensure_set → detect → recover → review ⏸ → collect → narrate → render
+    ensure_set → detect → recover → auto_review → review ⏸ → collect → narrate → render
 
 The same stages as `watch/runner.py`, with three differences:
 
@@ -12,6 +12,8 @@ The same stages as `watch/runner.py`, with three differences:
   with `Command(resume=True)` once `review.json` says `completed`.
 - **Recovery.** The `recover` node runs the missed-card agent (`pokepipe.recover`),
   whose suggestions are waiting in review when the reviewer opens it.
+- **Auto-review.** The `auto_review` node (`review/auto.py`, `REVIEW_MODE`) confirms
+  packs the evidence settles. If nothing is left, `review` doesn't interrupt at all.
 
 `job.json` stays as a read-only view of where each video is, so `watch status` and
 `watch retry` work with either engine. The checkpoint is what decides what runs next.
@@ -48,6 +50,7 @@ STAGES: list[tuple[str, Status, str]] = [
     ("ensure_set", Status.QUEUED, ""),
     ("detect", Status.DETECTING, ""),
     ("recover", Status.DETECTING, "looking for missed cards"),
+    ("auto_review", Status.DETECTING, "auto-reviewing"),
     ("review", Status.AWAITING_REVIEW, "detected — waiting for your review"),
     ("collect", Status.COLLECTING, "review finished"),
     ("narrate", Status.NARRATING, ""),
@@ -95,6 +98,7 @@ class GraphRunner:
             "ensure_set": self.ops.ensure_set,
             "detect": self.ops.detect,
             "recover": self.ops.recover,
+            "auto_review": self.ops.auto_review,
             "collect": self.ops.apply_collection,
             "narrate": self.ops.narrate,
             "render": self.ops.render,

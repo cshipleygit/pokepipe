@@ -20,7 +20,7 @@ reviewer as much as for function.
 | 1 | `cards/` | **built** | Fetch any set's checklist + images from pokemontcg.io, cache locally, build CLIP image embeddings, GPU nearest-neighbour index. |
 | 2 | `detection/` | **built** | Sample frames, detect card-reveal moments, crop the card, match against the stage-1 index → pulls with confidence + timestamps. |
 | 2b | `recover/` | **built** | Claude agent (LangGraph tool loop) that looks for cards detection missed in short packs, using local GPU rescans and the pack layout → suggestions in review. |
-| 3 | `review/` | **built** | Small local web page to confirm/fix detected pulls before rendering. The only human-in-the-loop pause. |
+| 3 | `review/` | **built** | Auto-reviewer (`auto.py`, `REVIEW_MODE`) + small local web page to confirm/fix what it couldn't settle. The only human-in-the-loop pause, now only for exceptions. |
 | 4 | `collection/` | **built** | Local master-set progress per set, updated from confirmed pulls of each video. |
 | 5 | `narration/` | **built** | LLM script from the user's style guidelines + ElevenLabs TTS voiceover. |
 | 6 | `render/` | **built** | ffmpeg: one vertical post per pack group, narration-driven speed ramps, zoom on hits, optional reusable intro, word captions, master-set progress overlay. |
@@ -529,6 +529,40 @@ not used.
   be audited; the pack-number check now lets a line refer back to another pack
   ("same Vespiquen as pack one") and only flags a wrong label for the card's own pack.
 
+### Auto-review (`review/auto.py`, `replay.py`, `calibrate.py`)
+
+Goal: no manual review. Built 2026-11-14, before any new footage, so **untested on
+real reviews**: run `review replay --all` on the existing finished reviews first.
+
+- Runs after recover (`auto_review` node in the graph; inside the detecting step of
+  the old runner). Never touches an existing `review.json`.
+- A **pack** is auto-confirmed iff, with the agent's *high* suggestions, it has exactly
+  `expected_cards`, it has a slot layout (re-inferred over all 10 if the agent filled
+  it), and every detected pull is trusted. Otherwise the whole pack stays pending with
+  `auto_note` saying why.
+- A **pull** is trusted iff `confidence ≥ AUTO_MIN_CONFIDENCE` (0.6; or the fitted
+  calibration's threshold if `data/review_calibration.json` exists) and it leads the
+  best *different* non-decoy card by `AUTO_MIN_LEAD` (0.02; Enamorus U vs IR was 0.007).
+- `ReviewedPull.decided_by = "auto"` marks untouched auto decisions; every store edit
+  clears it. `ReviewState.auto` records mode, policy, exceptions.
+- Modes: `always` (off), `shadow` (default: predictions to `auto_review.json`, human
+  reviews blind — not pre-filled, so the human labels stay unbiased), `exceptions`
+  (applied; completed automatically if nothing is left, then narrate uses the
+  suggested post plan), `off` (never pauses: unresolved detected pulls keep
+  detection's guess, unresolved suggestions are rejected, both noted "UNCHECKED").
+- `review replay` re-runs auto-review on a fresh state and diffs it with a finished
+  human review. **Silent errors** = auto-confirmed but the person rejected / changed
+  card / flipped reverse / moved pack, or added a card to a pack auto called complete.
+  Refuses reviews containing untouched auto decisions (not ground truth).
+- `review fit`: logistic regression (numpy, Newton, L2) on peak score, mean margin,
+  log frames, lead; human decisions only; threshold = just above the highest-scoring
+  known wrong pull. Needs ≥3 wrong labels. Also prints a cut-off table for the
+  heuristic confidence.
+- Not handled yet: card order within a pack (the agent's Nidoran♀/Tornadus swap would
+  pass), duplicate-vs-reshow judgement beyond detection's merge, post-plan choice
+  (uses `posts.suggest`), missing prices (logged only). No vision check on ambiguous
+  crops yet — candidate next step for the exceptions that remain.
+
 ## Commands
 
 ```bash
@@ -545,7 +579,10 @@ pokepipe recover run <slug>               # agent: missed cards in short packs �
 pokepipe recover eval <slug>              # score it against hand-added pulls in review
 pokepipe review serve                     # review page at http://127.0.0.1:8765
 pokepipe review prefill <slug>            # copy reverse guesses onto pending pulls
-pokepipe review status                    # progress per video
+pokepipe review status                    # progress per video (+ auto-review summary)
+pokepipe review auto <slug> [--mode M]    # auto-review a video with no review yet
+pokepipe review replay <slug>|--all       # score auto-review vs finished human reviews
+pokepipe review fit [--save]              # calibrate confidence on human reviews
 pokepipe collection apply <slug>          # add a finished review → collection.json
 pokepipe collection status sv3pt5         # master-set progress by rarity
 pokepipe collection missing sv3pt5 --variant reverse
