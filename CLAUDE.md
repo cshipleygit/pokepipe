@@ -491,6 +491,17 @@ not used.
   kept). **Delta Reign: 3/3 (Enamorus U in pack 9; Nidoran♀ and a second Tornadus as
   reverse holos in pack 10, shown together in one stretch), 0 wrong, 5 turns, $0.13.**
   This video was also used to design the tools: validate on new footage.
+- **First real end-to-end graph run (2026-11-13, `img-6054-graph`, test collection):**
+  same 88 detections and moments as the original; the agent again suggested the 3
+  missed cards ($0.13) but put the two cards held up together in pack 10 in the wrong
+  order (Nidoran♀ before Tornadus; the footage leads with Tornadus from 930.1 s), fixed
+  by hand in review. `scan_window` now reports each candidate's `first_top`,
+  `last_top` and `best_at`, and the agent is told to time suggestions by `first_top`.
+  Two bugs found and fixed: nested loops (writer, agent) inherited the pipeline's
+  checkpointer and crashed on resume (now `compile(checkpointer=False)`), and an
+  ElevenLabs quota error was reported as a bad API key. Output: two 90 s posts, 0
+  freezes, every line on its card, scripts passing every critic check (the original
+  post 1 has one timing overrun); $0.83 for the video vs $2.72 spent on the original.
 
 **Script critic** (`narration/critic.py`, `narration/writer.py`):
 - Deterministic checks: contract (anchors, reveal order, ≤20-word lines, ≤8-word

@@ -97,7 +97,11 @@ def build_writer(
     g.add_edge(START, "write")
     g.add_edge("write", "critique")
     g.add_conditional_edges("critique", route, ["write", END])
-    return g.compile()
+    # Never checkpoint this loop. Run inside the checkpointed pipeline graph it would
+    # inherit the parent's checkpointer; a run stopped mid-script then resumed from
+    # SQLite with the drafts and SDK responses turned into dicts and crashed (found on
+    # the first real end-to-end run). A post's script is simply rewritten instead.
+    return g.compile(checkpointer=False)
 
 
 def best(attempts: list[Attempt]) -> Attempt:

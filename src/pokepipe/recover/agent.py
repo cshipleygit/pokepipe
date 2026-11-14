@@ -47,8 +47,11 @@ Work pack by pack. Ignore groups marked probably_not_a_pack. For each short pack
 its overview, rescan the stretch where the missing slot should be (look at the gaps),
 and test candidates with check_fit before suggesting them (all of a pack's additions
 in one call). Use the layout to settle near-ties. One stretch can hold two cards held
-up together, so read past the top candidate. A stretch already_detected_as a card is
-that card, unless it is a repeat inside the pack and the layout needs a second copy.
+up together, so read past the top candidate. Give each suggested card the time it was
+first the top match (first_top): that keeps reveal order, which sets the slot (8 vs 9)
+and the order the edit and script follow. Never give two cards the same time.
+A stretch already_detected_as a card is that card, unless it is a repeat inside the
+pack and the layout needs a second copy.
 
 Only suggest a card when the scan shows it and it fits the pack. Leave a pack short
 rather than guess: a person reviews every suggestion, and a wrong one costs them more
@@ -237,7 +240,10 @@ def build_agent(
     g.add_edge(START, "agent")
     g.add_conditional_edges("agent", after_agent, ["tools", END])
     g.add_conditional_edges("tools", after_tools, ["agent", END])
-    return g.compile()
+    # Never checkpoint this loop, even inside the checkpointed pipeline graph: nested
+    # graphs inherit the parent's checkpointer, and its state (SDK message objects)
+    # comes back from SQLite as dicts. Rerunning recovery from the start is cheap.
+    return g.compile(checkpointer=False)
 
 
 def kickoff(slug: str, set_name: str) -> dict:

@@ -63,6 +63,10 @@ class ElevenLabsClient:
             404: "voice not found — check ELEVENLABS_VOICE_ID (`pokepipe narrate voices`)",
             422: "request rejected",
         }.get(resp.status_code, "request failed")
+        # ElevenLabs reports an exhausted quota as a 401 too; don't blame the key for it.
+        if "quota_exceeded" in resp.text:
+            hint = ("out of ElevenLabs credits for this billing period — wait for the "
+                    "reset or upgrade the plan (the API key is fine)")
         raise VoiceError(f"ElevenLabs {resp.status_code}: {hint}. {resp.text[:200]}")
 
     def voices(self) -> list[dict]:

@@ -60,6 +60,17 @@ class NearMiss:
         ranked = sorted(best.items(), key=lambda kv: -kv[1])
         return [(c, s, wins[c] / n) for c, s in ranked]
 
+    def timing(self, card_id: str) -> dict:
+        """When `card_id` led the match in this stretch, and when it scored best. Two
+        cards held up together share a stretch; these times are what orders them."""
+        led = [f.time for f in self.frames if f.best.card_id == card_id]
+        scored = [(m.score, f.time) for f in self.frames for m in f.top if m.card_id == card_id]
+        return {
+            "first_top": round(led[0], 2) if led else None,
+            "last_top": round(led[-1], 2) if led else None,
+            "best_at": round(max(scored)[1], 2) if scored else None,
+        }
+
 
 def _overlap(a: tuple[float, float], b: tuple[float, float]) -> float:
     return max(0.0, min(a[1], b[1]) - max(a[0], b[0]))
@@ -229,7 +240,8 @@ class Evidence:
             stretches.append({
                 "time": f"{nm.start:.2f}-{nm.end:.2f}", "frames": len(nm.frames),
                 "candidates": [{**self._describe(c), "best_score": round(s, 3),
-                                "top_in_share_of_frames": round(w, 2)} for c, s, w in cands],
+                                "top_in_share_of_frames": round(w, 2), **nm.timing(c)}
+                               for c, s, w in cands],
                 "lead": round(cands[0][1] - cands[1][1], 3) if len(cands) > 1 else None,
                 "already_detected_as": same.card_id if same else None,
                 "is_basic_energy": is_decoy(top),

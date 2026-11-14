@@ -97,6 +97,18 @@ def test_overview_names_the_missing_slots():
     assert ov["gaps"][4]["seconds"] > 1.5  # the hole between Uncommon 1 and 3
 
 
+def test_candidates_carry_the_times_that_order_two_cards_in_one_stretch():
+    """Delta Reign pack 10: Tornadus led first, then Nidoran in the same stretch."""
+    # mostly the Uncommon first, then mostly the Common, with a little interleaving
+    leaders = ["s-u2"] * 4 + ["s-c1", "s-u2", "s-c1", "s-u2"] + ["s-c1"] * 4
+    other = {"s-u2": "s-c1", "s-c1": "s-u2"}
+    frames = [fr(930.0 + i / 8, (c, 0.81), (other[c], 0.80)) for i, c in enumerate(leaders)]
+    (nm,) = near_misses(frames)  # one stretch, both cards in it
+    first, second = nm.timing("s-u2"), nm.timing("s-c1")
+    assert first["first_top"] == 930.0 and second["first_top"] == 930.5
+    assert first["first_top"] < second["first_top"]
+
+
 def test_scan_flags_already_detected_cards_and_counts_down():
     ev = evidence()
     out = ev.scan_window(1, None, None, 8)

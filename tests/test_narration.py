@@ -263,6 +263,10 @@ def test_synthesize_sends_key_and_returns_audio():
 
 @responses.activate
 def test_elevenlabs_errors_are_explained():
+    quota = {"detail": {"code": "quota_exceeded", "message": "exceeds your quota"}}
+    responses.post(f"{API}/text-to-speech/voice123/with-timestamps", status=401, json=quota)
+    with pytest.raises(VoiceError, match="out of ElevenLabs credits.*key is fine"):
+        ElevenLabsClient("k").synthesize("hi", VoiceSettings(voice_id="voice123"))
     responses.post(f"{API}/text-to-speech/voice123/with-timestamps", status=401, json={})
     with pytest.raises(VoiceError, match="API key rejected"):
         ElevenLabsClient("bad", session=requests.Session()).synthesize("x", SETTINGS)
