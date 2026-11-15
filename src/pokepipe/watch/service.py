@@ -19,7 +19,9 @@ class Watcher:
     def __init__(
         self, inbox: Inbox, runner: Runner, jobs: JobStore, log: Callable[[str], None] = print,
         notify: Callable[[str, str], object] = lambda title, message: None,
+        on_tick: Callable[[], object] = lambda: None,
     ) -> None:
+        self.on_tick = on_tick  # e.g. the control room's "watcher is alive" signal
         self.inbox = inbox
         self.runner = runner
         self.jobs = jobs
@@ -46,6 +48,7 @@ class Watcher:
 
     def tick(self) -> list[Job]:
         """One pass: intake, then advance every unfinished job as far as it can go."""
+        self.on_tick()
         self.intake()
         active = [j for j in self.jobs.all() if not j.status.terminal]
         for job in active:

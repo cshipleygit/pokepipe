@@ -4,6 +4,7 @@ import typer
 
 from pokepipe.cards.cli import app as cards_app
 from pokepipe.collection.cli import app as collection_app
+from pokepipe.control.cli import app as ui_app
 from pokepipe.detection.cli import app as detect_app
 from pokepipe.narration.cli import app as narrate_app
 from pokepipe.recover.cli import app as recover_app
@@ -22,6 +23,7 @@ app.add_typer(narrate_app, name="narrate")
 app.add_typer(render_app, name="render")
 app.add_typer(watch_app, name="watch")
 app.add_typer(tiktok_app, name="tiktok")
+app.add_typer(ui_app, name="ui")
 
 
 

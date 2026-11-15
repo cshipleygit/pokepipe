@@ -26,6 +26,7 @@ reviewer as much as for function.
 | 6 | `render/` | **built** | ffmpeg: one vertical post per pack group, narration-driven speed ramps, zoom on hits, optional reusable intro, word captions, master-set progress overlay. |
 | 7 | `watch/` | **built** | Watch folder: drop a video in → run stages 2→6, pausing only at review. |
 | 7 | `graph/` | **built** | The same pipeline as a LangGraph state graph: SQLite checkpoints, review as `interrupt()` (`--engine graph`). |
+| 8 | `control/` | **first cut** | Control room: phone-friendly page to upload videos (resumable chunks → inbox) and follow every job. TikTok analytics come later. |
 
 Work proceeds **one stage at a time**; stop and show the user after each stage
 before starting the next.
@@ -493,6 +494,26 @@ Signals, measured on the Delta Reign ETB video:
   ElevenLabs voice + characters left (≈3,000 per video), set cached/indexed/layout
   verified, disk space (≈8 GB per 4K video), review mode.
 
+### Control room (`control/`)
+
+- `pokepipe watch run` also serves it on 127.0.0.1:8800; `--lan` binds 0.0.0.0 so phones
+  on the same Wi-Fi can open `http://<pc-ip>:8800/` (Windows Firewall asks once: allow
+  on private networks). `pokepipe ui serve [--lan]` runs it alone (no watcher status).
+- **Security:** loopback is trusted; anything else signs in with an 8-character access
+  code (`pokepipe ui code [--new]`, stored with hashed session tokens in
+  `data/control/access.json`, 5 wrong tries → 5 min lockout) and gets a 1-year cookie.
+  Every write needs an `X-Pokepipe: 1` header (CSRF guard for the loopback trust). It
+  never serves source footage or edits reviews; the review page stays loopback-only.
+- **Uploads** (`uploads.py`): 8 MB chunks PUT at explicit offsets into
+  `data/uploads/<id>.part`; a dropped connection or re-picked file resumes. Finishing
+  ffprobes the file (warns if the phone compressed it below 1080p), then moves it to
+  `<inbox>/<set>/<name>` via a `.part` rename so intake never sees half a file. The
+  page holds a screen wake lock while sending. Checked with a 155 MB clip in the browser.
+- **Status** (`dashboard.py`): pure reads of job.json, pulls/review/costs JSON and
+  rendered posts; failed jobs get a Retry button; posts play from the page.
+- iPhone note: Safari's Photos picker may hand over a compressed copy. Sending from
+  the Files app, or with LocalSend into `data/inbox/<set>/`, keeps the original.
+
 ### LangGraph engine, recovery agent, script critic
 
 Claude is always called through the official `anthropic` SDK (fallbacks, budget checks
@@ -644,6 +665,8 @@ pokepipe narrate cost <slug>              # spend so far vs the per-video budget
 pokepipe render post <slug> [-p 1]        # → posts/<n>/post.mp4 (1080x1920)
 pokepipe watch run                        # inbox watcher + review page, end to end
 pokepipe watch run --engine graph         # same, as a checkpointed LangGraph graph
+pokepipe watch run --lan                  # + control room reachable from phones (code)
+pokepipe ui code                          # the access code phones sign in with
 pokepipe watch status                     # where every video is
 pokepipe watch retry <slug>               # resume a failed video at its failed stage
 pytest                                    # unit tests (no network, no GPU)
