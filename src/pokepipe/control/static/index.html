@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14171c">
+  <title>Pokepipe control room</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Control room</h1>
+    <span id="watcher" class="pill">…</span>
+  </header>
+
+  <main>
+    <section id="pc" class="panel pc" hidden>
+      <h2>On this PC</h2>
+      <div id="pc-body"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Send a video</h2>
+      <label class="field" for="set">Set
+        <select id="set"></select>
+      </label>
+      <label class="pick" for="file">
+        <input id="file" type="file" accept="video/*,.mov,.mp4,.m4v">
+        <span class="pick-title">Choose a video</span>
+        <span class="pick-sub">Uploads in pieces, so a locked screen or dropped Wi-Fi only pauses it</span>
+      </label>
+      <div id="upload" class="upload" hidden>
+        <div class="upload-head">
+          <strong id="up-name"></strong>
+          <span id="up-pct" class="num"></span>
+        </div>
+        <div class="bar"><div id="up-bar"></div></div>
+        <div class="upload-foot">
+          <span id="up-detail" class="muted num"></span>
+          <button id="up-cancel" type="button" class="link">Cancel</button>
+        </div>
+        <p id="up-note" class="note" hidden></p>
+      </div>
+      <p id="inbox" class="muted small" hidden></p>
+    </section>
+
+    <section>
+      <h2 class="list-title">Videos</h2>
+      <div id="videos" class="videos"><p class="muted">Loading…</p></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

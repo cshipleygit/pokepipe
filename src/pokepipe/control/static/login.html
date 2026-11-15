@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14171c">
+  <title>Sign in · Pokepipe</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login">
+  <main>
+    <form id="form" class="panel">
+      <h1>Control room</h1>
+      <p class="muted">Enter the access code shown on the PC (in the terminal running
+        <code>pokepipe watch run --lan</code>, or on the control room page there).</p>
+      <label class="field" for="code">Access code
+        <input id="code" name="code" autocomplete="one-time-code" autocapitalize="characters"
+               spellcheck="false" maxlength="12" required>
+      </label>
+      <button class="primary" type="submit">Sign in</button>
+      <p id="error" class="error" hidden></p>
+    </form>
+  </main>
+  <script src="/static/login.js"></script>
+</body>
+</html>

@@ -41,9 +41,11 @@ def _start_review_server(port: int) -> str:
     return f"http://127.0.0.1:{port}/"
 
 
-def _runner(engine: str, ops, jobs: JobStore):
+def _runner(engine: str, ops, jobs: JobStore, live=None):
     def on_event(job, message):
         _log(f"{job.slug}: {message}")
+        if live is not None:
+            live.event(job.slug, message)
 
     if engine == "runner":
         return Runner(ops, jobs, on_event=on_event)
@@ -65,8 +67,13 @@ def run(
     engine: str = typer.Option(
         "runner", help="'runner' (default state machine) or 'graph' (LangGraph, checkpointed, "
                        "with the missed-card recovery agent)"),
+    ui: bool = typer.Option(True, "--ui/--no-ui", help="Serve the control room too"),
+    ui_port: int = typer.Option(8800, help="Control room port"),
+    lan: bool = typer.Option(False, "--lan", help="Let phones on the home network open the "
+                                                  "control room (with an access code)"),
 ):
     """Watch the inbox and run every video through the pipeline."""
+    from pokepipe.control.dashboard import LiveStatus
     from pokepipe.watch.pipeline import PipelineOps
     from pokepipe.watch.service import Watcher
 
@@ -74,22 +81,32 @@ def run(
     s.inbox_dir.mkdir(parents=True, exist_ok=True)
     jobs = _jobs()
     inbox = Inbox(s.inbox_dir, jobs, s.watch_default_set, s.watch_settle_seconds)
-    runner = _runner(engine, PipelineOps(s, log=_log), jobs)
+    live = LiveStatus(engine=engine) if ui and not once else None
+    runner = _runner(engine, PipelineOps(s, log=_log), jobs, live)
     if engine == "graph":
         _log(f"engine: LangGraph (checkpoints in {s.graph_checkpoints})")
     from pokepipe.watch.notify import notify
 
     watcher = Watcher(inbox, runner, jobs, log=_log,
-                      notify=notify if s.notify else (lambda title, message: None))
+                      notify=notify if s.notify else (lambda title, message: None),
+                      on_tick=live.tick if live else (lambda: None))
 
     if once:
         watcher.tick()
         return
+    review_url = None
     if review:
-        url = _start_review_server(port)
-        _log(f"review page: [bold]{url}[/]")
+        review_url = _start_review_server(port)
+        _log(f"review page: [bold]{review_url}[/]")
         if open_browser:
-            webbrowser.open(url)
+            webbrowser.open(review_url)
+    if ui:
+        from pokepipe.control.cli import build_config, describe, start_in_thread
+
+        cfg = build_config(s, ui_port, lan, live=live, review_url=review_url)
+        start_in_thread(cfg, ui_port)
+        for line in describe(cfg, ui_port):
+            _log(line)
     where = f"{s.inbox_dir}" + (
         f" (default set {s.watch_default_set})" if s.watch_default_set else ""
     )
