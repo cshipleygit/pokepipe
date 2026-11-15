@@ -1,4 +1,10 @@
-# pokepipe
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="docs/brand/logo-light.png">
+    <img alt="pokepipe" src="docs/brand/logo-light.png" width="420">
+  </picture>
+</h1>
 
 [![CI](https://github.com/cshipleygit/pokepipe/actions/workflows/ci.yml/badge.svg)](https://github.com/cshipleygit/pokepipe/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
