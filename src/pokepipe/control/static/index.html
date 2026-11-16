@@ -3,17 +3,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#14171c">
+  <meta name="theme-color" content="#0b0b0f">
   <title>Pokepipe control room</title>
+  <!-- Display fonts; without a connection the page falls back to system fonts. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <header class="top">
-    <h1>Control room</h1>
+    <span class="brand">pokepipe<b>.</b></span>
     <span id="watcher" class="pill">…</span>
   </header>
 
   <main>
+    <h1>Your drops</h1>
+
+    <a id="needs" class="needs" hidden>
+      <span class="eyebrow">Needs you</span>
+      <strong id="needs-title"></strong>
+      <span id="needs-sub"></span>
+    </a>
+
     <section id="pc" class="panel pc" hidden>
       <h2>On this PC</h2>
       <div id="pc-body"></div>
@@ -26,9 +37,10 @@
       </label>
       <label class="pick" for="file">
         <input id="file" type="file" accept="video/*,.mov,.mp4,.m4v">
-        <span class="pick-title">Choose a video</span>
-        <span class="pick-sub">Uploads in pieces, so a locked screen or dropped Wi-Fi only pauses it</span>
+        <span class="pick-title">Drop a video</span>
+        <span class="pick-sub">Choose from your phone</span>
       </label>
+      <p class="pick-hint">Sends in pieces, so a locked screen or dropped Wi-Fi only pauses it</p>
       <div id="upload" class="upload" hidden>
         <div class="upload-head">
           <strong id="up-name"></strong>

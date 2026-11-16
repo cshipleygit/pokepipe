@@ -3,43 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pull Review</title>
+  <meta name="theme-color" content="#0b0b0f">
+  <title>Pokepipe review</title>
+  <!-- Display fonts; without a connection the page falls back to system fonts. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <header class="topbar">
-    <div class="brand">Pull Review</div>
+    <span class="brand">pokepipe<b>.</b></span>
     <select id="video-select" aria-label="Video"></select>
-    <div class="progress" id="progress" aria-live="polite"></div>
+    <div class="tabs" role="tablist" aria-label="View">
+      <button role="tab" data-view="pack" aria-selected="true">Pack</button>
+      <button role="tab" data-view="card" aria-selected="false">Card</button>
+      <button role="tab" data-view="video" aria-selected="false">Video</button>
+    </div>
+    <div class="needs-count" aria-live="polite"><strong id="needs-n">0</strong><span id="needs-label">cards need you</span></div>
+    <span class="progress" id="progress"></span>
     <button id="finish" class="primary" disabled>Finish review</button>
   </header>
 
   <div class="layout">
-    <nav class="packs" aria-label="Packs">
-      <ol id="pack-list"></ol>
-      <p class="hint">Keys: <kbd>j</kbd>/<kbd>k</kbd> move · <kbd>c</kbd> confirm ·
-        <kbd>x</kbd> reject · <kbd>r</kbd> reverse holo · <kbd>e</kbd> change card ·
-        <kbd>space</kbd> play from card</p>
+    <nav class="packs" aria-label="Cards and packs">
+      <div class="side-block">
+        <h2>Needs you</h2>
+        <ol id="queue" class="queue"></ol>
+      </div>
+      <div class="side-block">
+        <h2>Packs</h2>
+        <ol id="pack-list"></ol>
+      </div>
+      <p class="hint">Views: <kbd>p</kbd> pack · <kbd>d</kbd> card · <kbd>v</kbd> video<br>
+        Keys: <kbd>1</kbd>–<kbd>3</kbd> pick · <kbd>c</kbd> keep · <kbd>x</kbd> reject ·
+        <kbd>r</kbd> reverse holo · <kbd>e</kbd> search · <kbd>space</kbd> play ·
+        <kbd>j</kbd>/<kbd>k</kbd> move</p>
     </nav>
 
-    <main>
-      <section class="player">
-        <video id="video" controls preload="metadata"></video>
-        <div class="player-bar">
-          <span id="clip-label"></span>
-          <button id="play-clip">Play pack clip</button>
+    <!-- One page, three views (data-view): Pack (the pack's cards), Card (decide one
+         card next to the video) and Video (the whole video with a tick per card). The
+         Card and Video views share one <video> element so playback carries over. -->
+    <main id="main" data-view="pack">
+      <section class="pack-view">
+        <div class="pack-head">
+          <div class="pack-title">
+            <h1 id="pack-title"></h1>
+            <span id="clip-label"></span>
+          </div>
+          <div class="actions">
+            <button id="play-clip">Play pack clip</button>
+            <button id="add-card">Add missed card</button>
+            <button id="confirm-pack" class="primary">Keep the rest</button>
+          </div>
         </div>
+        <ul id="pulls" class="pulls"></ul>
+        <p class="tiles-hint">Click a card to decide it in the Card view.</p>
       </section>
 
-      <section class="pack-head">
-        <h1 id="pack-title"></h1>
-        <div class="actions">
-          <button id="add-card">Add missed card</button>
-          <button id="confirm-pack" class="primary">Confirm remaining</button>
+      <div class="stage">
+        <section class="player">
+          <video id="video" controls preload="metadata"></video>
+        </section>
+        <section id="focus" class="focus" aria-live="polite"></section>
+      </div>
+
+      <section class="video-view">
+        <div id="timeline" class="timeline" aria-label="Cards on the video timeline">
+          <div id="bands"></div>
+          <div id="ticks"></div>
+          <i id="playhead" class="playhead"></i>
         </div>
+        <ol id="chapters" class="chapters"></ol>
       </section>
 
-      <ul id="pulls" class="pulls"></ul>
       <p id="empty" class="empty" hidden>No detection results yet. Run
         <code>pokepipe detect run &lt;video&gt; --set &lt;set_id&gt;</code> first.</p>
     </main>
@@ -66,7 +102,7 @@
       <p id="posts-note" class="hint"></p>
       <menu>
         <button value="cancel" formnovalidate>Back</button>
-        <button id="posts-save" class="primary" value="save">Save &amp; finish review</button>
+        <button id="posts-save" class="primary" value="save">Save and finish review</button>
       </menu>
     </form>
   </dialog>

@@ -285,6 +285,28 @@ function videoCard(v) {
   return card;
 }
 
+// The lime "Needs you" card: the review is the pipeline's only human stop, so it goes
+// above everything else. It links to the review page only on the PC (loopback-only).
+function needsCard(data) {
+  const card = $("needs");
+  const waiting = data.videos.filter((v) => !v.failed && v.status === "awaiting_review");
+  if (!waiting.length) { card.hidden = true; return; }
+  card.hidden = false;
+  const first = waiting[0];
+  const cards = waiting.reduce((n, v) => n + (v.review_pending || 0), 0);
+  const what = cards ? `${cards} card${cards === 1 ? "" : "s"} to check` : "A review to finish";
+  $("needs-title").textContent = waiting.length === 1 ? `${what} in ${first.slug}` : `${what} in ${waiting.length} videos`;
+  const reviewUrl = data.pc && data.pc.review_url;
+  if (reviewUrl) {
+    card.href = `${reviewUrl}#${encodeURIComponent(first.slug)}`;
+    card.target = "_blank";
+    $("needs-sub").textContent = "Open the review page →";
+  } else {
+    card.removeAttribute("href");
+    $("needs-sub").textContent = "Open the review page on the PC";
+  }
+}
+
 function alertBox(parent, text) {
   parent.append(el("p", { class: "error", text }));
 }
@@ -301,6 +323,8 @@ async function refresh() {
   inbox.textContent = data.inbox.length
     ? `In the inbox, waiting for the watcher: ${data.inbox.map((f) => f.name).join(", ")}`
     : "";
+
+  needsCard(data);
 
   const list = $("videos");
   list.replaceChildren();

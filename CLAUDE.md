@@ -237,10 +237,20 @@ uses instead:
   validated against the set, any edit reopens a finished review). `app.py` is a thin
   layer over it. A review is **complete** only when nothing is pending. Stages 4+ and
   the watch folder read `review.json` and wait for `completed: true`.
-- UI: packs sidebar (red when a pack's count ≠ expected), video player that jumps to
-  each card, video crop next to reference scan, hit badges, low-confidence "check"
-  badges, and a card picker seeded with the detector's runner-ups. Keyboard shortcuts:
-  j/k move, c/x/r/e act, space plays from the card.
+- UI (same dark, acid-lime, Unbounded look as the control room and the repo logo):
+  - Top bar: the video, a Pack / Card / Video switch (Pack is the default), and how many
+    cards still need a person.
+  - Sidebar: the "Needs you" queue of pending cards, then each pack as a row of 10 card
+    slots (pending ones pulse; a hit shows foil; a missing card is dashed).
+  - **Pack** view: the pack's cards as tiles, plus Play pack clip / Add missed card /
+    Keep the rest. Clicking a tile opens it in the Card view.
+  - **Card** view: the video next to the card being decided, with the video crop beside
+    the reference scan and the detector's top guesses as answers (keys 1-3 pick one,
+    keep it and jump to the next card that needs a person).
+  - **Video** view: the whole video with a tick per card on the timeline (pending cards
+    lime, hits foil) and pack clips as bands and chapters. Clicking a tick plays from
+    just before that card.
+  - Keys: p/d/v switch view, j/k move, c/x/r/e act, 1-3 pick, space plays from the card.
 
 ### Stage 4 design
 
