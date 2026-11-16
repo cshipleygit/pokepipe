@@ -552,8 +552,11 @@ not used.
   agent failure is written to `recovered.json` and the video carries on to review.
 - Suggestions seed a *new* review as pending pulls (`ReviewedPull.suggested`), shown
   with an "agent: missed card?" badge. They never enter an already-started review.
-- `recover eval` scores against hand-added pulls (not agent suggestions the reviewer
-  kept). **Delta Reign: 3/3 (Enamorus U in pack 9; Nidoran♀ and a second Tornadus as
+- `recover eval` scores against every missed card a person confirmed: added by hand,
+  or an agent suggestion the reviewer kept (reported separately, a weaker label);
+  rejected or corrected suggestions count as wrong, untouched auto decisions are
+  ignored. Across the 3 reviewed videos: 10/10 suggestions kept, none missed.
+  **Delta Reign: 3/3 (Enamorus U in pack 9; Nidoran♀ and a second Tornadus as
   reverse holos in pack 10, shown together in one stretch), 0 wrong, 5 turns, $0.13.**
   This video was also used to design the tools: validate on new footage.
 - **First real end-to-end graph run (2026-11-13, `img-6054-graph`, test collection):**

@@ -242,9 +242,6 @@ def test_eval_scores_against_hand_added_pulls():
                      time=1, status=RS.CONFIRMED),
         ReviewedPull(id=1, card_id="s-u2", pack=1, time=6.5, status=RS.CONFIRMED),
         ReviewedPull(id=2, card_id="s-c5", pack=2, time=20, status=RS.CONFIRMED),
-        # an agent suggestion the reviewer kept is not ground truth for grading itself
-        ReviewedPull(id=3, card_id="s-u4", pack=2, time=21, status=RS.CONFIRMED,
-                     suggested="high confidence: ..."),
     )
     rec = RecoveredFile(video_slug="v", model="m", suggestions=[
         Suggestion(pack=1, card_id="s-u2", time=6.5, confidence="high", evidence=""),
@@ -253,6 +250,33 @@ def test_eval_scores_against_hand_added_pulls():
     r = evaluate(rec, review)
     assert r.found == [(1, "s-u2")] and r.wrong == [(2, "s-u3")] and r.missed == [(2, "s-c5")]
     assert r.recall == 0.5 and r.precision == 0.5
+    assert r.confirmed_suggestions == []
+
+
+def test_eval_counts_suggestions_the_reviewer_decided():
+    sugg = "high confidence: ..."
+    review = review_with(
+        # kept as suggested: right
+        ReviewedPull(id=0, card_id="s-u4", pack=1, time=5, status=RS.CONFIRMED, suggested=sugg),
+        # rejected: wrong, and not truth
+        ReviewedPull(id=1, card_id="s-c1", pack=1, time=8, status=RS.REJECTED, suggested=sugg),
+        # corrected to another card: the agent's card is wrong, the real one was missed
+        ReviewedPull(id=2, card_id="s-c5", pack=2, time=20, status=RS.CONFIRMED, suggested=sugg),
+        # applied by auto-review and never touched: no person decided it
+        ReviewedPull(id=3, card_id="s-u2", pack=2, time=22, status=RS.CONFIRMED, suggested=sugg,
+                     decided_by="auto"),
+    )
+    rec = RecoveredFile(video_slug="v", model="m", suggestions=[
+        Suggestion(pack=1, card_id="s-u4", time=5, confidence="high", evidence=""),
+        Suggestion(pack=1, card_id="s-c1", time=8, confidence="high", evidence=""),
+        Suggestion(pack=2, card_id="s-u3", time=20, confidence="high", evidence=""),
+        Suggestion(pack=2, card_id="s-u2", time=22, confidence="high", evidence=""),
+    ])
+    r = evaluate(rec, review)
+    assert r.found == [(1, "s-u4")]
+    assert r.wrong == [(1, "s-c1"), (2, "s-u3"), (2, "s-u2")]
+    assert r.missed == [(2, "s-c5")]
+    assert r.confirmed_suggestions == [(1, "s-u4"), (2, "s-c5")]
 
 
 def test_suggestions_seed_a_new_review_as_pending(tmp_path):

@@ -60,7 +60,7 @@ def run(
 
 @app.command("eval")
 def eval_(slug: str):
-    """Score recovered.json against the cards a reviewer added by hand."""
+    """Score recovered.json against the missed cards a reviewer added or kept."""
     from pokepipe.recover.models import load_recovered
     from pokepipe.recover.service import evaluate
     from pokepipe.review.models import ReviewState
@@ -76,7 +76,9 @@ def eval_(slug: str):
     if not review.completed:
         console.print("[yellow]review not finished: ground truth may be incomplete[/]")
     r = evaluate(recovered, review)
-    console.print(f"missed by detection (added by hand): {len(r.truth)}")
+    kept = len(r.confirmed_suggestions)
+    console.print(f"missed by detection: {len(r.truth)} "
+                  f"({len(r.truth) - kept} added by hand, {kept} kept from suggestions)")
     console.print(f"recovered: {len(r.found)}  {r.found}")
     console.print(f"wrong suggestions: {len(r.wrong)}  {r.wrong}")
     console.print(f"still missed: {len(r.missed)}  {r.missed}")

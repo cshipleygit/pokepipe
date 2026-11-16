@@ -86,10 +86,13 @@ def _valid(suggestions: list[Suggestion], det: PullsFile, cards: dict) -> list[S
 
 @dataclass
 class EvalResult:
-    truth: list[tuple[int, str]]  # (pack, card_id) the reviewer had to add by hand
+    truth: list[tuple[int, str]]  # (pack, card_id) detection missed, per the reviewer
     found: list[tuple[int, str]] = field(default_factory=list)
     wrong: list[tuple[int, str]] = field(default_factory=list)
     missed: list[tuple[int, str]] = field(default_factory=list)
+    # the part of `truth` the reviewer confirmed from a suggestion shown in review
+    # (rather than adding it by hand): a weaker label, a person may lean towards yes
+    confirmed_suggestions: list[tuple[int, str]] = field(default_factory=list)
 
     @property
     def recall(self) -> float:
@@ -102,17 +105,28 @@ class EvalResult:
 
 
 def evaluate(recovered: RecoveredFile, review: ReviewState) -> EvalResult:
-    """Compare suggestions with the cards a person added by hand in a finished review.
+    """Compare suggestions with the cards detection missed, as a person decided them.
 
-    Hand-added pulls are exactly the ones detection missed, so they are the ground
-    truth. Agent suggestions already in the review are excluded from it, so a review
-    that started from suggestions doesn't grade itself.
+    Pulls with no detection behind them that a person confirmed are the ground truth:
+    cards added by hand, and agent suggestions the reviewer kept (with the card they
+    ended on, so a corrected suggestion counts as wrong). A suggestion the reviewer
+    rejected is not truth, so it scores as wrong. Only decisions nobody touched
+    (`decided_by == "auto"`) are left out, because no person made them.
+
+    Earlier this excluded every suggestion seeded into review, so a video whose
+    review started from suggestions reported each kept card as a wrong one.
     """
-    truth = [(p.pack, p.card_id) for p in review.pulls
-             if p.detected_index is None and p.status == ReviewStatus.CONFIRMED
-             and not p.suggested]
+    truth: list[tuple[int, str]] = []
+    from_suggestions: list[tuple[int, str]] = []
+    for p in review.pulls:
+        if p.detected_index is not None or p.status != ReviewStatus.CONFIRMED \
+                or p.decided_by == "auto":
+            continue
+        truth.append((p.pack, p.card_id))
+        if p.suggested:
+            from_suggestions.append((p.pack, p.card_id))
     remaining = list(truth)
-    result = EvalResult(truth=truth)
+    result = EvalResult(truth=truth, confirmed_suggestions=from_suggestions)
     for s in recovered.suggestions:
         key = (s.pack, s.card_id)
         if key in remaining:
