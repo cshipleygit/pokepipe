@@ -26,6 +26,31 @@ and sound effects on the hits, and a rocket-themed master-set progress bar.
 
 <!-- Demo: add a GIF/MP4 here rendered from your own footage, e.g. docs/demo.gif -->
 
+## Highlights
+
+- **Measured against human labels.** On four creator videos (280 cards, every one
+  confirmed by a person) the local detector reaches **92.9% recall at 99.2% precision**;
+  with the recovery agent, **98.9%**. See [Results](#results).
+- **An agent only where it earns its keep.** CLIP finds most cards. A Claude agent
+  (LangGraph tool loop) works only on packs that came up short, with local GPU tools, and
+  sends no video frames to the model. **17 suggestions, 17 correct**, at about $0.13–$0.33
+  a video. See [Agent for the gaps](#engineering-notes).
+- **Evaluation built into the repo.** Finished human reviews are frozen as test
+  fixtures and CI replays the auto-reviewer against them, failing if its silent errors
+  rise above a baseline of zero. `recover eval`, `review replay` and `narrate critique`
+  score each AI component. See [Measuring the AI parts](#measuring-the-ai-parts).
+- **A critic that checks the LLM against the footage.** Scripts are checked for timing,
+  spoilers and wrong facts, then rewritten. 7 of 8 earlier drafts broke a rule; all 4
+  scripts kept in a live run passed.
+- **Hard cost guardrails.** Every paid call is logged and checked against a **$1 per
+  video** cap before it runs. Vision and matching stay on the local GPU.
+- **Two orchestration engines over one set of idempotent stages:** a small state machine,
+  and a LangGraph graph with SQLite checkpoints and review as an `interrupt()`.
+- **In real use.** Posts go straight into the channel's TikTok drafts. **7 posts from 4
+  videos** have been sent that way and published. See [TikTok drafts](#tiktok-drafts).
+- **Honest about what failed.** Recall is lower on the newest footage, OCR lost to CLIP,
+  and a CI deadlock took 13 pushes to find. See [What didn't work](#what-didnt-work).
+
 ## How it works
 
 ```mermaid
@@ -53,26 +78,8 @@ flowchart LR
 
 ## Results
 
-Measured on one 10.6-minute 1080p60 opening of 12 packs of *151* (120 cards):
-
-| | |
-|---|---|
-| Cards found | **120 / 120** (12 packs × 10), 0 false positives |
-| Detection time | **89 s** on an RTX 3060 |
-| Reverse holos inferred from pack order | 22, verified against the pack layout |
-| 45-second post | rendered in **39 s**, all 9 voice lines within 0.1 s of their card |
-| API cost | about **$0.20 per 45 s post** (script ≈ $0.04, voice ≈ $0.16) |
-
-And on a creator's own footage: a 16-minute vertical 4K HDR iPhone opening of a
-*Delta Reign* Elite Trainer Box (9 packs, 90 cards):
-
-| | |
-|---|---|
-| Cards found | **86 / 90**; the 4 misses are understood (near-identical art, a borderline frame, a reverse-holo copy merged as a repeat) |
-| Missed cards recovered by the agent | **3 / 3** of those the reviewer had to add by hand, **0** wrong suggestions; 5 turns, **$0.13** |
-| Decode | 0.9× → **6.6× real time** with NVDEC; whole video about 4 min including CLIP |
-| Moments found automatically | 9/9 pack tears and Energy starts, 4/4 box shots, 3/3 sleeved hits |
-| Output | two 90 s posts; in-pack jump cuts 27 → 3 and 39 → 1, every voice line on its card |
+The headline numbers are the four-video results below. The two tables after them are
+the earlier calibration runs.
 
 ### Across four reviewed creator videos (280 cards)
 
@@ -103,6 +110,32 @@ sent the rest to a person, nearly all of which (187 of 189) it had already got r
 *Four videos are still not a benchmark. Thresholds were calibrated on the first footage,
 and other cameras, rooms and lighting may need recalibrating (see
 [Limitations](#limitations)).*
+
+### Calibration run: a third-party opening of *151*
+
+One 10.6-minute 1080p60 opening of 12 packs (120 cards), used to set the thresholds:
+
+| | |
+|---|---|
+| Cards found | **120 / 120** (12 packs × 10), 0 false positives |
+| Detection time | **89 s** on an RTX 3060 |
+| Reverse holos inferred from pack order | 22, verified against the pack layout |
+| 45-second post | rendered in **39 s**, all 9 voice lines within 0.1 s of their card |
+| API cost | about **$0.20 per 45 s post** (script ≈ $0.04, voice ≈ $0.16) |
+
+### First run on a creator's footage
+
+A 16-minute vertical 4K HDR iPhone opening of a *Delta Reign* Elite Trainer Box
+(9 packs, 90 cards), as first measured (86 of 90 found; a later re-run counts 87, the 97%
+above):
+
+| | |
+|---|---|
+| Cards found | **86 / 90**; the 4 misses are understood (near-identical art, a borderline frame, a reverse-holo copy merged as a repeat) |
+| Missed cards recovered by the agent | **3 / 3** of those the reviewer had to add by hand, **0** wrong suggestions; 5 turns, **$0.13** |
+| Decode | 0.9× → **6.6× real time** with NVDEC; whole video about 4 min including CLIP |
+| Moments found automatically | 9/9 pack tears and Energy starts, 4/4 box shots, 3/3 sleeved hits |
+| Output | two 90 s posts; in-pack jump cuts 27 → 3 and 39 → 1, every voice line on its card |
 
 ## Engineering notes
 
@@ -221,6 +254,8 @@ Each rendered post gets a `caption.txt` beside it, ready to paste into TikTok: t
 hook, the best pulls with prices, master-set progress, "Part 1 of 3" and hashtags.
 Add your own hashtags or a footer in `data/brand/caption.json` (not committed).
 
+### TikTok drafts
+
 `pokepipe tiktok login` (once) and `pokepipe tiktok draft <slug>` send finished posts
 straight to your TikTok inbox as drafts: open the notification in the app, paste the
 caption, post. Needs a TikTok developer app (Sandbox mode is enough) with Login Kit and
@@ -232,6 +267,14 @@ account, not a test environment. It works from a Sandbox developer app with that
 registered as a target user, so it needs no TikTok app review, and you still add the
 caption and press post yourself. Each post records its send in `tiktok.json`, so one is
 never sent twice.
+
+### Control room and recording-day tools
+
+`pokepipe watch run --lan` also serves a phone-friendly control room, so a video can be
+uploaded from a phone and every job followed from the couch. Uploads are resumable
+8 MB chunks, so a dropped connection carries on where it stopped. The review page stays
+on loopback only. Anything off the machine signs in with an access code (hashed session
+tokens, lockout after repeated wrong tries), and every write needs a CSRF header.
 
 Before a recording day, `pokepipe preflight --set <id> --videos 3` checks the GPU,
 ffmpeg, API keys, ElevenLabs characters left, card data and disk space. While
@@ -274,10 +317,23 @@ pokepipe render post <video-slug>          # → data/videos/<slug>/posts/<n>/po
 Every stage reads and writes JSON under `data/`, so any step can be re-run or
 inspected on its own. Run `pokepipe <stage> --help` for all options.
 
-**Measuring the AI parts:** `pokepipe recover eval <slug>` scores the agent's
-suggestions against the cards you added by hand in a finished review, and
-`pokepipe narrate critique <slug> --all` runs the script checks over every script on
-disk (no API calls). `SCRIPT_CRITIC=false` turns the critic off.
+### Measuring the AI parts
+
+Each AI component has a command that scores it against decisions a person made, so
+claims in this README can be re-run:
+
+| Command | What it scores |
+|---|---|
+| `pokepipe recover eval <slug>` | The missed-card agent: recall and precision against every missed card a person confirmed, plus its turns and cost. |
+| `pokepipe review replay --all` | The auto-reviewer against finished human reviews: what it would have confirmed, what it would have asked, and every **silent error**. |
+| `pokepipe review fit` | Fits a confidence cut-off on human labels and shows how many wrong pulls each threshold would let through. |
+| `pokepipe narrate critique <slug> --all` | Runs the script checks over every script on disk, with no API calls. |
+
+The replay also runs in the test suite, and so in CI. `tests/fixtures/reviews/` holds a
+finished review (JSON only, no footage; the Delta Reign box so far) and `baseline.json`
+records the allowed number of silent errors, currently zero. A change that makes
+auto-review confirm a wrong card fails the build. `SCRIPT_CRITIC=false` turns the critic
+off.
 
 **Prices.** Market prices come from pokemontcg.io (TCGplayer) once it has them; a
 brand-new set can take a few weeks. Until then, or to use your own numbers, list them in
@@ -305,6 +361,9 @@ src/pokepipe/
                          rocket theme, sound effects, ffmpeg
   watch/        stage 7  inbox intake, resumable job state machine, watcher loop
   graph/        stage 7  the same pipeline as a checkpointed LangGraph state graph
+  control/      stage 8  phone-friendly control room: resumable uploads, job status
+  tiktok/       stage 8  Login Kit (PKCE) + Content Posting API draft uploads
+  preflight.py           recording-day checks: GPU, ffmpeg, keys, quota, disk
 tests/          pytest; APIs mocked, no GPU needed except tests marked `gpu`
 config/         style guide (and optional intro clip)
 ```
@@ -314,12 +373,30 @@ Design notes for each stage, with calibration data, are in [CLAUDE.md](CLAUDE.md
 ## Testing
 
 ```bash
-pytest            # ~300 tests: no network, no GPU (a few render tiny clips with ffmpeg)
+pytest            # ~280 tests: no network, no GPU (a few render tiny clips with ffmpeg)
 pytest -m gpu     # real CLIP model on CUDA
 ruff check src tests
 ```
 
 CI runs the CPU suite and lint on every push.
+
+## What didn't work
+
+- **Recall did not carry over to new footage.** 97% on the video the thresholds were
+  tuned on, 89% on the newest. More labelled videos, not more tuning, is the fix.
+- **OCR as the main identifier.** Reading the set code and number from the card's corner
+  got 97 of 120 right and ran 5× slower than CLIP, so it is kept as a future tie-breaker.
+- **Zero-shot CLIP for sound-like events.** Prompts such as "tearing a booster pack"
+  fired on almost every frame. High-passed audio worked where vision did not.
+- **Centre-cropped embeddings.** OpenCLIP's default dropped the name bar and attack text.
+  Matching the whole card lifted recall from 114 to 120 cards on the calibration video.
+- **Guessing reverse holos on shuffled packs.** The layout matcher refuses to guess when
+  the order doesn't fit, and review handles those packs.
+- **A CI deadlock that took 13 pushes to find.** ffmpeg 8.0 on the runner hung on any
+  sped-up clip whose audio ran through the same command as the video. A probe on the
+  runner isolated it. The fix splits each clip into picture, sound and a stream-copy
+  mux, bounds every audio pad, closes stdin and times each run out, and `pytest-timeout`
+  makes any future hang fail by name.
 
 ## Limitations
 
@@ -336,14 +413,32 @@ CI runs the CPU suite and lint on every push.
 
 ## Roadmap
 
-- Profit/loss: record what each product cost and report value pulled minus cost per
-  video and across a series (`values.json` is the input).
-- Recovery agent: measure it on more labelled videos (three so far), and give it a
-  corner-OCR tool for tie-breaks.
-- More agents on the same graph: a price finder that proposes rows for the price sheet
-  and waits for approval, and an MCP server exposing collection status to chat clients.
-- Creator profiles (style guide, voice, theme, intro, collection per creator).
-- Set auto-detection and tie-breaking from the card's corner text (OCR).
+**Shipped recently:** auto-review with a replay harness and a CI ratchet, the recovery
+agent and its eval, the writer ⇄ critic loop, the LangGraph engine with checkpointed
+review, the phone control room, and TikTok drafts.
+
+**Next, in order:**
+
+1. **Close the generalisation gap.** Detector recall fell from 97% on the footage it was
+   tuned on to 89% on the newest. Refit the confidence cut-off on all four labelled
+   videos, keep a held-out video for every change, and freeze the other three reviews
+   into the test fixtures (only one is there today).
+2. **Raise auto-review coverage without silent errors.** It confirms about a third of
+   cards on its own and nearly everything it asks about was already right. Add a vision
+   check on ambiguous crops and corner-OCR as a tie-breaker, then move the default from
+   `shadow` to `exceptions` once replay stays at zero across more videos.
+3. **Teach the agent the cases it missed.** Telling a reverse-holo copy from a repeat
+   showing (one of the three booster-box misses was exactly that), and a corner-OCR tool
+   for near-identical art.
+4. **Set auto-detection** from the card's corner text, so a video no longer needs `--set`
+   and one video can mix sets.
+5. **Profit/loss:** record what each product cost and report value pulled minus cost per
+   video and across a series (`values.json` is the input).
+6. **More agents on the same graph:** a price finder that proposes rows for the price
+   sheet and waits for approval, and an MCP server exposing collection status to chat
+   clients.
+7. **TikTok analytics in the control room**, and creator profiles (style guide, voice,
+   intro and collection per creator).
 
 ## Disclaimer
 
