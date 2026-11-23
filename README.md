@@ -24,7 +24,11 @@ and renders 1080×1920 posts: the box opening and each pack's tear as quick cuts
 their real sound, packs that run card to card, zooms that follow the card, price tags
 and sound effects on the hits, and a rocket-themed master-set progress bar.
 
-<!-- Demo: add a GIF/MP4 here rendered from your own footage, e.g. docs/demo.gif -->
+<p align="center">
+  <img src="docs/demo.gif" alt="A pulled Illustration Rare: the card is recognised, zoomed and labelled, with the master-set bar counting up" width="300">
+</p>
+<p align="center"><sub>Three seconds of a rendered post, in the default theme: the pull is recognised,
+zoomed and labelled, and the master-set bar updates.</sub></p>
 
 ## Highlights
 
