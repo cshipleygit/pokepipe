@@ -13,6 +13,9 @@
 **Turn a raw Pokémon TCG pack-opening video into narrated, edited vertical shorts,
 locally, for under $1 per video.**
 
+Used for a real channel: 4 videos, 280 cards, and 7 posts sent to TikTok drafts and
+published.
+
 pokepipe watches the footage, recognises every card on a local GPU, sends a Claude agent
 to look for any card detection missed, lets you confirm the results in a small review
 page, tracks your master-set progress and what your pulls are worth, writes and voices a
@@ -222,6 +225,13 @@ Add your own hashtags or a footer in `data/brand/caption.json` (not committed).
 straight to your TikTok inbox as drafts: open the notification in the app, paste the
 caption, post. Needs a TikTok developer app (Sandbox mode is enough) with Login Kit and
 the Content Posting API; set `TIKTOK_AUTO_DRAFT=true` to send drafts after every render.
+
+This is in real use: **7 posts from 4 videos** have gone from a rendered file to the
+channel's own TikTok drafts this way and been published. The drafts land in the real
+account, not a test environment. It works from a Sandbox developer app with that account
+registered as a target user, so it needs no TikTok app review, and you still add the
+caption and press post yourself. Each post records its send in `tiktok.json`, so one is
+never sent twice.
 
 Before a recording day, `pokepipe preflight --set <id> --videos 3` checks the GPU,
 ffmpeg, API keys, ElevenLabs characters left, card data and disk space. While
