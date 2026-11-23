@@ -301,3 +301,15 @@ def test_suggestions_seed_a_new_review_as_pending(tmp_path):
     assert [(p.card_id, p.status, p.pack) for p in added] == [("s-u2", RS.PENDING, 1)]
     assert "slot 6" in added[0].suggested
     assert not state.completed
+
+
+def test_scan_and_turn_limits_grow_with_short_packs():
+    from pokepipe.recover.agent import AgentSettings
+    from pokepipe.recover.service import scaled_limits
+
+    base = AgentSettings(max_turns=14)
+    s, scans = scaled_limits(3, base)  # an ordinary ETB: the configured floor holds
+    assert (s.max_turns, scans) == (14, 8)
+    s, scans = scaled_limits(9, base)  # img-6084: 9 short packs ran out at 8 scans
+    assert (s.max_turns, scans) == (24, 18)
+    assert s.model == base.model  # only the limits change

@@ -309,99 +309,14 @@ Known limitations:
 
 ### Stage 6 design (render/)
 
-- `timeline.py` is pure edit logic. Each pack's clip window becomes gap, reveal and
-  hit shots.
-  - **Hits** are the rare slot and better, excluding reverse-holo Rares. They play at
-    1× for 2.5–4 s with a punch-in zoom; the rest of a long hold speeds up.
-  - **Framing:** shots are vertical 9:16 crops centred on the card.
-- **Narration drives the pacing.**
-  - Regions are cut at each card a line is about. A region must last as long as its
-    narration, quiet regions run up to 4× (gaps 2.5× faster), and spare time up to
-    the post's target is shared out.
-  - If a region can't fit its lines even at 1×, its hit freezes. The final shot may
-    run into real footage after the pack (`tail_room`) before freezing.
-  - Each voice line is cut from `voice.mp3` and starts when its card appears, and
-    drift is reported.
-- **Scripts are written to fit:** before Claude writes, `render/inputs.airtime()`
-  drafts the edit and gives each card's seconds on screen plus the seconds after the
-  last card. This removed the end-of-video freeze (first render 58 s with a 7 s
-  freeze, now 45.2 s with every line in sync).
-- `captions.py` writes an ASS file burned in by libass: word-by-word captions with
-  the current word highlighted, the hook caption, a master-set counter that ticks up
-  1.2 s after each pack's last card plus a "+N NEW" badge, and rarity labels during
-  big-hit zooms. Everything stays inside TikTok's safe area.
-- `ffmpeg.py` renders in two passes. First, one clip per shot (NVENC when available,
-  else x264). Then concat, burn in the ASS file, and mix the voice lines
-  (atrim + adelay + amix). An optional `config/intro.mp4` is prepended.
-  `edit.json` records every decision.
-- **A shot with source audio is three ffmpeg runs** (`render_segment`): picture, sound,
-  then a filterless stream-copy mux. In one run, ffmpeg 8.0 (Ubuntu 26, the CI runner)
-  deadlocks on every sped-up shot whose audio goes through atempo + apad/atrim next to
-  the video, whatever the filter order; each part alone finishes in under a second.
-  This hung CI for 13 pushes (each cancelled at 20 min) before a probe on the runner
-  isolated it. Audio pads are always bounded (`apad=whole_dur` + `atrim`), ffmpeg runs
-  with stdin closed and a timeout, `-hwaccel auto` only where `nvidia-smi` exists, and
-  `pytest-timeout` (300 s) makes any future hang fail by name.
-- Result on packs 1–3 of the test video: 45.2 s, 41 shots, rendered in 39 s on the
-  RTX 3060. A clean run of one 45 s post costs about $0.20 (script + voice).
-- **Zooms follow the card and never cut it off** (`render/track.py`, `render/zoom.py`).
-  - Detection boxes are grid cells, too rough to frame a card, so the tracker re-finds
-    the known card 5×/s during each zoom: coarse-to-fine box search scored against that
-    one card's embedding on the GPU. CLIP scores the artwork alone about as high as the
-    whole card, so it takes the *largest* box within 0.02 of the best score, kept to
-    0.7–1.35× the detection box (full-art cards score flatly and would grow otherwise).
-  - `zoom.py` (pure): crop width = card width × 1.5 (≤ 1.8× in), moving average, then
-    any keyframe that would clip the card is widened until it fits. A lost card (score
-    < 0.55) eases back to the normal framing; 1–2 lost samples are bridged.
-  - Zooms ease in (0.6 s) and out (0.5 s) with zoompan instead of hard cuts. One zoom
-    per card: repeat showings stay at normal framing. A hit straight after another zoom
-    pans across from it instead of zooming out and back in.
-  - Allen's posts: 16 zooms → 10, every zoom frame shows the whole card. Tracking adds
-    about 10 s per post. `--no-track` / `RENDER_TRACK=false` skips it.
-- **Pack numbers in scripts count opened packs only** (`narration/script.pack_numbers`): a group of fewer than 3 pulls, like a promo shown before the first pack, gets no number. Pull ids (`p<index>-<n>`) are unchanged.
-- **Narration off** (`render post --no-narration`, or `NARRATION=false` for the watcher):
-  the edit alone, with no script, voice or API spend. The source audio plays under it,
-  sped up per shot with pitch-preserving `atempo` and padded through freezes, so it stays
-  in sync. There's no hook and no word captions; the counter and labels stay. Allen's Delta
-  Reign posts (90 s each) rendered this way in about 5 min each.
-- To tune next: motion blur on fast slivers and quick commons; listen-test the
-  synthesised effects.
+Renders vertical 1080×1920 posts with ffmpeg (NVENC when available). `timeline.py` is
+pure edit logic, `captions.py` writes the ASS captions, `ffmpeg.py` runs the passes, and
+narration timings drive the pacing. The channel's editing style is deliberately not
+documented in this public repo: it lives in a gitignored `CLAUDE.local.md`, and the
+channel's look in `data/brand/`.
 
-### Series edit (moments.json)
+Public mechanics worth knowing:
 
-`pokepipe detect moments <slug>` (`detection/moments.py` pure, `moments_scan.py` signals)
-finds footage Allen films on purpose. When `moments.json` exists, render and the script
-writer use the series edit (`render/inputs.edit_inputs`):
-- **Opening montage, ~1 s each with sound:** the sealed box, shrink-wrap coming off, lid
-  off, packs fanned (only in the post with the first pack), then every pack's tear and
-  cards coming out.
-- **Packs start at their Energy,** which cuts the straightening, the code card and early
-  peeks. Repeat showings are dropped from packs.
-- **End recap:** each hit again (2 s for Double Rare+, 1.2 s otherwise), from its sleeving
-  footage when there is some, under the outro. CTA: part *n*+1, then follow the series.
-- **Sound:** source audio at 0.22 under the voice, 0.8 on the quick clips.
-- **Each pack's tear plays right before that pack** (not all up front: hits already on
-  the table would show early). The packs run card to card (`EditParams.cut_gaps`):
-  straightening, slips and re-shown cards between reveals are cut (part 1: 48 s of such
-  footage), and so is the tail after the last card.
-- **Clean cuts:** in the series edit a card's shot starts and ends exactly where it is
-  recognised (`reveal_lead`/`reveal_tail` = 0, and short gaps are cut, not absorbed).
-  The default margins are precisely when the next card's edge peeks out from behind the
-  current one. A colour check (next card's hues around the current card) was tried and
-  dropped: hands and foil glare moved it as much as a real peek. Checked by eye on the
-  last frames of all 40 card shots of part 1.
-- **Sleeving:** after a hit, a 2.8 s clip of it sliding into its sleeve (from 2.4 s before the sleeve score drops to 0.4 s after, so the whole insert shows) (2x volume: it is
-  recorded very quietly). Silent, so found visually: CLIP's "sliding a card into a
-  sleeve" score is high while the card goes in and drops once it's in, in the 6 s before
-  a post-pack showing (each showing is tried; Kecleon was held up before sleeving).
-  3/3 sleeved hits found, Kyogre (not sleeved) correctly skipped.
-- **Fewer jump cuts:** a card-to-card transition up to 1.5 s (the slide itself) stays
-  as a "sliver" sped up to ~0.12 s on screen; longer fumbles (3.8 s+) are cut. In-pack
-  jump cuts: part 1 27 → 3, part 2 39 → 1, all of them real fumbles.
-- **Rocket theme** (`render/theme.py`): Gill Sans Ultra Bold Condensed, navy outlines,
-  flame-orange spoken word, mint badge, yellow rarity labels. The master-set bar is a
-  rounded navy pill whose orange fill is a flame trail; a Pillow-drawn rocket PNG rides
-  its tip (ffmpeg overlay, x keyframed with the fill, gentle sin bob). Captions at ~79%.
 - **Captions to paste** (`narration/caption.py`): after rendering, the watcher writes
   `posts/<n>/caption.txt`: the script's hook caption; "Pulled:" with the post's best
   cards (Double Rare+ or $5+, priced from values.json, most valuable first, max 3);
@@ -430,29 +345,6 @@ writer use the series edit (`render/inputs.edit_inputs`):
   suite sets it (tests/conftest.py), so tests always check the public default.
   **Never copy brand names, colours, artwork or notes into tracked files**; the brand's
   own notes and tests live in `data/brand/` (see `data/brand/NOTES.md`).
-- **On screen:** the progress bar (ASS vector drawing, its fill clip animated when a
-  pack is done, the rocket overlaid on its tip), a "PACK 3 OF 9" title over each tear,
-  price tags on hits, and spoken captions at about 79% of the height, above TikTok's own
-  caption and username.
-- **Script:** the first line is a hook aimed at the viewer, with 2–3 interactive
-  prompts. **No spoilers:** `narration/script.spoilers` flags any line (and the
-  hook caption) that names a hit, or a special rarity, before it appears. It is one of
-  the critic's checks (`narration/critic.py`, below).
-
-Signals, measured on the Delta Reign ETB video:
-- **Sound** (high-passed >2.5 kHz): tearing foil and shrink-wrap are -25 to -40 dB in an
-  otherwise quiet room (about -75 dB). The last crinkle of ≥1.5 s before a pack's Energy
-  is its tear then cards out. 9/9 tears correct, 9/9 cards-out after one fix (the crinkle
-  tails off past the cards).
-- **Energy start:** basic-Energy decoy matches. 9/9.
-- **CLIP zero-shot** only for "open box with packs inside" (0.94–0.98) and "packs fanned".
-  Generic prompts fired everywhere because the ETB display wall is behind every shot.
-  The longest wrap crinkle before the lid comes off is the seal. All 4 box shots correct.
-- Tuned on one video: check `moments.json` on new footage (a different room, music, or
-  talking would break the sound rules).
-
-### Prices, P/L and sound effects
-
 - **Prices** (`cards/prices.py`): a `PriceBook` per set = pokemontcg.io's TCGplayer market
   price per printing (stored on `Card.prices` by `cards fetch`) overridden by
   `data/prices/<set>.csv` (card_id, variant, usd, source, as_of). Lookups are exact
@@ -460,11 +352,6 @@ Signals, measured on the Delta Reign ETB video:
   its hits were entered from tcgplayer.com market prices (2026-11-12).
 - **P/L input:** `pokepipe collection value <slug>` → `values.json` (each pull's price,
   source and date; totals per pack and video; unpriced count). Cost basis comes next.
-- **On screen:** a mint price tag pops in under each zoomed hit (0.5 s after the zoom).
-- **Sound effects** (`render/sfx.py`), synthesised with numpy (no samples to license):
-  sparkle on Double Rare+ reveals, chime on ordinary rares, coin with each price tag,
-  rocket rise when the bar fills, whoosh into each pack and the recap. One `sfx.wav`
-  per post, mixed under the voice at 0.5.
 
 ### Stage 7 design (watch/)
 

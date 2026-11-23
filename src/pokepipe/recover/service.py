@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from pokepipe.cards.cache import SetCache
@@ -15,6 +15,24 @@ from pokepipe.recover.evidence import Evidence, Scanner
 from pokepipe.recover.models import FILENAME, RecoveredFile, Suggestion
 from pokepipe.review.models import ReviewState
 from pokepipe.review.models import Status as ReviewStatus
+
+BASE_SCANS = 8
+SCANS_PER_SHORT_PACK = 2
+TURNS_PER_SHORT_PACK = 2
+TURNS_OVERHEAD = 6  # overview, layout checks, find_cards and submit around the scans
+
+
+def scaled_limits(n_short: int, settings: AgentSettings) -> tuple[AgentSettings, int]:
+    """Scan and turn budgets that grow with the number of short packs.
+
+    Fixed limits (8 scans, 14 turns) suited a 9-10 pack ETB, but a 12-pack booster
+    box with 9 short packs ran out of scans before it reached pack 10. Each short pack
+    gets room for two rescans (the gap, then a wider window); the configured values
+    stay the floor.
+    """
+    scans = max(BASE_SCANS, SCANS_PER_SHORT_PACK * n_short)
+    turns = max(settings.max_turns, TURNS_OVERHEAD + TURNS_PER_SHORT_PACK * n_short)
+    return replace(settings, max_turns=turns), scans
 
 
 def recover(
@@ -41,10 +59,12 @@ def recover(
     slug = video_dir.name
 
     out = RecoveredFile(video_slug=slug, model=settings.model)
-    if not evidence.short_packs()["short_packs"]:
+    short = evidence.short_packs()["short_packs"]
+    if not short:
         out.notes = "every pack is complete; nothing to recover"
         files.save(video_dir / FILENAME, out)
         return out
+    settings, evidence.scans_left = scaled_limits(len(short), settings)
 
     def check(estimate: float) -> None:
         budget.check(files.load_ledger(), estimate, "missed-card recovery")

@@ -71,8 +71,35 @@ And on a creator's own footage: a 16-minute vertical 4K HDR iPhone opening of a
 | Moments found automatically | 9/9 pack tears and Energy starts, 4/4 box shots, 3/3 sleeved hits |
 | Output | two 90 s posts; in-pack jump cuts 27 → 3 and 39 → 1, every voice line on its card |
 
-*Two videos are not a benchmark. Thresholds were calibrated on this footage, and other
-cameras, rooms and lighting may need recalibrating (see [Limitations](#limitations)).*
+### Across four reviewed creator videos (280 cards)
+
+Every card was confirmed by a person in the review page, so these are measured against
+human labels, not the pipeline's own output. Two of the videos (a 30-card clip and a
+12-pack booster box) came after the thresholds were set.
+
+| | |
+|---|---|
+| Detector alone: precision | **99.2%** (260 of 262 detections right, 2 rejected) |
+| Detector alone: recall | **92.9%** (260 of 280; 20 missed) |
+| Detector + recovery agent: recall | **98.9%** (277 of 280) |
+| Agent suggestions | 17 correct, **0 wrong**, $0.13–$0.33 per video |
+| Auto-review silent errors | **0** (it confirms only what the evidence settles) |
+
+| Video | Cards | Detector recall | After agent |
+|---|---|---|---|
+| Elite Trainer Box, 9 packs | 90 | 97% | 100% |
+| Short clip, 3 packs | 30 | 87% | 100% |
+| Booster box, 12 packs | 120 | 89% | 97.5% |
+
+Recall was lower on the newest footage than on the video the thresholds were tuned on,
+which is the generalisation gap to expect from one camera and one room. The agent missed
+3 cards on the booster box, one of them a second copy of a card already in its pack.
+Auto-review is deliberately cautious: it confirmed about a third of cards on its own and
+sent the rest to a person, nearly all of which (187 of 189) it had already got right.
+
+*Four videos are still not a benchmark. Thresholds were calibrated on the first footage,
+and other cameras, rooms and lighting may need recalibrating (see
+[Limitations](#limitations)).*
 
 ## Engineering notes
 
@@ -277,7 +304,7 @@ Design notes for each stage, with calibration data, are in [CLAUDE.md](CLAUDE.md
 ## Testing
 
 ```bash
-pytest            # ~200 tests: no network, no GPU (a few render tiny clips with ffmpeg)
+pytest            # ~300 tests: no network, no GPU (a few render tiny clips with ffmpeg)
 pytest -m gpu     # real CLIP model on CUDA
 ruff check src tests
 ```
@@ -286,8 +313,8 @@ CI runs the CPU suite and lint on every push.
 
 ## Limitations
 
-- **Calibrated on two videos.** Detection thresholds and the moment rules (sound
-  levels, sleeve timing) come from two openings, so check `pulls.json` and
+- **Calibrated on a few videos.** Detection thresholds and the moment rules (sound
+  levels, sleeve timing) come from the first openings, so check `pulls.json` and
   `moments.json` on new footage. Talking, music or a noisy room would break the
   sound-based tear detection.
 - **Pack layouts:** slot order is defined for Scarlet & Violet (verified on *151*) and
@@ -301,7 +328,7 @@ CI runs the CPU suite and lint on every push.
 
 - Profit/loss: record what each product cost and report value pulled minus cost per
   video and across a series (`values.json` is the input).
-- Recovery agent: measure it on more labelled videos (one so far), and give it a
+- Recovery agent: measure it on more labelled videos (three so far), and give it a
   corner-OCR tool for tie-breaks.
 - More agents on the same graph: a price finder that proposes rows for the price sheet
   and waits for approval, and an MCP server exposing collection status to chat clients.
