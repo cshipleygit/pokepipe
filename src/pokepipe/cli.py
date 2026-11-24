@@ -1,5 +1,8 @@
 """Root CLI. Each pipeline stage registers its own sub-command group."""
 
+import sys
+from typing import TextIO
+
 import typer
 
 from pokepipe.cards.cli import app as cards_app
@@ -12,6 +15,24 @@ from pokepipe.render.cli import app as render_app
 from pokepipe.review.cli import app as review_app
 from pokepipe.tiktok.cli import app as tiktok_app
 from pokepipe.watch.cli import app as watch_app
+
+
+def use_utf8(*streams: TextIO) -> None:
+    """Switch console streams to UTF-8 so card names (Pokémon, Nidoran♀) and arrows
+    print anywhere.
+
+    On Windows, Python encodes stdout with the console's code page (cp1252) when it
+    is piped or run from Git Bash, and any character outside it raised
+    UnicodeEncodeError mid-command (seen on `tiktok status`). Unencodable characters
+    are replaced rather than raised, so output can never crash a command.
+    """
+    for stream in streams:
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
+use_utf8(sys.stdout, sys.stderr)
 
 app = typer.Typer(help="Pokémon pack-opening → TikTok shorts pipeline.", no_args_is_help=True)
 app.add_typer(cards_app, name="cards")

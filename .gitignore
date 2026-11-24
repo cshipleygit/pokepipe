@@ -14,3 +14,6 @@ apikey*.txt
 data/*
 !data/.gitkeep
 *.egg-info/
+
+# private edit-style notes
+CLAUDE.local.md
