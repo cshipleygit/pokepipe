@@ -25,7 +25,7 @@ their real sound, packs that run card to card, zooms that follow the card, price
 and sound effects on the hits. Finished posts are sent straight to your TikTok drafts.
 
 <p align="center">
-  <img src="docs/demo.gif" alt="A pulled Illustration Rare: the card is recognised, zoomed and labelled, with the master-set bar counting up" width="300">
+  <img src="docs/demo-v2.gif" alt="A pulled Illustration Rare: the card is recognised, zoomed and labelled, with the master-set bar counting up" width="300">
 </p>
 <p align="center"><sub>Three seconds of a rendered post, in the default theme: the pull is recognised,
 zoomed and labelled, and the master-set bar updates.</sub></p>
