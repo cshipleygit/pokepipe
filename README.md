@@ -22,7 +22,7 @@ page, tracks your master-set progress and what your pulls are worth, writes and 
 script that a critic checks against the facts and the footage before it's kept,
 and renders 1080×1920 posts: the box opening and each pack's tear as quick cuts with
 their real sound, packs that run card to card, zooms that follow the card, price tags
-and sound effects on the hits, and a rocket-themed master-set progress bar.
+and sound effects on the hits. Finished posts are sent straight to your TikTok drafts.
 
 <p align="center">
   <img src="docs/demo.gif" alt="A pulled Illustration Rare: the card is recognised, zoomed and labelled, with the master-set bar counting up" width="300">
@@ -67,6 +67,9 @@ flowchart LR
     K -->|collection.json| N["5 · Script + voice<br/>Claude + ElevenLabs"]
     N -->|script + voice.json| E["6 · Render<br/>ffmpeg, NVENC"]
     E --> P[post.mp4 ×N]
+    P -->|"Content Posting API<br/>(inbox upload)"| T["8 · TikTok drafts<br/>caption.txt + draft in the app"]
+    U["Phone upload<br/>control room"] -.-> W["7 · Watch folder<br/>runs stages 2 to 6"]
+    W -.-> D
 ```
 
 | Stage | What it does |
@@ -79,6 +82,7 @@ flowchart LR
 | **5 · Script + voice** | You choose which packs form each post. Claude writes a script from computed facts only, with a hook and viewer prompts. A critic checks every draft for timing against the footage, spoilers, wrong facts and style, and sends failing drafts back for a rewrite. ElevenLabs voices it with per-word timings. |
 | **6 · Render** | Vertical cuts paced by the narration: quick clips of the box and every tear with their own sound, packs card to card with fumbles cut, zooms that track the card, sleeving clips and an end recap. Word-by-word captions, price tags, synthesised sound effects and a progress bar, with each spoken line on its card. |
 | **7 · Watch folder** | Drop a video in and it runs end to end, pausing only for your review. Resumable, with failures recorded and retryable. Two engines: a small state machine (default), or a LangGraph state graph with SQLite checkpoints and review as an `interrupt()` (`--engine graph`). |
+| **8 · TikTok drafts + control room** | `tiktok draft` sends each rendered post to the account's TikTok inbox through the Content Posting API (Login Kit with PKCE, file upload in chunks, tokens refreshed automatically, one send per post). A caption to paste is written beside each post. A phone-friendly control room accepts resumable video uploads and shows every job. In use: 7 posts from 4 videos, sent and published. |
 
 ## Results
 
