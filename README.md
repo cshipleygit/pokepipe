@@ -210,8 +210,8 @@ The decisions that mattered, each backed by a measurement:
   node that didn't finish, and review is a real `interrupt()` resumed with
   `Command(resume=True)`. Both engines share the same idempotent stage functions and
   `job.json` status view.
-- **Nothing to license.** Sound effects are synthesised with numpy, and the rocket is
-  drawn with Pillow.
+- **Nothing to license.** Sound effects are synthesised with numpy, and every on-screen
+  graphic is drawn in code.
 
 ## Quick start
 
@@ -366,7 +366,7 @@ src/pokepipe/
   narration/    stage 5  post planning, Claude scripts, writer ⇄ critic loop, ElevenLabs,
                          budget
   render/       stage 6  edit timeline, pacing, card tracking, zoom paths, captions,
-                         rocket theme, sound effects, ffmpeg
+                         default theme, sound effects, ffmpeg
   watch/        stage 7  inbox intake, resumable job state machine, watcher loop
   graph/        stage 7  the same pipeline as a checkpointed LangGraph state graph
   control/      stage 8  phone-friendly control room: resumable uploads, job status
